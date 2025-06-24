@@ -5,13 +5,16 @@ import {
   type RouteObject,
   redirect,
 } from 'react-router';
+import { PageLayout } from '@/components/PageLayout.tsx';
+import { privateRouteKeys, privateRoutes } from '@/router/privateRoutes.tsx';
 import { ls } from '@/utils/ls.tsx';
 import type { LoaderFunction } from 'react-router-dom';
 
 const LoginPageLazy = lazy(() => import('@/pages/Login/LoginPage.tsx'));
 
 export const DEFAULT_PUBLIC_PATH = '/login';
-export const DEFAULT_PRIVATE_PATH = '/home';
+export const DEFAULT_PRIVATE_PATH =
+  '/template_management/medical_record_template';
 
 // 公开的路由
 const publicRoutes: RouteObject[] = [
@@ -20,15 +23,6 @@ const publicRoutes: RouteObject[] = [
     element: <LoginPageLazy />,
   },
 ];
-
-// 需要鉴权的路由
-const privateRoutes: RouteObject[] = [
-  {
-    path: DEFAULT_PRIVATE_PATH,
-    element: <div>home page</div>,
-  },
-];
-const privatePaths = privateRoutes.map((route) => route.path);
 
 // 鉴权 Loader
 const authLoader: LoaderFunction = async ({ request }) => {
@@ -41,7 +35,7 @@ const authLoader: LoaderFunction = async ({ request }) => {
   if (isLogged && url.pathname === DEFAULT_PUBLIC_PATH) {
     return redirect(DEFAULT_PRIVATE_PATH);
   }
-  if (!isLogged && privatePaths.includes(url.pathname)) {
+  if (!isLogged && privateRouteKeys.includes(url.pathname)) {
     return redirect(DEFAULT_PUBLIC_PATH);
   }
 
@@ -55,6 +49,21 @@ export const createRoutes = () =>
       path: '/',
       element: <Outlet />,
       loader: authLoader,
-      children: [...privateRoutes, ...publicRoutes],
+      children: [
+        {
+          path: '/',
+          element: <Outlet />,
+          children: publicRoutes,
+        },
+        {
+          path: '/',
+          element: <PageLayout />,
+          children: privateRoutes,
+        },
+      ],
+    },
+    {
+      path: '*',
+      element: <div>404 Not Found</div>,
     },
   ]);

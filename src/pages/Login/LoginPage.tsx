@@ -1,26 +1,30 @@
+import { Button } from 'antd';
 import { useNavigate } from 'react-router';
 import { DEFAULT_PRIVATE_PATH } from '@/router/route.tsx';
+import { useUserStore } from '@/store/useUserStore.tsx';
 import { ls } from '@/utils/ls.tsx';
 
 const LoginPage = () => {
+  const setUser = useUserStore((s) => s.setUser);
   const nav = useNavigate();
   const onLogin = () => {
     ls.token.set({
       at: 'aaa',
       rt: 'bbb',
     });
+    const user = { name: 'Admin', id: 1 };
+    ls.user.set(user);
+    setUser(user);
     nav(DEFAULT_PRIVATE_PATH);
   };
 
   return (
-    <div>
-      <h1>Login Page</h1>
-      <p>Please enter your credentials to log in.</p>
-      {/* Add your login form here */}
-      <button type="button" onClick={onLogin}>
-        login
-      </button>
-    </div>
+    <main className="flex flex-col gap-y-[16px] justify-center items-center h-full w-full">
+      <h1 className="text-[28px]">Login Page</h1>
+      <Button type="primary" onClick={onLogin}>
+        登录
+      </Button>
+    </main>
   );
 };
 

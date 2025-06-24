@@ -1,6 +1,7 @@
 const KEYS = {
   ACCESS_TOKEN: 'aat',
   REFRESH_TOKEN: 'rto',
+  USER: 'user',
 };
 
 export const ls: LocalStorage.Utils = {
@@ -17,5 +18,14 @@ export const ls: LocalStorage.Utils = {
       localStorage.removeItem(KEYS.ACCESS_TOKEN);
       localStorage.removeItem(KEYS.REFRESH_TOKEN);
     },
+  },
+  user: {
+    get: () => JSON.parse(localStorage.getItem(KEYS.USER) || 'null'),
+    set: (value) => localStorage.setItem(KEYS.USER, JSON.stringify(value)),
+    clear: () => localStorage.removeItem(KEYS.USER),
+  },
+  clearAll: () => {
+    ls.token.clear();
+    ls.user.clear();
   },
 };
