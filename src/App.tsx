@@ -1,30 +1,47 @@
-import reactLogo from '@/assets/imgs/react.svg';
-import viteLogo from '/vite.svg';
+import clsx from 'clsx';
+import { useEffect, useState } from 'react';
+import { RouterProvider } from 'react-router/dom';
+import { createRoutes } from '@/router/route.tsx';
+
+const initApp = async () => {
+  console.log('initialize App');
+  return;
+};
 
 function App() {
-  return (
-    <div className="h-full w-full flex flex-col gap-y-[24px] items-center justify-center">
-      <div className="flex gap-x-[32px]">
-        <a href="https://vite.dev" target="_blank" rel="noopener">
-          <img
-            src={viteLogo}
-            alt="Vite logo"
-            className="w-[56px] h-[56px] animate-"
-          />
-        </a>
-        <a href="https://react.dev" target="_blank" rel="noopener">
-          <img
-            src={reactLogo}
-            alt="React logo"
-            className="w-[56px] h-[56px] animate-bounce"
-          />
-        </a>
+  const [isTimeout, setIsTimeout] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setIsTimeout(true), 80); // Set timeout to 5 seconds
+    return () => clearTimeout(timer); // Cleanup the timer on unmount
+  });
+
+  const [isInitialized, setIsInitialized] = useState(false);
+  useEffect(() => {
+    initApp()
+      .then(() => {
+        setIsInitialized(true);
+        console.log('App is ready');
+      })
+      .catch(() => {
+        console.error('App initialization failed');
+      });
+  }, []);
+
+  if (!isInitialized) {
+    return (
+      <div
+        className={clsx(
+          'flex w-full h-full flex-col gap-y-[8px] items-center justify-center',
+          isTimeout ? 'visible' : 'hidden',
+        )}
+      >
+        <div className="i-line-md:loading-loop text-[36px] fg-secondary" />
+        <span className="text-[14px] fg-secondary">Loading...</span>
       </div>
-      <h1 className="text-red font-bold text-[32px]">
-        Vite + React + Rolldown + Oxc + UnoCSS
-      </h1>
-    </div>
-  );
+    );
+  }
+
+  return <RouterProvider router={createRoutes()} />;
 }
 
 export default App;
