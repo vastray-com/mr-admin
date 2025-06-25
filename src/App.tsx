@@ -1,3 +1,5 @@
+import { App as AntdApp, ConfigProvider } from 'antd';
+import zhCN from 'antd/locale/zh_CN';
 import clsx from 'clsx';
 import { useEffect, useState } from 'react';
 import { RouterProvider } from 'react-router/dom';
@@ -41,7 +43,17 @@ function App() {
     );
   }
 
-  return <RouterProvider router={createRoutes()} />;
+  return (
+    <ConfigProvider locale={zhCN}>
+      <AntdApp
+        message={{ maxCount: 2 }}
+        notification={{ maxCount: 1 }}
+        component={false}
+      >
+        <RouterProvider router={createRoutes()} />
+      </AntdApp>
+    </ConfigProvider>
+  );
 }
 
 export default App;

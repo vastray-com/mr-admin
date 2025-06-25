@@ -1,4 +1,4 @@
-import { Avatar, Breadcrumb, Layout, Menu, Select } from 'antd';
+import { Avatar, Layout, Menu, Select } from 'antd';
 import { type FC, useCallback } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { getMenuStatus, menuItems } from '@/router/privateRoutes.tsx';
@@ -49,8 +49,8 @@ export const PageLayout: FC = () => {
         </div>
       </Layout.Header>
 
-      <Layout>
-        <Layout.Sider width={200} className="bg-white">
+      <Layout className="h-[calc(100%_-_48px)]">
+        <Layout.Sider width={200} className="bg-white h-full">
           <Menu
             mode="inline"
             selectedKeys={getMenuStatus(pathname).selectedKeys}
@@ -62,11 +62,7 @@ export const PageLayout: FC = () => {
         </Layout.Sider>
 
         <Layout>
-          <Breadcrumb
-            items={[{ title: 'Home' }, { title: 'List' }, { title: 'App' }]}
-            style={{ margin: '16px 0' }}
-          />
-          <Layout.Content className="bg-[#F0F2F5] px-[20px] py-[12px]">
+          <Layout.Content className="bg-[#F0F2F5] h-full">
             <Outlet />
           </Layout.Content>
         </Layout>
