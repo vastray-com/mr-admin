@@ -1,10 +1,10 @@
 import { Avatar, Layout, Menu, Select } from 'antd';
 import { type FC, useCallback } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
-import { getMenuStatus, menuItems } from '@/router/privateRoutes.tsx';
-import { DEFAULT_PUBLIC_PATH } from '@/router/route.tsx';
-import { useUserStore } from '@/store/useUserStore.tsx';
-import { ls } from '@/utils/ls.tsx';
+import { getMenuStatus, menuItems } from '@/router/privateRoutes';
+import { DEFAULT_PUBLIC_PATH } from '@/router/route';
+import { useUserStore } from '@/store/useUserStore';
+import { ls } from '@/utils/ls';
 
 export const PageLayout: FC = () => {
   const nav = useNavigate();
@@ -49,7 +49,7 @@ export const PageLayout: FC = () => {
         </div>
       </Layout.Header>
 
-      <Layout className="h-[calc(100%_-_48px)]">
+      <Layout className="h-[calc(100%_-_48px)] w-full">
         <Layout.Sider width={200} className="bg-white h-full">
           <Menu
             mode="inline"
@@ -61,8 +61,8 @@ export const PageLayout: FC = () => {
           />
         </Layout.Sider>
 
-        <Layout>
-          <Layout.Content className="bg-[#F0F2F5] h-full">
+        <Layout className="h-full w-[calc(100%_-_200px)]">
+          <Layout.Content className="bg-[#F0F2F5] h-full w-full">
             <Outlet />
           </Layout.Content>
         </Layout>

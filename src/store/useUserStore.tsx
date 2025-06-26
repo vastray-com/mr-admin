@@ -1,5 +1,5 @@
 import { createWithEqualityFn } from 'zustand/traditional';
-import { ls } from '@/utils/ls.tsx';
+import { ls } from '@/utils/ls';
 
 type State = {
   user: LocalStorage.User | null;

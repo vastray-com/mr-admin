@@ -5,12 +5,12 @@ import {
   type RouteObject,
   redirect,
 } from 'react-router';
-import { PageLayout } from '@/components/PageLayout.tsx';
-import { privateRouteKeys, privateRoutes } from '@/router/privateRoutes.tsx';
-import { ls } from '@/utils/ls.tsx';
+import { PageLayout } from '@/components/PageLayout';
+import { privateRouteKeys, privateRoutes } from '@/router/privateRoutes';
+import { ls } from '@/utils/ls';
 import type { LoaderFunction } from 'react-router-dom';
 
-const LoginPageLazy = lazy(() => import('@/pages/Login/LoginPage.tsx'));
+const LoginPageLazy = lazy(() => import('@/pages/Login/LoginPage'));
 
 export const DEFAULT_PUBLIC_PATH = '/login';
 export const DEFAULT_PRIVATE_PATH =

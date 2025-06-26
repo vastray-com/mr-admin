@@ -1,4 +1,11 @@
-declare namespace MedicalRecordTemplate {
+import type {
+  MedicalTemplateFieldDescType,
+  MedicalTemplateFieldType,
+  MedicalTemplateStatus,
+  MedicalTemplateType,
+} from './enum';
+
+export declare namespace MedicalRecordTemplate {
   type GetListParams = {
     name?: string;
     update_end?: string;
@@ -12,17 +19,41 @@ declare namespace MedicalRecordTemplate {
     // Node ID
     mr_node_id: string;
     // 模版类型
-    mr_type: '住院病历' | '门诊病历';
+    mr_type: MedicalTemplateType;
     // 中文名称
     name_cn: string;
     // 英文名称
     name_en: string;
     // 排序
     sort_index: number;
-    // 状态 0-启用 1-禁用
-    status: 0 | 1;
+    // 状态
+    status: MedicalTemplateStatus;
     // 创建时间
     update_time: string;
   };
   type List = ListItem[];
+
+  type Field = {
+    // 指标定义
+    data_define: string;
+    // 指标名称
+    data_name: string;
+    // 码表 ID，值描述类型为码表时不可为空，指定码表 ID
+    dim_table_id?: number;
+    // 值描述，值描述类型为纯文本或枚举时不可为空
+    field_desc?: string;
+    // 值描述类型
+    field_desc_type: MedicalTemplateFieldDescType;
+    // 字段长度
+    field_len: string;
+    // 字段名
+    field_name: string;
+    // 字段类型
+    field_type: MedicalTemplateFieldType;
+  };
+  type Fields = Field[];
+
+  type Detail = ListItem & { fields: Fields };
+
+  type SaveDetail = Omit<Detail, 'id' | 'mr_node_id' | 'update_time'>;
 }

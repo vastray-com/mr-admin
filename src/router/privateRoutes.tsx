@@ -6,7 +6,13 @@ import type { LoaderFunction } from 'react-router-dom';
 const MedicalRecordTemplateLazy = lazy(
   () =>
     import(
-      '@/pages/TemplateManagement/MedicalRecordTemplate/MedicalRecordTemplatePage.tsx'
+      '@/pages/TemplateManagement/MedicalRecordTemplate/MedicalRecordTemplatePage'
+    ),
+);
+const MedicalRecordTemplateDetailLazy = lazy(
+  () =>
+    import(
+      '@/pages/TemplateManagement/MedicalRecordTemplate/MedicalRecordTemplateDetail/MedicalRecordTemplateDetail'
     ),
 );
 
@@ -15,10 +21,13 @@ type BaseRoute = {
   element: ReactNode;
   label: string;
   icon?: ReactNode;
+  addToMenu?: boolean; // 是否隐藏菜单
   children?: {
     key: string;
     element: ReactNode;
     label: string;
+    addToMenu?: boolean; // 是否隐藏菜单
+    selectedKeys?: string[]; // 选中时的 key
   }[];
   loader?: LoaderFunction;
 }[];
@@ -29,6 +38,7 @@ const privateBaseRoutes: BaseRoute = [
     key: '/template_management',
     element: <Outlet />,
     label: '模版配置',
+    addToMenu: true,
     loader: ({ request }) => {
       const url = new URL(request.url);
       if (url.pathname === '/template_management') {
@@ -42,11 +52,20 @@ const privateBaseRoutes: BaseRoute = [
         key: '/template_management/medical_record_template',
         element: <MedicalRecordTemplateLazy />,
         label: '病历模版',
+        addToMenu: true,
+      },
+      {
+        key: '/template_management/medical_record_template/:id',
+        selectedKeys: ['/template_management/medical_record_template'],
+        element: <MedicalRecordTemplateDetailLazy />,
+        label: '病历模版详情',
+        addToMenu: false,
       },
       {
         key: '/template_management/encode_management',
         element: <div>码表管理列表</div>,
         label: '码表管理',
+        addToMenu: true,
       },
     ],
   },
@@ -101,6 +120,7 @@ const menuPathMap: Record<
 export const menuItems = privateBaseRoutes.reduce<
   Required<MenuProps>['items'][number][]
 >((pre, cur) => {
+  if (!cur.addToMenu) return pre;
   const item = {
     key: cur.key,
     label: cur.label,
@@ -112,7 +132,11 @@ export const menuItems = privateBaseRoutes.reduce<
     item.children.forEach((child) => {
       menuPathMap[child.key] = {
         openKeys: [cur.key],
-        selectedKeys: [child.key],
+        selectedKeys: !child.addToMenu
+          ? child.selectedKeys
+            ? child.selectedKeys
+            : []
+          : [child.key],
       };
     });
   } else {
@@ -122,10 +146,33 @@ export const menuItems = privateBaseRoutes.reduce<
     };
   }
 
-  pre.push(item);
+  // 移除 addToMenu 属性
+  const pushedItem = { ...item };
+  if (pushedItem.children && pushedItem.children.length > 0) {
+    pushedItem.children = pushedItem.children.map((child) => {
+      // biome-ignore lint/correctness/noUnusedVariables: false
+      const { addToMenu, selectedKeys, ...rest } = child;
+      return rest;
+    });
+  }
+  pre.push(pushedItem);
   return pre;
 }, []);
 
 export const getMenuStatus = (path: string) => {
-  return menuPathMap[path] || { openKeys: [], selectedKeys: [] };
+  const target = menuPathMap[path];
+  if (target) return target;
+
+  // 如果 key 中存在 path 参数则匹配任意字符串参数
+  for (const pattern in menuPathMap) {
+    if (!pattern.includes(':')) continue; // 跳过没有参数的路径
+
+    // 将参数替换为正则
+    const regex = new RegExp(`^${pattern.replace(/:[^/]+/g, '[^/]+')}$`);
+    if (regex.test(path)) {
+      return menuPathMap[pattern];
+    }
+  }
+
+  return { openKeys: [], selectedKeys: [] };
 };

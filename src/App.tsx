@@ -3,7 +3,7 @@ import zhCN from 'antd/locale/zh_CN';
 import clsx from 'clsx';
 import { useEffect, useState } from 'react';
 import { RouterProvider } from 'react-router/dom';
-import { createRoutes } from '@/router/route.tsx';
+import { createRoutes } from '@/router/route';
 
 const initApp = async () => {
   console.log('initialize App');

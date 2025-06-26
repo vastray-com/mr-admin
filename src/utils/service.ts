@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ls } from '@/utils/ls.tsx';
+import { ls } from '@/utils/ls';
 
 export const service = axios.create({
   baseURL: import.meta.env.VITE_API_URL,

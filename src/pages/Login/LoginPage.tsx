@@ -1,8 +1,8 @@
 import { Button } from 'antd';
 import { useNavigate } from 'react-router';
-import { DEFAULT_PRIVATE_PATH } from '@/router/route.tsx';
-import { useUserStore } from '@/store/useUserStore.tsx';
-import { ls } from '@/utils/ls.tsx';
+import { DEFAULT_PRIVATE_PATH } from '@/router/route';
+import { useUserStore } from '@/store/useUserStore';
+import { ls } from '@/utils/ls';
 
 const LoginPage = () => {
   const setUser = useUserStore((s) => s.setUser);
