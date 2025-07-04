@@ -3,16 +3,13 @@ import { Outlet, type RouteObject, redirect } from 'react-router';
 import type { MenuProps } from 'antd';
 import type { LoaderFunction } from 'react-router-dom';
 
-const MedicalRecordTemplateLazy = lazy(
-  () =>
-    import(
-      '@/pages/TemplateManagement/MedicalRecordTemplate/MedicalRecordTemplatePage'
-    ),
+const StructRulesLazy = lazy(
+  () => import('@/pages/RulesManagement/StructRules/StructRulesPage'),
 );
-const MedicalRecordTemplateDetailLazy = lazy(
+const StructRuleDetailLazy = lazy(
   () =>
     import(
-      '@/pages/TemplateManagement/MedicalRecordTemplate/MedicalRecordTemplateDetail/MedicalRecordTemplateDetail'
+      '@/pages/RulesManagement/StructRules/StructRuleDetail/StructRuleDetailPage'
     ),
 );
 
@@ -32,37 +29,40 @@ type BaseRoute = {
   loader?: LoaderFunction;
 }[];
 
+// 默认私有路由
+export const DEFAULT_PRIVATE_PATH = '/rules_management/struct_rules';
+
 // 需要鉴权的路由
 const privateBaseRoutes: BaseRoute = [
   {
-    key: '/template_management',
+    key: '/rules_management',
     element: <Outlet />,
-    label: '模版配置',
+    label: '规则配置',
     addToMenu: true,
     loader: ({ request }) => {
       const url = new URL(request.url);
-      if (url.pathname === '/template_management') {
-        return redirect('/template_management/medical_record_template');
+      if (url.pathname === '/rules_management') {
+        return redirect('/rules_management/struct_rules');
       }
       return null;
     },
     icon: <i className="i-icon-park-outline:file-editing-one" />,
     children: [
       {
-        key: '/template_management/medical_record_template',
-        element: <MedicalRecordTemplateLazy />,
-        label: '病历模版',
+        key: DEFAULT_PRIVATE_PATH,
+        element: <StructRulesLazy />,
+        label: '结构化规则',
         addToMenu: true,
       },
       {
-        key: '/template_management/medical_record_template/:id',
-        selectedKeys: ['/template_management/medical_record_template'],
-        element: <MedicalRecordTemplateDetailLazy />,
-        label: '病历模版详情',
+        key: '/rules_management/struct_rules/:id',
+        selectedKeys: ['/rules_management/struct_rules'],
+        element: <StructRuleDetailLazy />,
+        label: '结构化规则详情',
         addToMenu: false,
       },
       {
-        key: '/template_management/encode_management',
+        key: '/rules_management/encode_management',
         element: <div>码表管理列表</div>,
         label: '码表管理',
         addToMenu: true,
@@ -120,6 +120,7 @@ const menuPathMap: Record<
 export const menuItems = privateBaseRoutes.reduce<
   Required<MenuProps>['items'][number][]
 >((pre, cur) => {
+  console.log('cur', cur);
   if (!cur.addToMenu) return pre;
   const item = {
     key: cur.key,
@@ -149,11 +150,14 @@ export const menuItems = privateBaseRoutes.reduce<
   // 移除 addToMenu 属性
   const pushedItem = { ...item };
   if (pushedItem.children && pushedItem.children.length > 0) {
-    pushedItem.children = pushedItem.children.map((child) => {
-      // biome-ignore lint/correctness/noUnusedVariables: false
-      const { addToMenu, selectedKeys, ...rest } = child;
-      return rest;
-    });
+    pushedItem.children = pushedItem.children
+      .map((child) => {
+        if (!child.addToMenu) return null; // 如果不添加到菜单，则直接返回原对象
+        // biome-ignore lint/correctness/noUnusedVariables: false
+        const { addToMenu, selectedKeys, ...rest } = child;
+        return rest;
+      })
+      .filter((child) => !!child); // 过滤掉 null 值
   }
   pre.push(pushedItem);
   return pre;

@@ -6,15 +6,17 @@ import {
   redirect,
 } from 'react-router';
 import { PageLayout } from '@/components/PageLayout';
-import { privateRouteKeys, privateRoutes } from '@/router/privateRoutes';
+import {
+  DEFAULT_PRIVATE_PATH,
+  privateRouteKeys,
+  privateRoutes,
+} from '@/router/privateRoutes';
 import { ls } from '@/utils/ls';
 import type { LoaderFunction } from 'react-router-dom';
 
 const LoginPageLazy = lazy(() => import('@/pages/Login/LoginPage'));
 
 export const DEFAULT_PUBLIC_PATH = '/login';
-export const DEFAULT_PRIVATE_PATH =
-  '/template_management/medical_record_template';
 
 // 公开的路由
 const publicRoutes: RouteObject[] = [

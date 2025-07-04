@@ -29,7 +29,7 @@ export const PageLayout: FC = () => {
               alt=""
               className="h-full aspect-ratio-square"
             />
-            <h1 className="text-white text-[20px] font-bold">伟世AI</h1>
+            <h1 className="text-white text-[20px] font-bold">伟世 AI</h1>
           </div>
           <Select
             className="w-[128px]"

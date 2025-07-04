@@ -3,36 +3,35 @@ import { type FC, useCallback, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import {
-  MedicalTemplateFieldDescType,
-  MedicalTemplateStatus,
-  MedicalTemplateType,
-  medicalTemplateFieldDescTypeOptions,
-  medicalTemplateFieldTypeOptions,
-  medicalTemplateTypeOptions,
+  StructRuleFieldDescType,
+  StructRuleStatus,
+  StructRuleType,
+  structRuleFieldDescTypeOptions,
+  structRuleFieldTypeOptions,
+  structRuleTypeOptions,
 } from '@/typing/enum';
 import { service } from '@/utils/service';
-import type { MedicalRecordTemplate } from '@/typing/medicalRecordTemplate';
+import type { StructRule } from '@/typing/structRules';
 
-const initialDetail: MedicalRecordTemplate.Detail = {
+const initialDetail: StructRule.Detail = {
   comment: '',
   id: 'xxxx',
   mr_node_id: 'yyyy',
-  mr_type: MedicalTemplateType.Outpatient,
+  mr_type: StructRuleType.Outpatient,
   name_cn: '',
   name_en: '',
   sort_index: 0,
-  status: MedicalTemplateStatus.Enabled,
+  status: StructRuleStatus.Enabled,
   update_time: 'zzzz',
   fields: [],
 };
 
-const MedicalRecordTemplateDetailPage: FC = () => {
+const StructRuleDetailPage: FC = () => {
   const { id } = useParams<{ id: string }>();
-  const isNewTemplate = useRef(id === 'NEW');
-  const isInit = useRef(isNewTemplate.current);
+  const isNewRule = useRef(id === 'NEW');
+  const isInit = useRef(isNewRule.current);
 
-  const [detail, setDetail] =
-    useState<MedicalRecordTemplate.Detail>(initialDetail);
+  const [detail, setDetail] = useState<StructRule.Detail>(initialDetail);
   const fetchDetail = useCallback(async (id: string) => {
     const res = await service.get('/314100093', { params: { id } });
     console.log('拉取病历模板详情成功:', res);
@@ -40,13 +39,13 @@ const MedicalRecordTemplateDetailPage: FC = () => {
     isInit.current = true;
   }, []);
 
-  const [form] = Form.useForm<MedicalRecordTemplate.Detail>();
+  const [form] = Form.useForm<StructRule.Detail>();
 
   // 保存
-  const onFinish = useCallback(async (values: MedicalRecordTemplate.Detail) => {
+  const onFinish = useCallback(async (values: StructRule.Detail) => {
     console.log('保存病历模板:', values);
   }, []);
-  if (!isInit.current && !isNewTemplate.current && id) {
+  if (!isInit.current && !isNewRule.current && id) {
     fetchDetail(id);
   }
 
@@ -56,7 +55,7 @@ const MedicalRecordTemplateDetailPage: FC = () => {
   if (!id || !isInit.current) return null;
   return (
     <Form
-      name="medical-record-template-save"
+      name="struct-rules-save"
       onFinish={onFinish}
       initialValues={detail}
       autoComplete="off"
@@ -66,15 +65,11 @@ const MedicalRecordTemplateDetailPage: FC = () => {
       <ContentLayout
         breadcrumb={[
           {
-            title: (
-              <Link to="/template_management/medical_record_template">
-                病历模版
-              </Link>
-            ),
+            title: <Link to="/rules_management/struct_rules">病历模版</Link>,
           },
           { title: '编辑模版' },
         ]}
-        title={isNewTemplate.current ? '新建病历模板' : '编辑病历模板'}
+        title={isNewRule.current ? '新建病历模板' : '编辑病历模板'}
         action={
           <Button htmlType="submit" type="primary">
             保存
@@ -83,7 +78,7 @@ const MedicalRecordTemplateDetailPage: FC = () => {
       >
         <Card className="h-[220px]" title="基本信息">
           <div className="flex items-center gap-x-[24px] mb-[8px]">
-            <Form.Item<MedicalRecordTemplate.Detail>
+            <Form.Item<StructRule.Detail>
               label="规则名称"
               name="name_cn"
               className="w-[36%]"
@@ -95,7 +90,7 @@ const MedicalRecordTemplateDetailPage: FC = () => {
               <Input />
             </Form.Item>
 
-            <Form.Item<MedicalRecordTemplate.Detail>
+            <Form.Item<StructRule.Detail>
               label="英文名称"
               name="name_en"
               className="w-[36%]"
@@ -109,7 +104,7 @@ const MedicalRecordTemplateDetailPage: FC = () => {
           </div>
 
           <div className="flex items-center gap-x-[24px]">
-            <Form.Item<MedicalRecordTemplate.Detail>
+            <Form.Item<StructRule.Detail>
               label="所属分类"
               name="mr_type"
               className="w-[16%]"
@@ -117,21 +112,21 @@ const MedicalRecordTemplateDetailPage: FC = () => {
                 { required: true, message: '请选择所属分类' },
                 {
                   type: 'enum',
-                  enum: medicalTemplateTypeOptions.map((item) => item.value),
+                  enum: structRuleTypeOptions.map((item) => item.value),
                   message: '请选择正确的所属分类',
                 },
               ]}
             >
-              <Select options={medicalTemplateTypeOptions} />
+              <Select options={structRuleTypeOptions} />
             </Form.Item>
-            <Form.Item<MedicalRecordTemplate.Detail>
+            <Form.Item<StructRule.Detail>
               label="排序权重"
               name="sort_index"
               className="w-[16%]"
             >
               <InputNumber precision={0} />
             </Form.Item>
-            <Form.Item<MedicalRecordTemplate.Detail>
+            <Form.Item<StructRule.Detail>
               label="模版备注"
               name="comment"
               className="w-[38%]"
@@ -223,7 +218,7 @@ const MedicalRecordTemplateDetailPage: FC = () => {
                                 { required: true, message: '请选择字段类型' },
                                 {
                                   type: 'enum',
-                                  enum: medicalTemplateFieldTypeOptions.map(
+                                  enum: structRuleFieldTypeOptions.map(
                                     (item) => item.value,
                                   ),
                                   message: '请选择正确的字段类型',
@@ -232,7 +227,7 @@ const MedicalRecordTemplateDetailPage: FC = () => {
                             >
                               <Select
                                 placeholder="请选择字段类型"
-                                options={medicalTemplateFieldTypeOptions}
+                                options={structRuleFieldTypeOptions}
                               />
                             </Form.Item>
                           </td>
@@ -260,7 +255,7 @@ const MedicalRecordTemplateDetailPage: FC = () => {
                                 { required: true, message: '请选择值描述类型' },
                                 {
                                   type: 'enum',
-                                  enum: medicalTemplateFieldDescTypeOptions.map(
+                                  enum: structRuleFieldDescTypeOptions.map(
                                     (item) => item.value,
                                   ),
                                   message: '请选择正确的值描述类型',
@@ -269,7 +264,7 @@ const MedicalRecordTemplateDetailPage: FC = () => {
                             >
                               <Select
                                 placeholder="请选择值描述类型"
-                                options={medicalTemplateFieldDescTypeOptions}
+                                options={structRuleFieldDescTypeOptions}
                               />
                             </Form.Item>
                           </td>
@@ -287,7 +282,7 @@ const MedicalRecordTemplateDetailPage: FC = () => {
                                   'fields',
                                   name,
                                   'field_desc_type',
-                                ]) === MedicalTemplateFieldDescType.DimTable ? (
+                                ]) === StructRuleFieldDescType.DimTable ? (
                                   <Form.Item
                                     {...restField}
                                     name={[name, 'dim_table_id']}
@@ -392,4 +387,4 @@ const MedicalRecordTemplateDetailPage: FC = () => {
   );
 };
 
-export default MedicalRecordTemplateDetailPage;
+export default StructRuleDetailPage;

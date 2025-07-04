@@ -13,22 +13,22 @@ import dayjs, { type Dayjs } from 'dayjs';
 import { type FC, useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
-import { MedicalTemplateStatus } from '@/typing/enum';
+import { StructRuleStatus } from '@/typing/enum';
 import { service } from '@/utils/service';
 import type { FormProps } from 'antd';
-import type { MedicalRecordTemplate } from '@/typing/medicalRecordTemplate';
+import type { StructRule } from '@/typing/structRules';
 
 type FormValues = {
   name?: string;
   range?: [Dayjs, Dayjs] | null;
 };
 
-const MedicalRecordTemplatePage: FC = () => {
+const StructRulesPage: FC = () => {
   const { message, modal } = App.useApp();
   const isFirst = useRef(true);
   const nav = useNavigate();
 
-  const [list, setList] = useState<MedicalRecordTemplate.List>([]);
+  const [list, setList] = useState<StructRule.List>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // 禁止选择超过今天的日期和 6 个月前的日期
@@ -40,19 +40,16 @@ const MedicalRecordTemplatePage: FC = () => {
     };
 
   // 拉取病历模板列表
-  const fetchList = useCallback(
-    async (params: MedicalRecordTemplate.GetListParams) => {
-      const data = await service.get('/312240633', { params });
-      console.log('拉取病历模板列表成功:', data);
-      setList(data.data as MedicalRecordTemplate.List);
-    },
-    [],
-  );
+  const fetchList = useCallback(async (params: StructRule.GetListParams) => {
+    const data = await service.get('/312240633', { params });
+    console.log('拉取病历模板列表成功:', data);
+    setList(data.data as StructRule.List);
+  }, []);
 
   // 查询表单提交处理函数
   const onFinish: FormProps<FormValues>['onFinish'] = async (values) => {
     const { name, range } = values;
-    const params: MedicalRecordTemplate.GetListParams = {};
+    const params: StructRule.GetListParams = {};
     if (name) params.name = name;
     if (range && range.length === 2) {
       params.update_start = range[0].format('YYYY-MM-DD');
@@ -91,7 +88,7 @@ const MedicalRecordTemplatePage: FC = () => {
   const onCreate = useCallback(() => {
     console.log('新建病历模板');
     // 这里可以添加新建逻辑
-    nav('/template_management/medical_record_template/NEW');
+    nav('/rules_management/struct_rules/NEW');
   }, [nav]);
 
   // 导出选中病历模板
@@ -108,18 +105,15 @@ const MedicalRecordTemplatePage: FC = () => {
 
   // 编辑项目
   const onEdit = useCallback(
-    (record: MedicalRecordTemplate.ListItem) => {
+    (record: StructRule.ListItem) => {
       console.log('编辑项目:', record);
-      nav(`/template_management/medical_record_template/${record.id}`);
+      nav(`/rules_management/struct_rules/${record.id}`);
     },
     [nav],
   );
   // 停用/启用/删除项目
   const onAction = useCallback(
-    (
-      record: MedicalRecordTemplate.ListItem,
-      action: 'enable' | 'disable' | 'delete',
-    ) => {
+    (record: StructRule.ListItem, action: 'enable' | 'disable' | 'delete') => {
       console.log(`执行 ${action} 操作:`, record);
     },
     [],
@@ -149,7 +143,7 @@ const MedicalRecordTemplatePage: FC = () => {
         <Card className="h-[80px]">
           <Form
             layout="inline"
-            name="medical-record-template-search"
+            name="struct-rules-search"
             onFinish={onFinish}
             autoComplete="off"
             className="flex items-center justify-between"
@@ -189,7 +183,7 @@ const MedicalRecordTemplatePage: FC = () => {
         </Card>
 
         <Card className="h-[calc(100%_-_80px_-_16px)] mt-[16px]">
-          <Table<MedicalRecordTemplate.ListItem>
+          <Table<StructRule.ListItem>
             dataSource={list}
             rowKey="id"
             rowSelection={{
@@ -213,20 +207,18 @@ const MedicalRecordTemplatePage: FC = () => {
             <Table.Column
               title="状态"
               dataIndex="status"
-              render={(status: MedicalTemplateStatus) => (
+              render={(status: StructRuleStatus) => (
                 <p className="flex items-center">
                   <span
                     className={clsx(
                       'w-[6px] h-[6px] rounded-full inline-block mr-[4px]',
-                      status === MedicalTemplateStatus.Enabled
+                      status === StructRuleStatus.Enabled
                         ? 'bg-[#52C41A]'
                         : 'bg-[#FF4D4F]',
                     )}
                   />
                   <span>
-                    {status === MedicalTemplateStatus.Enabled
-                      ? '启用中'
-                      : '已停用'}
+                    {status === StructRuleStatus.Enabled ? '启用中' : '已停用'}
                   </span>
                 </p>
               )}
@@ -235,7 +227,7 @@ const MedicalRecordTemplatePage: FC = () => {
               title="操作"
               key="action"
               width={180}
-              render={(_, record: MedicalRecordTemplate.ListItem) => (
+              render={(_, record: StructRule.ListItem) => (
                 <div className="flex">
                   <Button
                     size="small"
@@ -250,13 +242,13 @@ const MedicalRecordTemplatePage: FC = () => {
                     onClick={() =>
                       onAction(
                         record,
-                        record.status === MedicalTemplateStatus.Enabled
+                        record.status === StructRuleStatus.Enabled
                           ? 'disable'
                           : 'enable',
                       )
                     }
                   >
-                    {record.status === MedicalTemplateStatus.Enabled
+                    {record.status === StructRuleStatus.Enabled
                       ? '停用'
                       : '启用'}
                   </Button>
@@ -278,4 +270,4 @@ const MedicalRecordTemplatePage: FC = () => {
   );
 };
 
-export default MedicalRecordTemplatePage;
+export default StructRulesPage;

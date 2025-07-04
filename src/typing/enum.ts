@@ -1,33 +1,33 @@
 // 模版类型
-export enum MedicalTemplateType {
+export enum StructRuleType {
   Inpatient = '住院病历',
   Outpatient = '门诊病历',
 }
-export const medicalTemplateTypeOptions = [
-  { value: MedicalTemplateType.Inpatient, label: '住院病历' },
-  { value: MedicalTemplateType.Outpatient, label: '门诊病历' },
+export const structRuleTypeOptions = [
+  { value: StructRuleType.Inpatient, label: '住院病历' },
+  { value: StructRuleType.Outpatient, label: '门诊病历' },
 ];
 
 // 病历模版状态
-export enum MedicalTemplateStatus {
+export enum StructRuleStatus {
   Enabled = 0, // 启用中
   Disabled = 1, // 已停用
 }
 
 // 值描述类型
-export enum MedicalTemplateFieldDescType {
+export enum StructRuleFieldDescType {
   DimTable = 'dim_table',
   Enum = 'enum',
   Plain = 'plain',
 }
-export const medicalTemplateFieldDescTypeOptions = [
-  { value: MedicalTemplateFieldDescType.DimTable, label: '码表' },
-  { value: MedicalTemplateFieldDescType.Enum, label: '枚举型' },
-  { value: MedicalTemplateFieldDescType.Plain, label: '纯文本' },
+export const structRuleFieldDescTypeOptions = [
+  { value: StructRuleFieldDescType.DimTable, label: '码表' },
+  { value: StructRuleFieldDescType.Enum, label: '枚举型' },
+  { value: StructRuleFieldDescType.Plain, label: '纯文本' },
 ];
 
 // 字段类型
-export enum MedicalTemplateFieldType {
+export enum StructRuleFieldType {
   C = 'C',
   Cl = 'CL',
   D = 'D',
@@ -35,11 +35,11 @@ export enum MedicalTemplateFieldType {
   N = 'N',
   Vc = 'VC',
 }
-export const medicalTemplateFieldTypeOptions = [
-  { value: MedicalTemplateFieldType.C, label: '字符型' },
-  { value: MedicalTemplateFieldType.Cl, label: '字符长型' },
-  { value: MedicalTemplateFieldType.D, label: '日期型' },
-  { value: MedicalTemplateFieldType.Dt, label: '日期时间型' },
-  { value: MedicalTemplateFieldType.N, label: '数值型' },
-  { value: MedicalTemplateFieldType.Vc, label: '变长字符型' },
+export const structRuleFieldTypeOptions = [
+  { value: StructRuleFieldType.C, label: '字符型' },
+  { value: StructRuleFieldType.Cl, label: '字符长型' },
+  { value: StructRuleFieldType.D, label: '日期型' },
+  { value: StructRuleFieldType.Dt, label: '日期时间型' },
+  { value: StructRuleFieldType.N, label: '数值型' },
+  { value: StructRuleFieldType.Vc, label: '变长字符型' },
 ];
