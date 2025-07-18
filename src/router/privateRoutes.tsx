@@ -12,6 +12,18 @@ const StructRuleDetailLazy = lazy(
       '@/pages/RulesManagement/StructRules/StructRuleDetail/StructRuleDetailPage'
     ),
 );
+const TaskListLazy = lazy(
+  () => import('@/pages/TasksManagement/TaskList/TaskListPage'),
+);
+const TaskDetailLazy = lazy(
+  () => import('@/pages/TasksManagement/TaskList/TaskDetail/TaskDetailPage'),
+);
+const InstanceDetailLazy = lazy(
+  () =>
+    import(
+      '@/pages/TasksManagement/TaskList/InstanceDetail/InstanceDetailPage'
+    ),
+);
 
 type BaseRoute = {
   key: string;
@@ -30,10 +42,46 @@ type BaseRoute = {
 }[];
 
 // 默认私有路由
-export const DEFAULT_PRIVATE_PATH = '/rules_management/struct_rules';
+export const DEFAULT_PRIVATE_PATH = '/tasks_management/tasks';
 
 // 需要鉴权的路由
 const privateBaseRoutes: BaseRoute = [
+  {
+    key: '/tasks_management',
+    element: <Outlet />,
+    label: '任务管理',
+    addToMenu: true,
+    loader: ({ request }) => {
+      const url = new URL(request.url);
+      if (url.pathname === '/tasks_management') {
+        return redirect('/tasks_management/task_list');
+      }
+      return null;
+    },
+    icon: <i className="i-icon-park-outline:command" />,
+    children: [
+      {
+        key: '/tasks_management/tasks',
+        element: <TaskListLazy />,
+        label: '任务列表',
+        addToMenu: true,
+      },
+      {
+        key: '/tasks_management/tasks/detail/:taskId',
+        element: <TaskDetailLazy />,
+        label: '任务详情',
+        addToMenu: false,
+        selectedKeys: ['/tasks_management/tasks'],
+      },
+      {
+        key: '/tasks_management/tasks/detail/:taskId/:instanceId',
+        element: <InstanceDetailLazy />,
+        label: '执行结果',
+        addToMenu: false,
+        selectedKeys: ['/tasks_management/tasks'],
+      },
+    ],
+  },
   {
     key: '/rules_management',
     element: <Outlet />,
@@ -49,7 +97,7 @@ const privateBaseRoutes: BaseRoute = [
     icon: <i className="i-icon-park-outline:file-editing-one" />,
     children: [
       {
-        key: DEFAULT_PRIVATE_PATH,
+        key: '/rules_management/struct_rules',
         element: <StructRulesLazy />,
         label: '结构化规则',
         addToMenu: true,
@@ -113,6 +161,9 @@ export const privateRoutes = privateBaseRoutes.reduce<RouteObject[]>(
 );
 
 // menu 列表
+const allFirstLevelKeys = privateBaseRoutes
+  .filter((r) => r.addToMenu)
+  .map((r) => r.key);
 const menuPathMap: Record<
   string,
   { openKeys: string[]; selectedKeys: string[] }
@@ -120,7 +171,7 @@ const menuPathMap: Record<
 export const menuItems = privateBaseRoutes.reduce<
   Required<MenuProps>['items'][number][]
 >((pre, cur) => {
-  console.log('cur', cur);
+  // console.log('cur', cur);
   if (!cur.addToMenu) return pre;
   const item = {
     key: cur.key,
@@ -132,7 +183,8 @@ export const menuItems = privateBaseRoutes.reduce<
   if (item.children) {
     item.children.forEach((child) => {
       menuPathMap[child.key] = {
-        openKeys: [cur.key],
+        // 二级菜单展开对应一级菜单
+        openKeys: allFirstLevelKeys,
         selectedKeys: !child.addToMenu
           ? child.selectedKeys
             ? child.selectedKeys
@@ -142,7 +194,8 @@ export const menuItems = privateBaseRoutes.reduce<
     });
   } else {
     menuPathMap[cur.key] = {
-      openKeys: [],
+      // 一级菜单
+      openKeys: allFirstLevelKeys,
       selectedKeys: [cur.key],
     };
   }

@@ -55,7 +55,10 @@ export const PageLayout: FC = () => {
             mode="inline"
             selectedKeys={getMenuStatus(pathname).selectedKeys}
             openKeys={getMenuStatus(pathname).openKeys}
-            onClick={(e) => nav(e.key)}
+            onClick={(e) => {
+              console.log(e);
+              nav(e.key);
+            }}
             style={{ height: '100%', borderRight: 0 }}
             items={menuItems}
           />
