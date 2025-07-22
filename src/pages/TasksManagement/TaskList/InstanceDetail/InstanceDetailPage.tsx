@@ -1,6 +1,6 @@
-import { Button, Card, Descriptions, Drawer, Table } from 'antd';
+import { Button, Card, Descriptions, Drawer, Pagination, Table } from 'antd';
 import dayjs from 'dayjs';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 import { ScrollableCard } from '@/components/Card';
 import { ContentLayout } from '@/components/ContentLayout';
@@ -23,6 +23,16 @@ const InstanceDetailPage = () => {
   const isInitial = useRef(false);
   const [data, setData] = useState<Task.Instance | null>(null);
   const [resultList, setResultList] = useState<Task.ResultList>([]);
+  const [pagination, setPagination] = useState<{ cur: number; size: number }>({
+    cur: 1,
+    size: 10,
+  });
+  const currentList = useMemo(() => {
+    return resultList.slice(
+      (pagination.cur - 1) * pagination.size,
+      pagination.cur * pagination.size,
+    );
+  }, [pagination, resultList]);
 
   const { taskApi } = useApi();
 
@@ -42,7 +52,9 @@ const InstanceDetailPage = () => {
           APIRes<Task.ResultList>,
         ];
         if (detailRes.code === 200) setData(detailRes.data);
-        if (resultRes.code === 200) setResultList(resultRes.data);
+        if (resultRes.code === 200) {
+          setResultList(resultRes.data);
+        }
       })
       .catch((e) => {
         console.error('获取实例详情失败：', e);
@@ -116,9 +128,18 @@ const InstanceDetailPage = () => {
         }
         className="mt-[16px]"
       >
-        <Table<Task.ResultListItem> dataSource={resultList} rowKey="id">
+        <Table<Task.ResultListItem>
+          dataSource={currentList}
+          rowKey="id"
+          pagination={false}
+        >
           <Table.Column title="记录 ID" dataIndex="id" />
           <Table.Column title="输入数据" dataIndex="input_summary" />
+          <Table.Column
+            title="生成时间"
+            dataIndex="create_time"
+            render={(time: string) => dayjs(time).format('YYYY-MM-DD HH:mm:ss')}
+          />
           <Table.Column
             title="操作"
             key="action"
@@ -141,6 +162,17 @@ const InstanceDetailPage = () => {
             )}
           />
         </Table>
+
+        <div className="mt-[20px] flex justify-end">
+          <Pagination
+            showTotal={(total) => `共 ${total} 条`}
+            showSizeChanger
+            current={pagination.cur}
+            pageSize={pagination.size}
+            onChange={(cur, size) => setPagination({ cur, size })}
+            total={resultList.length}
+          />
+        </div>
       </Card>
 
       <Drawer

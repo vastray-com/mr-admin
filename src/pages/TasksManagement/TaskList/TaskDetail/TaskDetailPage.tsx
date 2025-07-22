@@ -1,7 +1,7 @@
-import { Button, Card, Descriptions, Divider, Table } from 'antd';
+import { Button, Card, Descriptions, Divider, Pagination, Table } from 'antd';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
@@ -19,12 +19,31 @@ export const taskInstanceStatusDisplay: Record<
 
 const TaskDetailPage = () => {
   const { taskId } = useParams();
+  const { taskApi } = useApi();
 
   const isInitial = useRef(false);
   const [data, setData] = useState<Task.Item | null>(null);
-  const [instanceList, setInstanceList] = useState<Task.InstanceList>([]);
 
-  const { taskApi } = useApi();
+  const [instanceList, setInstanceList] = useState<Task.InstanceList>([]);
+  const [listTotal, setListTotal] = useState(0);
+  const [pagination, setPagination] = useState<{ cur: number; size: number }>({
+    cur: 1,
+    size: 10,
+  });
+  const onPaginationChange = useCallback(
+    async (cur: number, size: number) => {
+      if (!taskId) return;
+      const result = await taskApi.getTaskInstanceList({
+        task_id: Number(taskId),
+        page_num: cur,
+        page_size: size,
+      });
+      if (result.code === 200) setInstanceList(result.data.data);
+      setListTotal(result.data.total);
+      setPagination({ cur, size });
+    },
+    [taskId, taskApi.getTaskInstanceList],
+  );
 
   if (!taskId) {
     return null;
@@ -35,8 +54,8 @@ const TaskDetailPage = () => {
       taskApi.getTaskDetail({ task_id: Number(taskId) }),
       taskApi.getTaskInstanceList({
         task_id: Number(taskId),
-        page_num: 1,
-        page_size: 200,
+        page_num: pagination.cur,
+        page_size: pagination.size,
       }),
     ];
     Promise.all(promiseList)
@@ -46,7 +65,10 @@ const TaskDetailPage = () => {
           APIRes<PaginationData<Task.Instance>>,
         ];
         if (detailRes.code === 200) setData(detailRes.data);
-        if (instancesRes.code === 200) setInstanceList(instancesRes.data.data);
+        if (instancesRes.code === 200) {
+          setListTotal(instancesRes.data.total);
+          setInstanceList(instancesRes.data.data);
+        }
       })
       .catch((e) => {
         console.error('获取任务详情失败：', e);
@@ -83,7 +105,11 @@ const TaskDetailPage = () => {
       </Card>
 
       <Card title="执行记录" className="mt-[16px]">
-        <Table<Task.Instance> dataSource={instanceList} rowKey="id">
+        <Table<Task.Instance>
+          dataSource={instanceList}
+          rowKey="id"
+          pagination={false}
+        >
           <Table.Column title="记录 ID" dataIndex="id" />
           <Table.Column
             title="运行状态"
@@ -155,6 +181,17 @@ const TaskDetailPage = () => {
             )}
           />
         </Table>
+
+        <div className="mt-[20px] flex justify-end">
+          <Pagination
+            showTotal={(total) => `共 ${total} 条`}
+            showSizeChanger
+            current={pagination.cur}
+            pageSize={pagination.size}
+            onChange={onPaginationChange}
+            total={listTotal}
+          />
+        </div>
       </Card>
     </ContentLayout>
   );

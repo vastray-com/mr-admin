@@ -65,6 +65,7 @@ declare namespace Task {
     date_time_end: string;
     create_time: string;
     update_time: string;
+    input_summary: string;
   };
   type ResultList = ResultListItem[];
   type ResultDetail = {
