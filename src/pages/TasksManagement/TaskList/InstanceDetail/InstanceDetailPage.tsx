@@ -1,9 +1,12 @@
 import { Button, Card, Descriptions, Drawer, Table } from 'antd';
+import dayjs from 'dayjs';
 import { useRef, useState } from 'react';
 import { useParams } from 'react-router';
+import { ScrollableCard } from '@/components/Card';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { taskInstanceStatusDisplay } from '@/pages/TasksManagement/TaskList/TaskDetail/TaskDetailPage';
+import { formatCountToString } from '@/utils/helper';
 
 const InstanceDetailPage = () => {
   const { taskId, instanceId } = useParams();
@@ -73,10 +76,31 @@ const InstanceDetailPage = () => {
               label: '运行状态',
               children: taskInstanceStatusDisplay[data.status][1],
             },
-            { key: '3', label: '开始执行时间', children: data.task_start_time },
+            {
+              key: '3',
+              label: '开始执行时间',
+              children: dayjs(data.task_start_time).format(
+                'YYYY-MM-DD HH:mm:ss',
+              ),
+            },
             { key: '4', label: '执行时长', children: data.task_duration },
-            { key: '5', label: '总量', children: data.task_duration },
-            { key: '6', label: '任务结果', children: data.task_duration },
+            {
+              key: '5',
+              label: '总量',
+              children: formatCountToString(data.mr_total),
+            },
+            {
+              key: '6',
+              label: '任务结果',
+              children: (
+                <p>
+                  <span>{`已执行${formatCountToString(data.mr_finish + data.mr_fail)}`}</span>
+                  <span>{`，成功 ${formatCountToString(data.mr_finish)}`}</span>
+                  <span>{`，失败 `}</span>
+                  <span className="text-red">{`${formatCountToString(data.mr_fail)}`}</span>
+                </p>
+              ),
+            },
           ]}
         />
       </Card>
@@ -127,20 +151,19 @@ const InstanceDetailPage = () => {
         onClose={() => setDrawer({ open: false, data: null })}
       >
         <div className="flex items-center gap-x-[16px] h-full">
-          <Card title="输入数据" className="w-full h-full">
-            <div className="overflow-auto pos-relative">
+          <ScrollableCard title="输入数据">
+            <p className=" whitespace-pre-wrap">
               {drawer.data?.input || '暂无输入数据'}
-            </div>
-          </Card>
-          <Card title="生成数据" className="w-full h-full">
-            <p className="h-full overflow-auto whitespace-pre-wrap">
-              {JSON.stringify(
-                JSON.parse(drawer.data?.output ?? '{}'),
-                null,
-                4,
-              ) || '暂无生成数据'}
             </p>
-          </Card>
+          </ScrollableCard>
+
+          <ScrollableCard title="生成数据">
+            <p className="whitespace-pre-wrap">
+              {drawer.data?.output
+                ? JSON.stringify(JSON.parse(drawer.data?.output ?? ''), null, 4)
+                : '暂无生成数据'}
+            </p>
+          </ScrollableCard>
         </div>
       </Drawer>
     </ContentLayout>

@@ -4,11 +4,7 @@ import dayjs from 'dayjs';
 import { useRef, useState } from 'react';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
-
-const typeMap: Record<Task.Item['task_type'], string> = {
-  0: '单次任务',
-  1: '循环任务',
-};
+import { TaskType } from '@/typing/enum';
 
 const statusDisplay: Record<Task.Item['status'], [string, string]> = {
   0: ['#D9D9D9', '已停用'],
@@ -46,7 +42,7 @@ const TaskListPage = () => {
           <Table.Column
             title="任务类型"
             dataIndex="task_type"
-            render={(type: Task.Item['task_type']) => typeMap[type]}
+            render={(type: Task.Item['task_type']) => TaskType[type]}
           />
           <Table.Column title="结构化规则" dataIndex="mr_tpl_id" />
           <Table.Column
@@ -54,7 +50,11 @@ const TaskListPage = () => {
             dataIndex="create_time"
             render={(time) => dayjs(time).format('YYYY-MM-DD HH:mm:ss')}
           />
-          <Table.Column title="执行任务数" dataIndex="execute_count" />
+          <Table.Column
+            title="执行任务数"
+            dataIndex="execute_count"
+            render={(count: number) => count ?? '-'}
+          />
           <Table.Column
             title="状态"
             dataIndex="status"

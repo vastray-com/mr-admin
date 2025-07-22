@@ -12,7 +12,8 @@ export const formatSecondsToTime = (seconds: number): string => {
   return `${hourString} ${minuteString} ${secondString}`.trim() || '0秒';
 };
 
-export const formatCountToString = (count: number): string => {
+export const formatCountToString = (count?: number): string => {
+  if (count === undefined || count === null) return '-';
   const r = count.toString().split('').reverse();
   const formatted = r.reduce((acc, digit, index) => {
     return (

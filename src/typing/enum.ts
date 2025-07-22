@@ -3,6 +3,7 @@ export enum StructRuleType {
   Inpatient = '住院病历',
   Outpatient = '门诊病历',
 }
+
 export const structRuleTypeOptions = [
   { value: StructRuleType.Inpatient, label: '住院病历' },
   { value: StructRuleType.Outpatient, label: '门诊病历' },
@@ -20,6 +21,7 @@ export enum StructRuleFieldDescType {
   Enum = 'enum',
   Plain = 'plain',
 }
+
 export const structRuleFieldDescTypeOptions = [
   { value: StructRuleFieldDescType.DimTable, label: '码表' },
   { value: StructRuleFieldDescType.Enum, label: '枚举型' },
@@ -35,6 +37,7 @@ export enum StructRuleFieldType {
   N = 'N',
   Vc = 'VC',
 }
+
 export const structRuleFieldTypeOptions = [
   { value: StructRuleFieldType.C, label: '字符型' },
   { value: StructRuleFieldType.Cl, label: '字符长型' },
@@ -43,3 +46,9 @@ export const structRuleFieldTypeOptions = [
   { value: StructRuleFieldType.N, label: '数值型' },
   { value: StructRuleFieldType.Vc, label: '变长字符型' },
 ];
+
+// 任务管理
+export const TaskType: Record<Task.Item['task_type'], string> = {
+  0: '单次任务',
+  1: '循环任务',
+};

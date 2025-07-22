@@ -24,6 +24,8 @@ declare namespace Task {
     interval: number;
     // 并发数
     concurrency: number;
+    // 执行次数
+    execute_count: number;
     create_time: string;
     update_time: string;
   };
@@ -42,6 +44,7 @@ declare namespace Task {
     status: 0 | 1 | 2;
     task_start_time: string;
     task_duration: number;
+    mr_total: number;
     mr_finish: number;
     mr_fail: number;
     create_time: string;

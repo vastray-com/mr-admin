@@ -5,6 +5,7 @@ import { useRef, useState } from 'react';
 import { useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
+import { TaskType } from '@/typing/enum';
 import { formatCountToString, formatSecondsToTime } from '@/utils/helper';
 
 export const taskInstanceStatusDisplay: Record<
@@ -69,9 +70,13 @@ const TaskDetailPage = () => {
         <Descriptions
           column={2}
           items={[
-            { key: '1', label: '任务类型', children: data.task_type },
+            { key: '1', label: '任务类型', children: TaskType[data.task_type] },
             { key: '2', label: '结构化规则', children: data.mr_tpl_id },
-            { key: '3', label: '输入源', children: data.category_list },
+            {
+              key: '3',
+              label: '输入源',
+              children: JSON.parse(data.category_list).join('，'),
+            },
             { key: '4', label: '执行时间', children: data.cron },
           ]}
         />
@@ -107,8 +112,8 @@ const TaskDetailPage = () => {
           />
           <Table.Column
             title="总文书量"
-            dataIndex="mr_finish"
-            render={(count: number) => formatCountToString(count)}
+            dataIndex="mr_total"
+            render={(total: number) => formatCountToString(total)}
           />
           <Table.Column
             title="任务结果（已执行/成功/失败）"
