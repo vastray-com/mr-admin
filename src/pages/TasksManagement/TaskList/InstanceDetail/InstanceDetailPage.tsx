@@ -33,7 +33,7 @@ const InstanceDetailPage = () => {
   if (!isInitial.current) {
     const promiseList = [
       taskApi.getTaskInstanceDetail(Number(instanceId)),
-      taskApi.getTaskInstanceResultList(Number(taskId)),
+      taskApi.getTaskInstanceResultList(Number(instanceId)),
     ];
     Promise.all(promiseList)
       .then((result) => {
