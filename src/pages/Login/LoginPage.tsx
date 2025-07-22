@@ -1,6 +1,6 @@
 import { Button } from 'antd';
 import { useNavigate } from 'react-router';
-import { DEFAULT_PRIVATE_PATH } from '@/router/route';
+import { DEFAULT_PRIVATE_PATH } from '@/router/privateRoutes';
 import { useUserStore } from '@/store/useUserStore';
 import { ls } from '@/utils/ls';
 
