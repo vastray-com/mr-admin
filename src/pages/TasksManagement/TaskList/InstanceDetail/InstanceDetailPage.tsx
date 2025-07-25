@@ -189,12 +189,22 @@ const InstanceDetailPage = () => {
             </p>
           </ScrollableCard>
 
-          <ScrollableCard title="生成数据">
-            <p className="whitespace-pre-wrap">
-              {drawer.data?.output
-                ? JSON.stringify(JSON.parse(drawer.data?.output ?? ''), null, 4)
-                : '暂无生成数据'}
-            </p>
+          <ScrollableCard title="提取结果">
+            <Table
+              pagination={false}
+              dataSource={JSON.parse(drawer.data?.output ?? '[]')}
+              columns={[
+                {
+                  title: '数据项',
+                  dataIndex: '数据项',
+                  width: '35%',
+                },
+                {
+                  title: '数据值',
+                  dataIndex: '数据值',
+                },
+              ]}
+            />
           </ScrollableCard>
         </div>
       </Drawer>

@@ -60,7 +60,8 @@ declare namespace Task {
     op_em_no: string;
     reg_date: string;
     visit_no: string;
-    is_execute: string;
+    // 0: 未执行, 1: 已执行, 2: 执行失败
+    is_execute: 0 | 1 | 2;
     date_time_start: string;
     date_time_end: string;
     create_time: string;
