@@ -12,6 +12,12 @@ const StructRuleDetailLazy = lazy(
       '@/pages/RulesManagement/StructRules/StructRuleDetail/StructRuleDetailPage'
     ),
 );
+const EncodeLazy = lazy(
+  () => import('@/pages/RulesManagement/Encode/EncodePage'),
+);
+const EncodeDetailLazy = lazy(
+  () => import('@/pages/RulesManagement/Encode/EncodeDetail/EncodeDetailPage'),
+);
 const TaskListLazy = lazy(
   () => import('@/pages/TasksManagement/TaskList/TaskListPage'),
 );
@@ -110,10 +116,17 @@ const privateBaseRoutes: BaseRoute = [
         addToMenu: false,
       },
       {
-        key: '/rules_management/encode_management',
-        element: <div>码表管理列表</div>,
+        key: '/rules_management/encode',
+        element: <EncodeLazy />,
         label: '码表管理',
         addToMenu: true,
+      },
+      {
+        key: '/rules_management/encode/:id',
+        selectedKeys: ['/rules_management/encode'],
+        element: <EncodeDetailLazy />,
+        label: '码表详情',
+        addToMenu: false,
       },
     ],
   },

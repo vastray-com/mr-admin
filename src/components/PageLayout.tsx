@@ -56,7 +56,7 @@ export const PageLayout: FC = () => {
             selectedKeys={getMenuStatus(pathname).selectedKeys}
             openKeys={getMenuStatus(pathname).openKeys}
             onClick={(e) => {
-              console.log(e);
+              // console.log(e);
               nav(e.key);
             }}
             style={{ height: '100%', borderRight: 0 }}

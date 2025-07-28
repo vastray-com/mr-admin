@@ -36,7 +36,22 @@ export const useApi = () => {
     [],
   );
 
+  const encode = useMemo(
+    () => ({
+      getEncodeList: (params: Encode.ListParams) =>
+        service.get('/admin/encode/list', { params }) as Promise<
+          APIRes<PaginationData<Encode.Item>>
+        >,
+      getEncodeDetail: (params: Encode.DetailParams) =>
+        service.get('/admin/encode/detail', { params }) as Promise<
+          APIRes<Encode.Detail>
+        >,
+    }),
+    [],
+  );
+
   return {
     taskApi: task,
+    encodeApi: encode,
   };
 };
