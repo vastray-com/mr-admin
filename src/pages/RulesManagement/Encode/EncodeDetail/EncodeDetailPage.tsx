@@ -44,17 +44,25 @@ const EncodeDetailPage: FC = () => {
   const [form] = Form.useForm<Encode.FormDetail>();
 
   // 保存
-  const onFinish = useCallback(async (values: Encode.FormDetail) => {
-    const submitData: Encode.Detail = {
-      ...values,
-      value: JSON.parse(values.value),
-    };
-    if (isNewEncode.current) {
-      console.log('新建码表:', submitData);
-    } else {
-      console.log('更新码表:', submitData);
-    }
-  }, []);
+  const onFinish = useCallback(
+    async (detail: Encode.FormDetail, values: Encode.FormDetail) => {
+      const submitData: Encode.Detail = {
+        ...detail,
+        ...values,
+        value: JSON.parse(values.value),
+      };
+      if (isNewEncode.current) {
+        console.log('新建码表:', submitData);
+        const res = await encodeApi.createEncode(submitData);
+        console.log('新建码表成功:', res);
+      } else {
+        console.log('更新码表:', submitData);
+        const res = await encodeApi.updateEncode(submitData);
+        console.log('更新码表成功:', res);
+      }
+    },
+    [encodeApi],
+  );
   if (!isInit.current && !isNewEncode.current && id) {
     fetchDetail(id);
   }
@@ -63,7 +71,7 @@ const EncodeDetailPage: FC = () => {
   return (
     <Form
       name="encode-save"
-      onFinish={onFinish}
+      onFinish={(v) => onFinish(detail, v)}
       initialValues={detail}
       autoComplete="off"
       className="w-full h-full"

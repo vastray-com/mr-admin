@@ -46,6 +46,12 @@ export const useApi = () => {
         service.get('/admin/encode/detail', { params }) as Promise<
           APIRes<Encode.Detail>
         >,
+      createEncode: (params: Encode.Detail) =>
+        service.post('/admin/encode/create', params) as Promise<APIRes<number>>,
+      updateEncode: (params: Encode.Detail) =>
+        service.post('/admin/encode/update', params) as Promise<APIRes<number>>,
+      actionEncode: (params: Encode.ActionParams) =>
+        service.post('/admin/encode/update', params) as Promise<APIRes<null>>,
     }),
     [],
   );

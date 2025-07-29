@@ -11,6 +11,15 @@ declare namespace Encode {
     id: number;
   };
 
+  // 操作码表的参数
+  type ActionParams = {
+    id: number;
+    // 0: 默认 1: 删除
+    is_deleted?: 0 | 1;
+    // 0: 停用, 1: 启用
+    status?: Item['status'];
+  };
+
   // 码表列表项
   type Item = {
     id: number;

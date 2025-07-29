@@ -115,10 +115,37 @@ const EncodePage: FC = () => {
   );
   // 停用/启用/删除项目
   const onAction = useCallback(
-    (record: Encode.Item, action: 'enable' | 'disable' | 'delete') => {
+    async (record: Encode.Item, action: 'enable' | 'disable' | 'delete') => {
       console.log(`执行 ${action} 操作:`, record);
+      if (action === 'delete') {
+        modal.confirm({
+          title: '确认删除',
+          content: `是否确认删除码表 ${record.name_cn}？`,
+          onOk: async () => {
+            await encodeApi.actionEncode({ id: record.id, is_deleted: 1 });
+            message.success(`删除码表 ${record.name_cn} 成功`);
+            await fetchList({ page_num: 1, page_size: 100 });
+          },
+        });
+        return;
+      }
+
+      // 启用或停用操作
+      const params: Encode.ActionParams = { id: record.id };
+      switch (action) {
+        case 'enable':
+          params.status = 1;
+          break;
+        case 'disable':
+          params.status = 0;
+          break;
+      }
+      await encodeApi.actionEncode(params);
+      message.success(`操作码表 ${record.name_cn} 成功`);
+      // 刷新列表
+      await fetchList({ page_num: 1, page_size: 100 });
     },
-    [],
+    [encodeApi.actionEncode, message.success, modal.confirm, fetchList],
   );
 
   // 如果是第一次加载，返回 null，避免重复渲染
