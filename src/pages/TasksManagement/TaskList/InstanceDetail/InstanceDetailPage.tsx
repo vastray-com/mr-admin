@@ -140,6 +140,7 @@ const InstanceDetailPage = () => {
           pagination={false}
         >
           <Table.Column title="记录 ID" dataIndex="id" />
+          <Table.Column title="病历标识" dataIndex="op_em_no" />
           <Table.Column title="输入数据" dataIndex="input_summary" />
           <Table.Column
             title="生成时间"
