@@ -2,7 +2,7 @@ import { Button, Card, Descriptions, Divider, Pagination, Table } from 'antd';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
 import { useCallback, useRef, useState } from 'react';
-import { useParams } from 'react-router';
+import { Link, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { TaskType } from '@/typing/enum';
@@ -86,7 +86,10 @@ const TaskDetailPage = () => {
   return (
     <ContentLayout
       title="任务详情"
-      breadcrumb={[{ title: '任务列表' }, { title: '任务详情' }]}
+      breadcrumb={[
+        { title: <Link to="/tasks_management/tasks">任务列表</Link> },
+        { title: '任务详情' },
+      ]}
     >
       <Card title="基本信息">
         <Descriptions

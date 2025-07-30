@@ -1,7 +1,7 @@
 import { Button, Card, Descriptions, Drawer, Pagination, Table } from 'antd';
 import dayjs from 'dayjs';
 import { useMemo, useRef, useState } from 'react';
-import { useParams } from 'react-router';
+import { Link, useParams } from 'react-router';
 import { ScrollableCard } from '@/components/Card';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
@@ -73,8 +73,14 @@ const InstanceDetailPage = () => {
     <ContentLayout
       title="执行结果"
       breadcrumb={[
-        { title: '任务列表' },
-        { title: '任务详情' },
+        { title: <Link to="/tasks_management/tasks">任务列表</Link> },
+        {
+          title: (
+            <Link to={`/tasks_management/tasks/detail/${taskId}`}>
+              任务详情
+            </Link>
+          ),
+        },
         { title: '执行结果' },
       ]}
     >
@@ -193,6 +199,7 @@ const InstanceDetailPage = () => {
             <Table
               pagination={false}
               dataSource={JSON.parse(drawer.data?.output ?? '[]')}
+              rowKey="数据项"
               columns={[
                 {
                   title: '数据项',
