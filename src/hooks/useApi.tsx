@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { service } from '@/utils/service';
+import type { StructRule } from '@/typing/structRules';
 
 export const useApi = () => {
   const task = useMemo(
@@ -56,8 +57,33 @@ export const useApi = () => {
     [],
   );
 
+  const rule = useMemo(
+    () => ({
+      getRuleList: (params: StructRule.GetListParams) =>
+        service.get('/admin/structured_rule/list', { params }) as Promise<
+          APIRes<PaginationData<StructRule.Item>>
+        >,
+      getRuleDetail: (params: StructRule.DetailParams) =>
+        service.get('/admin/structured_rule/detail', { params }) as Promise<
+          APIRes<StructRule.Detail>
+        >,
+      createRule: (params: StructRule.Detail) =>
+        service.post('/admin/structured_rule/create', params) as Promise<
+          APIRes<number>
+        >,
+      updateRule: (params: StructRule.Detail) =>
+        service.post('/admin/structured_rule/update', params) as Promise<
+          APIRes<number>
+        >,
+      actionRule: (params: Encode.ActionParams) =>
+        service.post('/admin/encode/update', params) as Promise<APIRes<null>>,
+    }),
+    [],
+  );
+
   return {
     taskApi: task,
     encodeApi: encode,
+    ruleApi: rule,
   };
 };

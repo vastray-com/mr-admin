@@ -13,8 +13,8 @@ import dayjs, { type Dayjs } from 'dayjs';
 import { type FC, useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
+import { useApi } from '@/hooks/useApi';
 import { StructRuleStatus } from '@/typing/enum';
-import { service } from '@/utils/service';
 import type { FormProps } from 'antd';
 import type { StructRule } from '@/typing/structRules';
 
@@ -24,6 +24,7 @@ type FormValues = {
 };
 
 const StructRulesPage: FC = () => {
+  const { ruleApi } = useApi();
   const { message, modal } = App.useApp();
   const isFirst = useRef(true);
   const nav = useNavigate();
@@ -40,16 +41,19 @@ const StructRulesPage: FC = () => {
     };
 
   // 拉取病历模板列表
-  const fetchList = useCallback(async (params: StructRule.GetListParams) => {
-    const data = await service.get('/312240633', { params });
-    console.log('拉取病历模板列表成功:', data);
-    setList(data.data as StructRule.List);
-  }, []);
+  const fetchList = useCallback(
+    async (params: StructRule.GetListParams) => {
+      const data = await ruleApi.getRuleList(params);
+      console.log('拉取病历模板列表成功:', data);
+      setList(data.data.data);
+    },
+    [ruleApi],
+  );
 
   // 查询表单提交处理函数
   const onFinish: FormProps<FormValues>['onFinish'] = async (values) => {
     const { name, range } = values;
-    const params: StructRule.GetListParams = {};
+    const params: StructRule.GetListParams = { page_size: 100, page_num: 1 };
     if (name) params.name = name;
     if (range && range.length === 2) {
       params.update_start = range[0].format('YYYY-MM-DD');
@@ -105,7 +109,7 @@ const StructRulesPage: FC = () => {
 
   // 编辑项目
   const onEdit = useCallback(
-    (record: StructRule.ListItem) => {
+    (record: StructRule.Item) => {
       console.log('编辑项目:', record);
       nav(`/rules_management/struct_rules/${record.id}`);
     },
@@ -113,7 +117,7 @@ const StructRulesPage: FC = () => {
   );
   // 停用/启用/删除项目
   const onAction = useCallback(
-    (record: StructRule.ListItem, action: 'enable' | 'disable' | 'delete') => {
+    (record: StructRule.Item, action: 'enable' | 'disable' | 'delete') => {
       console.log(`执行 ${action} 操作:`, record);
     },
     [],
@@ -121,7 +125,7 @@ const StructRulesPage: FC = () => {
 
   // 如果是第一次加载，返回 null，避免重复渲染
   if (isFirst.current) {
-    fetchList({});
+    fetchList({ page_num: 1, page_size: 100 });
     isFirst.current = false; // 设置为 false，避免重复加载
     return null;
   }
@@ -183,7 +187,7 @@ const StructRulesPage: FC = () => {
         </Card>
 
         <Card className="h-[calc(100%_-_80px_-_16px)] mt-[16px]">
-          <Table<StructRule.ListItem>
+          <Table<StructRule.Item>
             dataSource={list}
             rowKey="id"
             rowSelection={{
@@ -227,7 +231,7 @@ const StructRulesPage: FC = () => {
               title="操作"
               key="action"
               width={180}
-              render={(_, record: StructRule.ListItem) => (
+              render={(_, record: StructRule.Item) => (
                 <div className="flex">
                   <Button
                     size="small"

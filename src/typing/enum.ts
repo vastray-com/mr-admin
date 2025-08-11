@@ -1,32 +1,21 @@
-// 模版类型
-export enum StructRuleType {
-  Inpatient = '住院病历',
-  Outpatient = '门诊病历',
-}
-
-export const structRuleTypeOptions = [
-  { value: StructRuleType.Inpatient, label: '住院病历' },
-  { value: StructRuleType.Outpatient, label: '门诊病历' },
-];
-
-// 病历模版状态
+// 病历模版状态 1: 启用，0: 停用
 export enum StructRuleStatus {
-  Enabled = 0, // 启用中
-  Disabled = 1, // 已停用
+  Disabled = 0, // 已停用
+  Enabled = 1, // 启用中
 }
 
-// 值描述类型
-export enum StructRuleFieldDescType {
-  DimTable = 'dim_table',
-  Enum = 'enum',
-  Plain = 'plain',
-}
-
-export const structRuleFieldDescTypeOptions = [
-  { value: StructRuleFieldDescType.DimTable, label: '码表' },
-  { value: StructRuleFieldDescType.Enum, label: '枚举型' },
-  { value: StructRuleFieldDescType.Plain, label: '纯文本' },
+// 值描述类型 1: 文本 2: 枚举 3: 码表 4: 多项单字段文本 5: 多项单字段码表 6: 多项多字段 7: 多项多字段码表
+export const StructRuleFieldValueTypeOptions = [
+  { value: 1, label: '纯文本' },
+  { value: 2, label: '枚举型' },
+  { value: 3, label: '码表' },
+  { value: 4, label: '多项单字段文本' },
+  { value: 5, label: '多项单字段码表' },
+  { value: 6, label: '多项多字段文本' },
+  { value: 7, label: '多项多字段码表' },
 ];
+export type StructRuleFieldValueType =
+  (typeof StructRuleFieldValueTypeOptions)[number]['value'];
 
 // 字段类型
 export enum StructRuleFieldType {
