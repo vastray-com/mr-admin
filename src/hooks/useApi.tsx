@@ -75,8 +75,10 @@ export const useApi = () => {
         service.post('/admin/structured_rule/update', params) as Promise<
           APIRes<number>
         >,
-      actionRule: (params: Encode.ActionParams) =>
-        service.post('/admin/encode/update', params) as Promise<APIRes<null>>,
+      actionRule: (params: StructRule.ActionParams) =>
+        service.post('/admin/structured_rule/action', params) as Promise<
+          APIRes<number>
+        >,
     }),
     [],
   );

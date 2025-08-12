@@ -1,8 +1,18 @@
-import { Button, Card, Form, Input, InputNumber, Select } from 'antd';
-import { type FC, useCallback, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router';
+import {
+  App,
+  Button,
+  Card,
+  Form,
+  Input,
+  InputNumber,
+  Select,
+  Tree,
+} from 'antd';
+import { type FC, useCallback, useMemo, useRef, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
+import { useCacheStore } from '@/store/useCacheStore';
 import {
   StructRuleFieldValueTypeOptions,
   StructRuleStatus,
@@ -26,9 +36,12 @@ const initialDetail: StructRule.Detail = {
 const StructRuleDetailPage: FC = () => {
   const { id } = useParams<{ id: string }>();
   const { ruleApi } = useApi();
+  const { message } = App.useApp();
+  const nav = useNavigate();
   const isNewRule = useRef(id === 'NEW');
   const isInit = useRef(isNewRule.current);
 
+  const encodeList = useCacheStore((s) => s.encodeList);
   const [detail, setDetail] = useState<StructRule.Detail>(initialDetail);
   const fetchDetail = useCallback(
     async (id: string) => {
@@ -41,11 +54,58 @@ const StructRuleDetailPage: FC = () => {
   );
 
   const [form] = Form.useForm<StructRule.Detail>();
+  const categories = Form.useWatch('category', form) || [];
+  const fields = Form.useWatch('fields', form) || [];
+
+  // 分类选择列表
+  const categoryOptions = useMemo(
+    () =>
+      categories
+        .filter((category) => category?.name_en && category?.name_cn)
+        .map((item) => ({
+          label: item.name_cn,
+          value: item.name_en,
+        })),
+    [categories],
+  );
+  // 父字段选择列表
+  const parentOptions = useMemo(
+    () =>
+      fields
+        .filter((field) => field?.name_en && field?.name_cn)
+        .map((item) => ({
+          label: item.name_cn,
+          value: item.name_en,
+        })),
+    [fields],
+  );
 
   // 保存
-  const onFinish = useCallback(async (values: StructRule.Detail) => {
-    console.log('保存病历模板:', values);
-  }, []);
+  const onFinish = useCallback(
+    async (values: StructRule.Detail) => {
+      console.log('保存病历模板:', values);
+      if (isNewRule.current) {
+        const res = await ruleApi.createRule(values);
+        console.log('新建病历模板成功:', res);
+        if (res.code === 200) {
+          message.success('新建病历模板成功!');
+          nav(`/rules_management/struct_rules/${res.data}`);
+        } else {
+          message.error(res.msg || '新建病历模板失败');
+        }
+      } else {
+        const res = await ruleApi.updateRule(values);
+        console.log('更新病历模板成功:', res);
+        if (res.code === 200) {
+          message.success('更新病历模板成功');
+        } else {
+          message.error(res.msg || '更新病历模板失败');
+        }
+      }
+    },
+    [ruleApi, message, nav],
+  );
+
   if (!isInit.current && !isNewRule.current && id) {
     fetchDetail(id);
   }
@@ -75,7 +135,7 @@ const StructRuleDetailPage: FC = () => {
         }
       >
         <div className="flex h-full">
-          <div className="flex-1">
+          <div className="flex-1 w-[calc(100%_-_200px_-_200px_-_24px)] overflow-auto">
             <Card className="h-[220px]" title="基本信息">
               <div className="flex items-center gap-x-[24px] mb-[8px]">
                 <Form.Item<StructRule.Detail> name="id" hidden>
@@ -125,10 +185,10 @@ const StructRuleDetailPage: FC = () => {
                     <table className="w-full">
                       <thead className="sticky top-0 z-1">
                         <tr className="children:(pl-[24px] font-medium text-fg-title py-[16px] bg-[#f0f0f0])">
-                          <td>提取字段</td>
-                          <td>字段名称</td>
-                          <td>提取规则</td>
-                          <td>操作</td>
+                          <td className="w-[16%]">提取字段</td>
+                          <td className="w-[16%]">字段名称</td>
+                          <td className="w-[56%]">提取规则</td>
+                          <td className="w-[12%]">操作</td>
                         </tr>
                       </thead>
 
@@ -244,18 +304,22 @@ const StructRuleDetailPage: FC = () => {
             <Card title="明细字段" className="mt-[12px]">
               <Form.List name="fields">
                 {(fields, { add, remove, move }) => (
-                  <div className="h-full w-full rounded-2xl overflow-auto pos-relative">
+                  <div className="h-full rounded-2xl overflow-auto pos-relative">
                     <table className="w-full">
                       <thead className="sticky top-0 z-1">
                         <tr className="children:(pl-[24px] font-medium text-fg-title py-[16px] bg-[#f0f0f0])">
                           <td>数据项</td>
-                          <td>定义</td>
                           <td>字段名称</td>
+                          <td>大字段</td>
+                          <td>父字段</td>
+                          <td>定义</td>
                           <td>类型</td>
                           <td>长度</td>
-                          <td>值描述类型</td>
-                          <td>字段值描述</td>
-                          <td>操作</td>
+                          <td>值类型</td>
+                          <td>值描述</td>
+                          <td>源字段</td>
+                          <td>是否落库</td>
+                          <td className="sticky right-0">操作</td>
                         </tr>
                       </thead>
 
@@ -267,6 +331,7 @@ const StructRuleDetailPage: FC = () => {
                           >
                             <td>
                               <Form.Item<StructRule.Detail['fields']>
+                                style={{ width: '120px' }}
                                 {...restField}
                                 name={[name, 'name_cn']}
                                 rules={[
@@ -279,9 +344,98 @@ const StructRuleDetailPage: FC = () => {
                             </td>
 
                             <td>
-                              <Form.Item
+                              <Form.Item<StructRule.Detail['fields']>
+                                style={{ width: '120px' }}
                                 {...restField}
-                                name={[name, 'data_define']}
+                                name={[name, 'name_en']}
+                                rules={[
+                                  { required: true, message: '请输入字段名' },
+                                  { whitespace: true, message: '请输入字段名' },
+                                ]}
+                              >
+                                <Input placeholder="请输入字段名" />
+                              </Form.Item>
+                            </td>
+
+                            <td>
+                              <Form.Item<StructRule.Detail['fields']>
+                                style={{ width: '150px' }}
+                                {...restField}
+                                name={[name, 'category_name']}
+                                shouldUpdate
+                                rules={[
+                                  {
+                                    type: 'enum',
+                                    enum: categoryOptions.map(
+                                      (item) => item.value,
+                                    ),
+                                    message: '请选择正确的大字段分类',
+                                  },
+                                ]}
+                              >
+                                <Select
+                                  disabled={form.getFieldValue([
+                                    'fields',
+                                    name,
+                                    'parent_name',
+                                  ])}
+                                  allowClear
+                                  placeholder="请选择大字段分类"
+                                  options={categoryOptions}
+                                />
+                              </Form.Item>
+                            </td>
+
+                            <td>
+                              <Form.Item<StructRule.Detail['fields']>
+                                shouldUpdate
+                                style={{ width: '150px' }}
+                                {...restField}
+                                name={[name, 'parent_name']}
+                                rules={[
+                                  {
+                                    type: 'enum',
+                                    enum: parentOptions
+                                      .filter(
+                                        (item) =>
+                                          item.value !==
+                                          form.getFieldValue([
+                                            'fields',
+                                            name,
+                                            'name_en',
+                                          ]),
+                                      )
+                                      .map((item) => item.value),
+                                    message: '请选择正确的父字段',
+                                  },
+                                ]}
+                              >
+                                <Select
+                                  disabled={form.getFieldValue([
+                                    'fields',
+                                    name,
+                                    'category_name',
+                                  ])}
+                                  allowClear
+                                  placeholder="请选择父字段"
+                                  options={parentOptions.filter(
+                                    (item) =>
+                                      item.value !==
+                                      form.getFieldValue([
+                                        'fields',
+                                        name,
+                                        'name_en',
+                                      ]),
+                                  )}
+                                />
+                              </Form.Item>
+                            </td>
+
+                            <td>
+                              <Form.Item<StructRule.Detail['fields']>
+                                style={{ width: '160px' }}
+                                {...restField}
+                                name={[name, 'field_define']}
                                 rules={[
                                   {
                                     required: true,
@@ -298,23 +452,8 @@ const StructRuleDetailPage: FC = () => {
                             </td>
 
                             <td>
-                              <Form.Item
-                                {...restField}
-                                name={[name, 'field_name']}
-                                rules={[
-                                  { required: true, message: '请输入字段名称' },
-                                  {
-                                    whitespace: true,
-                                    message: '请输入字段名称',
-                                  },
-                                ]}
-                              >
-                                <Input placeholder="请输入字段名称" />
-                              </Form.Item>
-                            </td>
-
-                            <td className="w-[120px]">
-                              <Form.Item
+                              <Form.Item<StructRule.Detail['fields']>
+                                style={{ width: '160px' }}
                                 {...restField}
                                 name={[name, 'field_type']}
                                 rules={[
@@ -335,23 +474,28 @@ const StructRuleDetailPage: FC = () => {
                               </Form.Item>
                             </td>
 
-                            <td className="w-[120px]">
-                              <Form.Item
+                            <td>
+                              <Form.Item<StructRule.Detail['fields']>
+                                style={{ width: '60px' }}
                                 {...restField}
                                 name={[name, 'field_len']}
                                 rules={[
                                   { required: true, message: '请输入长度' },
                                 ]}
+                                getValueFromEvent={(e) => Number(e)}
+                                normalize={(v) => `${v}`}
                               >
                                 <InputNumber
+                                  style={{ width: '60px' }}
                                   placeholder="请输入长度"
                                   precision={0}
                                 />
                               </Form.Item>
                             </td>
 
-                            <td className="w-[120px]">
-                              <Form.Item
+                            <td>
+                              <Form.Item<StructRule.Detail['fields']>
+                                style={{ width: '150px' }}
                                 {...restField}
                                 name={[name, 'value_type']}
                                 rules={[
@@ -375,12 +519,12 @@ const StructRuleDetailPage: FC = () => {
                               </Form.Item>
                             </td>
 
-                            <td className="w-[160px]">
-                              <Form.Item
+                            <td>
+                              <Form.Item<StructRule.Detail['fields']>
                                 noStyle
                                 shouldUpdate={(prev, curr) =>
-                                  prev.fields?.[name]?.value_type !==
-                                  curr.fields?.[name]?.value_type
+                                  prev[name]?.value_type !==
+                                  curr[name]?.value_type
                                 }
                               >
                                 {() =>
@@ -389,27 +533,31 @@ const StructRuleDetailPage: FC = () => {
                                     name,
                                     'value_type',
                                   ]) === 3 ? (
-                                    <Form.Item
+                                    <Form.Item<StructRule.Detail['fields']>
+                                      style={{ width: '150px' }}
                                       {...restField}
                                       name={[name, 'value_desc']}
                                       rules={[
                                         {
                                           type: 'enum',
-                                          enum: [123, 456],
+                                          enum: encodeList.map(
+                                            (encode) => `${encode.id}`,
+                                          ),
                                           message: '请选择正确的码表',
                                         },
                                       ]}
                                     >
                                       <Select
                                         placeholder="请选择码表"
-                                        options={[
-                                          { value: 123, label: 'ICD-10' },
-                                          { value: 456, label: 'ICD-20' },
-                                        ]}
+                                        options={encodeList.map((encode) => ({
+                                          value: `${encode.id}`,
+                                          label: encode.name_cn,
+                                        }))}
                                       />
                                     </Form.Item>
                                   ) : (
-                                    <Form.Item
+                                    <Form.Item<StructRule.Detail['fields']>
+                                      style={{ width: '150px' }}
                                       {...restField}
                                       name={[name, 'value_desc']}
                                       rules={[
@@ -430,7 +578,66 @@ const StructRuleDetailPage: FC = () => {
                               </Form.Item>
                             </td>
 
-                            <td className="pt-0 w-[180px]">
+                            <td>
+                              <Form.Item<StructRule.Detail['fields']>
+                                shouldUpdate
+                                style={{ width: '150px' }}
+                                {...restField}
+                                name={[name, 'value_source_name']}
+                                rules={[
+                                  {
+                                    type: 'enum',
+                                    enum: parentOptions
+                                      .filter(
+                                        (item) =>
+                                          item.value !==
+                                          form.getFieldValue([
+                                            'fields',
+                                            name,
+                                            'name_en',
+                                          ]),
+                                      )
+                                      .map((item) => item.value),
+                                    message: '请选择正确的源字段',
+                                  },
+                                ]}
+                              >
+                                <Select
+                                  allowClear
+                                  placeholder="请选择源字段"
+                                  options={parentOptions.filter(
+                                    (item) =>
+                                      item.value !==
+                                      form.getFieldValue([
+                                        'fields',
+                                        name,
+                                        'name_en',
+                                      ]),
+                                  )}
+                                />
+                              </Form.Item>
+                            </td>
+
+                            <td>
+                              <Form.Item<StructRule.Detail['fields']>
+                                style={{ width: '60px' }}
+                                {...restField}
+                                name={[name, 'need_store']}
+                                rules={[
+                                  { type: 'enum', enum: [0, 1] },
+                                  { required: true, message: '请选择是否落库' },
+                                ]}
+                              >
+                                <Select
+                                  options={[
+                                    { value: 1, label: '是' },
+                                    { value: 0, label: '否' },
+                                  ]}
+                                />
+                              </Form.Item>
+                            </td>
+
+                            <td className="pt-0 sticky right-0 bg-white">
                               <Button
                                 size="small"
                                 type="link"
@@ -464,7 +671,7 @@ const StructRuleDetailPage: FC = () => {
                             <Button
                               type="dashed"
                               size="large"
-                              onClick={() => add()}
+                              onClick={() => add({ need_store: 1 })}
                               block
                             >
                               <i className="i-icon-park-outline:plus text-[16px]" />
@@ -479,7 +686,7 @@ const StructRuleDetailPage: FC = () => {
               </Form.List>
             </Card>
 
-            <Card title="代码片段" className="mt-[12px]">
+            <Card title="后处理代码片段" className="mt-[12px]">
               <Form.Item<StructRule.Detail>
                 name={['code_snippets', 0, 'content']}
               >
@@ -490,13 +697,90 @@ const StructRuleDetailPage: FC = () => {
 
           <div className="ml-[12px] w-[220px] shrink-0 grow-0 h-full">
             <Card title="预览" className="h-full">
-              xxxxx
+              <Preview categories={categories} fields={fields} />
             </Card>
           </div>
         </div>
       </ContentLayout>
     </Form>
   );
+};
+
+// 右侧预览组件
+type PreviewProps = {
+  categories: StructRule.Categories;
+  fields: StructRule.Fields;
+};
+type TreeNode = {
+  title: string;
+  key: string;
+  children?: TreeNode[];
+};
+const Preview: FC<PreviewProps> = ({ categories, fields }) => {
+  const treeData = useMemo<TreeNode[]>(() => {
+    const tree: TreeNode[] = [];
+    const process_categories = categories.filter(
+      (c) => c?.name_en && c?.name_cn,
+    );
+    const process_fields = fields.filter((f) => f?.name_en && f?.name_cn);
+
+    // 行转树
+    // 先构建所有节点的 Node
+    const nodes: Record<string, TreeNode> = {};
+    process_categories.forEach((c) => {
+      if (c.name_cn && c.name_en) {
+        nodes[`CATEGORY_${c.name_en}`] = {
+          title: c.name_cn,
+          key: `CATEGORY_${c.name_en}`,
+          children: [],
+        };
+      }
+    });
+    process_fields.forEach((f) => {
+      if (f.name_cn && f.name_en) {
+        nodes[`FIELD_${f.name_en}`] = {
+          title: f.name_cn,
+          key: `FIELD_${f.name_en}`,
+          children: [],
+        };
+      }
+    });
+
+    // 再构建父子关系
+    process_fields.forEach((f) => {
+      const node = nodes[`FIELD_${f.name_en}`];
+      if (f.category_name) {
+        const parentNode = nodes[`CATEGORY_${f.category_name}`];
+        if (parentNode) {
+          parentNode.children?.push(node);
+        }
+      } else if (f.parent_name) {
+        const parentNode = nodes[`FIELD_${f.parent_name}`];
+        if (parentNode) {
+          parentNode.children?.push(node);
+        }
+      }
+    });
+    // 最后将所有顶层节点加入树
+    process_categories.forEach((c) => {
+      const node = nodes[`CATEGORY_${c.name_en}`];
+      if (node) {
+        tree.push(node);
+      }
+    });
+    process_fields.forEach((f) => {
+      if (!f.category_name && !f.parent_name && f.name_en && f.name_cn) {
+        const node = nodes[`FIELD_${f.name_en}`];
+        if (node) {
+          tree.push(node);
+        }
+      }
+    });
+
+    return tree;
+  }, [categories, fields]);
+
+  return <Tree showLine treeData={treeData} />;
 };
 
 export default StructRuleDetailPage;

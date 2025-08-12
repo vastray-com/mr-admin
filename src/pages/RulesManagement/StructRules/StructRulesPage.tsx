@@ -117,10 +117,20 @@ const StructRulesPage: FC = () => {
   );
   // 停用/启用/删除项目
   const onAction = useCallback(
-    (record: StructRule.Item, action: 'enable' | 'disable' | 'delete') => {
+    async (
+      record: StructRule.Item,
+      action: StructRule.ActionParams['action'],
+    ) => {
       console.log(`执行 ${action} 操作:`, record);
+      const res = await ruleApi.actionRule({ id: record.id, action });
+      if (res.code === 200) {
+        message.success(`操作成功`);
+        fetchList({ page_num: 1, page_size: 100 });
+      } else {
+        message.error(`操作失败: ${res.msg}`);
+      }
     },
-    [],
+    [fetchList, message, ruleApi],
   );
 
   // 如果是第一次加载，返回 null，避免重复渲染
@@ -198,13 +208,16 @@ const StructRulesPage: FC = () => {
             <Table.Column title="病历名称" dataIndex="name_cn" />
             <Table.Column title="病历英文名" dataIndex="name_en" />
             <Table.Column title="病历 ID" dataIndex="id" />
-            <Table.Column title="所属分类" dataIndex="mr_type" />
-            <Table.Column title="排序" dataIndex="sort_index" />
+            {/*<Table.Column title="所属分类" dataIndex="mr_type" />*/}
+            {/*<Table.Column title="排序" dataIndex="sort_index" />*/}
             <Table.Column
               title="更新时间"
               dataIndex="update_time"
               sorter={(a, b) =>
                 dayjs(a.update_time).isBefore(dayjs(b.update_time)) ? -1 : 1
+              }
+              render={(time: string) =>
+                dayjs(time).format('YYYY-MM-DD HH:mm:ss')
               }
             />
             <Table.Column title="备注" dataIndex="comment" />

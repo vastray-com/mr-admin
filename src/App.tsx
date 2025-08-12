@@ -4,9 +4,27 @@ import clsx from 'clsx';
 import { useEffect, useState } from 'react';
 import { RouterProvider } from 'react-router/dom';
 import { createRoutes } from '@/router/route';
+import { useCacheStore } from '@/store/useCacheStore';
+import { service } from '@/utils/service';
 
 const initApp = async () => {
   console.log('initialize App');
+  // 初始化码表列表
+  service
+    .get('/admin/encode/list', {
+      params: { page_size: 1000, page_num: 1 },
+    })
+    .then((res) => {
+      const r = res as unknown as APIRes<PaginationData<Encode.Item>>;
+      if (r.code === 200) {
+        console.log('码表列表初始化成功', res.data.data);
+        useCacheStore.getState().setEncodeList(res.data.data);
+      }
+    })
+    .catch((err) => {
+      console.error('码表列表初始化失败', err);
+      throw err;
+    });
   return;
 };
 

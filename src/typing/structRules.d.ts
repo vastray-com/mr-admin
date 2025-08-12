@@ -33,7 +33,7 @@ export declare namespace StructRule {
     /// 规则分类
     category: Categories;
     /// 规则字段树
-    fields: FieldTrees;
+    fields: Fields;
     /// 规则代码片段
     code_snippets: CodeSnippets;
   };
@@ -72,13 +72,15 @@ export declare namespace StructRule {
   };
   type CodeSnippets = CodeSnippet[];
 
-  type FieldTree = {
+  type Field = {
     /// 自增ID
     id: number;
     /// 唯一 ID UUID v7
-    uid: string;
+    // uid: string;
     /// 所属规则 ID
     rule_id: number;
+    /// 父字段
+    parent_name?: string;
     /// 所属分类字段名
     category_name?: string;
     /// 提取字段名称
@@ -104,7 +106,12 @@ export declare namespace StructRule {
     /// 更新时间
     update_time: string;
     /// 子字段
-    children: FieldTrees;
+    // children: FieldTrees;
   };
-  type FieldTrees = FieldTree[];
+  type Fields = Field[];
+
+  type ActionParams = {
+    id: number;
+    action: 'enable' | 'disable' | 'delete';
+  };
 }

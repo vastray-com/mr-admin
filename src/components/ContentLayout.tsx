@@ -47,7 +47,7 @@ export const ContentLayout: FC<Props> = ({
           'p-[20px]',
         )}
       >
-        <div className="w-full h-full">{children}</div>
+        <div className="w-full h-full overflow-auto">{children}</div>
       </div>
     </div>
   );
