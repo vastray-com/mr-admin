@@ -86,7 +86,6 @@ const StructRuleDetailPage: FC = () => {
       console.log('保存病历模板:', values);
       if (isNewRule.current) {
         const res = await ruleApi.createRule(values);
-        console.log('新建病历模板成功:', res);
         if (res.code === 200) {
           message.success('新建病历模板成功!');
           nav(`/rules_management/struct_rules/${res.data}`);

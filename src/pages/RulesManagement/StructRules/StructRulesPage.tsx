@@ -44,7 +44,7 @@ const StructRulesPage: FC = () => {
   const fetchList = useCallback(
     async (params: StructRule.GetListParams) => {
       const data = await ruleApi.getRuleList(params);
-      console.log('拉取病历模板列表成功:', data);
+      console.log('拉取结构化规则列表成功:', data);
       setList(data.data.data);
     },
     [ruleApi],
@@ -64,13 +64,41 @@ const StructRulesPage: FC = () => {
 
   // 导入病历模版
   const importText = useRef<string>('');
-  const onImport = useCallback(() => {
-    console.log('导入病历模板', importText.current);
-    // 这里可以添加导入逻辑
-  }, []);
+  const onImport = useCallback(async () => {
+    console.log('导入结构化规则', importText.current);
+    // 检查导入文本是否为有效的 JSON 格式
+    let data = null;
+    try {
+      data = JSON.parse(importText.current);
+    } catch (e) {
+      console.error('导入文本不是有效的 JSON 格式:', e);
+      message.error('导入文本不是有效的 JSON 格式，请检查后重试。');
+      return;
+    }
+    if (!data || typeof data !== 'object') {
+      message.error('导入文本格式不正确，请检查后重试。');
+      return;
+    }
+    try {
+      const res = await ruleApi.createRule(data);
+      if (res.code === 200) {
+        message.success('新建病历模板成功!');
+        // 成功后清空导入文本
+        importText.current = '';
+        // 刷新列表
+        await fetchList({ page_num: 1, page_size: 100 });
+      } else {
+        message.error(res.msg || '新建病历模板失败');
+      }
+    } catch (error) {
+      console.error('新建病历模板失败:', error);
+      message.error('新建病历模板失败，请检查导入文本格式是否正确。');
+    }
+  }, [fetchList, message, ruleApi]);
+
   const onOpenImportModal = useCallback(() => {
     modal.confirm({
-      title: '快速导入病历模板',
+      title: '快速导入结构化规则',
       width: '64vw',
       centered: true,
       icon: null,
@@ -90,8 +118,6 @@ const StructRulesPage: FC = () => {
 
   // 新建病历模板
   const onCreate = useCallback(() => {
-    console.log('新建病历模板');
-    // 这里可以添加新建逻辑
     nav('/rules_management/struct_rules/NEW');
   }, [nav]);
 
@@ -99,10 +125,10 @@ const StructRulesPage: FC = () => {
   const onExportRecords = useCallback(
     (ids: string[]) => {
       if (ids.length === 0) {
-        message.info('没有选中任何病历模板');
+        message.info('没有选中任何结构化规则');
         return;
       }
-      console.log('导出选中的病历模板 ID:', ids);
+      console.log('导出选中的结构化规则 ID:', ids);
     },
     [message],
   );
@@ -143,12 +169,12 @@ const StructRulesPage: FC = () => {
   // 页面渲染
   return (
     <ContentLayout
-      title="病历模板列表"
+      title="结构化规则列表"
       action={
         <>
           <Button onClick={onOpenImportModal}>快速导入</Button>
           <Button type="primary" className="ml-[8px]" onClick={onCreate}>
-            新建病历模板
+            新建结构化规则
           </Button>
         </>
       }
