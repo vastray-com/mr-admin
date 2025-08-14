@@ -14,6 +14,7 @@ import { type FC, useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
+import { downloadFile } from '@/utils/helper';
 import type { FormProps } from 'antd';
 
 type FormValues = {
@@ -28,7 +29,7 @@ const EncodePage: FC = () => {
   const nav = useNavigate();
 
   const [list, setList] = useState<Encode.List>([]);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   // 禁止选择超过今天的日期和 6 个月前的日期
   const disabledDate: GetProps<typeof DatePicker.RangePicker>['disabledDate'] =
@@ -62,10 +63,38 @@ const EncodePage: FC = () => {
 
   // 导入病历模版
   const importText = useRef<string>('');
-  const onImport = useCallback(() => {
+  const onImport = useCallback(async () => {
     console.log('导入码表', importText.current);
-    // 这里可以添加导入逻辑
-  }, []);
+    // 检查导入文本是否为有效的 JSON 格式
+    let data = null;
+    try {
+      data = JSON.parse(importText.current);
+    } catch (e) {
+      console.error('导入文本不是有效的 JSON 格式:', e);
+      message.error('导入文本不是有效的 JSON 格式，请检查后重试。');
+      return;
+    }
+    if (!data || typeof data !== 'object') {
+      message.error('导入文本格式不正确，请检查后重试。');
+      return;
+    }
+    try {
+      const res = await encodeApi.createEncode(data);
+      if (res.code === 200) {
+        message.success('新建码表成功!');
+        // 成功后清空导入文本
+        importText.current = '';
+        // 刷新列表
+        await fetchList({ page_num: 1, page_size: 100 });
+      } else {
+        message.error(res.msg || '新建码表失败');
+      }
+    } catch (error) {
+      console.error('新建码表失败:', error);
+      message.error('新建码表失败，请检查导入文本格式是否正确。');
+    }
+  }, [encodeApi.createEncode, message.error, message.success, fetchList]);
+
   const onOpenImportModal = useCallback(() => {
     modal.confirm({
       title: '快速导入码表',
@@ -86,7 +115,7 @@ const EncodePage: FC = () => {
     });
   }, [onImport, modal]);
 
-  // 新建病历模板
+  // 新建码表
   const onCreate = useCallback(() => {
     console.log('新建码表');
     // 这里可以添加新建逻辑
@@ -95,14 +124,18 @@ const EncodePage: FC = () => {
 
   // 导出选中病历模板
   const onExportRecords = useCallback(
-    (ids: string[]) => {
+    async (ids: number[]) => {
       if (ids.length === 0) {
         message.info('没有选中任何码表');
         return;
       }
-      console.log('导出选中的码表 ID:', ids);
+      message.loading('正在导出码表...');
+      console.log('导出码表:', ids);
+      const res = await encodeApi.exportEncode({ ids });
+      downloadFile(res);
+      message.success('导出成功!');
     },
-    [message],
+    [encodeApi, message],
   );
 
   // 编辑项目
@@ -199,7 +232,7 @@ const EncodePage: FC = () => {
               <Form.Item noStyle>
                 <Button
                   htmlType="button"
-                  onClick={() => onExportRecords(selectedIds)}
+                  onClick={() => onExportRecords(selectedIds as number[])}
                 >
                   导出
                 </Button>
@@ -217,7 +250,7 @@ const EncodePage: FC = () => {
             rowKey="id"
             rowSelection={{
               type: 'checkbox',
-              onChange: (ids) => setSelectedIds(ids as string[]),
+              onChange: (ids) => setSelectedIds(ids as number[]),
             }}
           >
             <Table.Column title="码表名称" dataIndex="name_cn" />

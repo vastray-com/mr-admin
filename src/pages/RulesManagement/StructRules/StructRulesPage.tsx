@@ -129,8 +129,8 @@ const StructRulesPage: FC = () => {
         message.info('没有选中任何结构化规则');
         return;
       }
-      message.loading('正在导出选中结构化规则...');
-      console.log('导出选中结构化规则:', ids);
+      message.loading('正在导出结构化规则...');
+      console.log('导出结构化规则:', ids);
       const res = await ruleApi.exportRules({ ids });
       downloadFile(res);
       message.success('导出成功!');

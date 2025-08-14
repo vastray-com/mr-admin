@@ -54,6 +54,10 @@ export const useApi = () => {
         service.post('/admin/encode/update', params) as Promise<APIRes<number>>,
       actionEncode: (params: Encode.ActionParams) =>
         service.post('/admin/encode/update', params) as Promise<APIRes<null>>,
+      exportEncode: (params: { ids: number[] }) =>
+        noInterceptorsService.post('/admin/encode/export', params, {
+          responseType: 'blob', // 设置响应类型为 Blob
+        }) as Promise<AxiosResponse<Blob>>,
     }),
     [],
   );
