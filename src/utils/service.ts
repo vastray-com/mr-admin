@@ -45,3 +45,8 @@ service.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
+export const noInterceptorsService = axios.create({
+  baseURL: import.meta.env.VITE_API_URL,
+  timeout: 60000,
+});

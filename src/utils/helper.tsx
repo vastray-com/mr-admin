@@ -1,3 +1,5 @@
+import type { AxiosResponse } from 'axios';
+
 export const formatSecondsToTime = (seconds: number): string => {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
@@ -21,4 +23,28 @@ export const formatCountToString = (count?: number): string => {
     );
   }, '');
   return formatted.split('').reverse().join('');
+};
+
+export const downloadFile = (response: AxiosResponse<Blob>) => {
+  const url = URL.createObjectURL(response.data);
+  const a = document.createElement('a');
+  a.href = url;
+
+  const disposition = response.headers['content-disposition'] || '';
+  if (disposition) {
+    // 如果响应头中有 Content-Disposition，则从中提取文件名
+    const match = disposition.match(/filename="(.+)"/);
+    if (match?.[1]) {
+      a.download = match[1];
+    } else {
+      a.download = 'download_file'; // 默认文件名
+    }
+  } else {
+    a.download = 'download_file'; // 默认文件名
+  }
+  a.click();
+
+  // 释放 URL 对象和移除 a 元素
+  URL.revokeObjectURL(url);
+  a.remove();
 };

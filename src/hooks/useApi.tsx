@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { service } from '@/utils/service';
+import { noInterceptorsService, service } from '@/utils/service';
+import type { AxiosResponse } from 'axios';
 import type { StructRule } from '@/typing/structRules';
 
 export const useApi = () => {
@@ -79,6 +80,10 @@ export const useApi = () => {
         service.post('/admin/structured_rule/action', params) as Promise<
           APIRes<number>
         >,
+      exportRules: (params: { ids: number[] }) =>
+        noInterceptorsService.post('/admin/structured_rule/export', params, {
+          responseType: 'blob', // 设置响应类型为 Blob
+        }) as Promise<AxiosResponse<Blob>>,
     }),
     [],
   );

@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { StructRuleStatus } from '@/typing/enum';
+import { downloadFile } from '@/utils/helper';
 import type { FormProps } from 'antd';
 import type { StructRule } from '@/typing/structRules';
 
@@ -30,7 +31,7 @@ const StructRulesPage: FC = () => {
   const nav = useNavigate();
 
   const [list, setList] = useState<StructRule.List>([]);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   // 禁止选择超过今天的日期和 6 个月前的日期
   const disabledDate: GetProps<typeof DatePicker.RangePicker>['disabledDate'] =
@@ -123,14 +124,18 @@ const StructRulesPage: FC = () => {
 
   // 导出选中病历模板
   const onExportRecords = useCallback(
-    (ids: string[]) => {
+    async (ids: number[]) => {
       if (ids.length === 0) {
         message.info('没有选中任何结构化规则');
         return;
       }
-      console.log('导出选中的结构化规则 ID:', ids);
+      message.loading('正在导出选中结构化规则...');
+      console.log('导出选中结构化规则:', ids);
+      const res = await ruleApi.exportRules({ ids });
+      downloadFile(res);
+      message.success('导出成功!');
     },
-    [message],
+    [message, ruleApi],
   );
 
   // 编辑项目
@@ -228,7 +233,7 @@ const StructRulesPage: FC = () => {
             rowKey="id"
             rowSelection={{
               type: 'checkbox',
-              onChange: (ids) => setSelectedIds(ids as string[]),
+              onChange: (ids) => setSelectedIds(ids as number[]),
             }}
           >
             <Table.Column title="病历名称" dataIndex="name_cn" />
