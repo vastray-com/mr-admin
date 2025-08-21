@@ -12,7 +12,7 @@ import {
 } from 'antd';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { useCacheStore } from '@/store/useCacheStore';
@@ -56,13 +56,7 @@ const TaskListPage = () => {
   }, [taskApi]);
 
   // 新建任务
-  const ruleList = useCacheStore((s) => s.structRuleList);
-  const ruleOptions = useMemo(() => {
-    return ruleList.map((rule) => ({
-      value: rule.id,
-      label: rule.name_cn,
-    }));
-  }, [ruleList]);
+  const ruleOptions = useCacheStore((s) => s.ruleOptions);
   const [form] = Form.useForm<Task.CreateItem>();
   const newTaskData = useRef<Task.CreateItem | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);

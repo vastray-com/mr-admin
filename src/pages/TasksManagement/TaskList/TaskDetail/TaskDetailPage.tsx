@@ -5,16 +5,19 @@ import { useCallback, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
-import { TaskType } from '@/typing/enum';
+import { useCacheStore } from '@/store/useCacheStore';
+import { taskTypeMap } from '@/typing/enum';
 import { formatCountToString, formatSecondsToTime } from '@/utils/helper';
+import type { Task } from '@/typing/task';
 
 export const taskInstanceStatusDisplay: Record<
   Task.Instance['status'],
   [string, string]
 > = {
-  0: ['#FAAD14', '运行中'],
-  1: ['#52C41A', '运行完成'],
-  2: ['#F5222D', '运行失败'],
+  0: ['#FAAD14', '待运行'],
+  1: ['#52C41A', '运行中'],
+  2: ['#F5222D', '运行完成'],
+  3: ['#FAAD14', '运行失败'],
 };
 
 const TaskDetailPage = () => {
@@ -24,6 +27,7 @@ const TaskDetailPage = () => {
   const isInitial = useRef(false);
   const [data, setData] = useState<Task.Item | null>(null);
 
+  const ruleOptions = useCacheStore((s) => s.ruleOptions);
   const [instanceList, setInstanceList] = useState<Task.InstanceList>([]);
   const [listTotal, setListTotal] = useState(0);
   const [pagination, setPagination] = useState<{ cur: number; size: number }>({
@@ -95,12 +99,21 @@ const TaskDetailPage = () => {
         <Descriptions
           column={2}
           items={[
-            { key: '1', label: '任务类型', children: TaskType[data.task_type] },
-            { key: '2', label: '结构化规则', children: data.mr_tpl_id },
+            {
+              key: '1',
+              label: '任务类型',
+              children: taskTypeMap[data.task_type],
+            },
+            {
+              key: '2',
+              label: '结构化规则',
+              children:
+                ruleOptions.find((r) => r.value === data.rule_id)?.label || '-',
+            },
             {
               key: '3',
               label: '输入源',
-              children: JSON.parse(data.category_list).join('，'),
+              children: '-',
             },
             { key: '4', label: '执行时间', children: data.cron },
           ]}

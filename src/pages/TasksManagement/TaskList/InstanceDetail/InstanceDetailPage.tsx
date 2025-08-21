@@ -7,6 +7,7 @@ import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { taskInstanceStatusDisplay } from '@/pages/TasksManagement/TaskList/TaskDetail/TaskDetailPage';
 import { formatCountToString } from '@/utils/helper';
+import type { Task } from '@/typing/task';
 
 const InstanceDetailPage = () => {
   const { taskId, instanceId } = useParams();

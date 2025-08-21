@@ -41,7 +41,7 @@ const StructRuleDetailPage: FC = () => {
   const isNewRule = useRef(id === 'NEW');
   const isInit = useRef(isNewRule.current);
 
-  const encodeList = useCacheStore((s) => s.encodeList);
+  const encodeOptions = useCacheStore((s) => s.encodeOptions);
   const [detail, setDetail] = useState<StructRule.Detail>(initialDetail);
   const fetchDetail = useCallback(
     async (id: string) => {
@@ -539,8 +539,8 @@ const StructRuleDetailPage: FC = () => {
                                       rules={[
                                         {
                                           type: 'enum',
-                                          enum: encodeList.map(
-                                            (encode) => `${encode.id}`,
+                                          enum: encodeOptions.map(
+                                            (o) => o.value,
                                           ),
                                           message: '请选择正确的码表',
                                         },
@@ -548,10 +548,7 @@ const StructRuleDetailPage: FC = () => {
                                     >
                                       <Select
                                         placeholder="请选择码表"
-                                        options={encodeList.map((encode) => ({
-                                          value: `${encode.id}`,
-                                          label: encode.name_cn,
-                                        }))}
+                                        options={encodeOptions}
                                       />
                                     </Form.Item>
                                   ) : (
