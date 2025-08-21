@@ -14,6 +14,7 @@ import { type FC, useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
+import { useCacheStore } from '@/store/useCacheStore';
 import { downloadFile } from '@/utils/helper';
 import type { FormProps } from 'antd';
 
@@ -28,6 +29,7 @@ const EncodePage: FC = () => {
   const isFirst = useRef(true);
   const nav = useNavigate();
 
+  const setEncodeListCache = useCacheStore((s) => s.setEncodeList);
   const [list, setList] = useState<Encode.List>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
@@ -45,8 +47,9 @@ const EncodePage: FC = () => {
       const data = await encodeApi.getEncodeList(params);
       console.log('拉取码表列表成功:', data);
       setList(data.data.data);
+      setEncodeListCache(data.data.data); // 缓存列表数据
     },
-    [encodeApi.getEncodeList],
+    [encodeApi.getEncodeList, setEncodeListCache],
   );
 
   // 查询表单提交处理函数

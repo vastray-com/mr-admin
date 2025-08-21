@@ -2,10 +2,15 @@ import { useMemo } from 'react';
 import { noInterceptorsService, service } from '@/utils/service';
 import type { AxiosResponse } from 'axios';
 import type { StructRule } from '@/typing/structRules';
+import type { Task } from '@/typing/task';
 
 export const useApi = () => {
   const task = useMemo(
     () => ({
+      createTask: (params: Task.Item) =>
+        service.post('/task/create', params) as Promise<APIRes<number>>,
+      actionTask: (params: Task.ActionParams) =>
+        service.post('/task/action', params) as Promise<APIRes<null>>,
       getTaskList: (params: Task.ListParams) =>
         service.get('/task/list', { params }) as Promise<
           APIRes<PaginationData<Task.Item>>

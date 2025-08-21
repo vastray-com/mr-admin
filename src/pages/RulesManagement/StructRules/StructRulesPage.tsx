@@ -14,6 +14,7 @@ import { type FC, useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
+import { useCacheStore } from '@/store/useCacheStore';
 import { StructRuleStatus } from '@/typing/enum';
 import { downloadFile } from '@/utils/helper';
 import type { FormProps } from 'antd';
@@ -30,6 +31,7 @@ const StructRulesPage: FC = () => {
   const isFirst = useRef(true);
   const nav = useNavigate();
 
+  const setRuleListCache = useCacheStore((state) => state.setStructRuleList);
   const [list, setList] = useState<StructRule.List>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
@@ -47,8 +49,9 @@ const StructRulesPage: FC = () => {
       const data = await ruleApi.getRuleList(params);
       console.log('拉取结构化规则列表成功:', data);
       setList(data.data.data);
+      setRuleListCache(data.data.data); // 缓存病历模板列表
     },
-    [ruleApi],
+    [ruleApi, setRuleListCache],
   );
 
   // 查询表单提交处理函数

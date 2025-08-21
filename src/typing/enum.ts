@@ -36,8 +36,46 @@ export const structRuleFieldTypeOptions = [
   { value: StructRuleFieldType.Vc, label: '变长字符型' },
 ];
 
-// 任务管理
-export const TaskType: Record<Task.Item['task_type'], string> = {
-  0: '单次任务',
-  1: '循环任务',
+// 任务类型
+export enum TaskType {
+  // 一次性任务
+  OneTime = 'one-time',
+  // 循环任务
+  Circular = 'circular',
+}
+
+export const taskTypeMap: Record<TaskType, string> = {
+  [TaskType.OneTime]: '一次性任务',
+  [TaskType.Circular]: '循环任务',
 };
+
+export const taskTypeOptions = Object.entries(taskTypeMap).map(([k, v]) => ({
+  value: k,
+  label: v,
+}));
+
+// 一次性任务类型
+export enum OneTimeTaskType {
+  // 定时任务
+  Schedule = 'schedule',
+  // 立即执行
+  Immediate = 'immediate',
+}
+
+export const oneTimeTaskTypeMap: Record<OneTimeTaskType, string> = {
+  [OneTimeTaskType.Schedule]: '定时任务',
+  [OneTimeTaskType.Immediate]: '立即执行',
+};
+
+export const oneTimeTaskTypeOptions = Object.entries(oneTimeTaskTypeMap).map(
+  ([k, v]) => ({
+    value: k,
+    label: v,
+  }),
+);
+
+// 任务状态 1: 启用，0: 停用
+export enum TaskStatus {
+  Disabled = 0, // 已停用
+  Enabled = 1, // 启用中
+}

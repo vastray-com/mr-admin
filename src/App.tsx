@@ -6,6 +6,7 @@ import { RouterProvider } from 'react-router/dom';
 import { createRoutes } from '@/router/route';
 import { useCacheStore } from '@/store/useCacheStore';
 import { service } from '@/utils/service';
+import type { StructRule } from '@/typing/structRules';
 
 const initApp = async () => {
   console.log('initialize App');
@@ -25,6 +26,24 @@ const initApp = async () => {
       console.error('码表列表初始化失败', err);
       throw err;
     });
+
+  // 初始化结构化规则列表
+  service
+    .get('/admin/structured_rule/list', {
+      params: { page_size: 1000, page_num: 1 },
+    })
+    .then((res) => {
+      const r = res as unknown as APIRes<PaginationData<StructRule.Item>>;
+      if (r.code === 200) {
+        console.log('结构化规则列表初始化成功', res.data.data);
+        useCacheStore.getState().setStructRuleList(res.data.data);
+      }
+    })
+    .catch((err) => {
+      console.error('结构化规则列表初始化失败', err);
+      throw err;
+    });
+
   return;
 };
 

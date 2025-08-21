@@ -1,3 +1,6 @@
+import type { OneTimeTaskType, TaskStatus, TaskType } from '@/typing/enum';
+import type { Dayjs } from 'dayjs';
+
 declare namespace Task {
   // 获取任务列表的参数
   type ListParams = PaginationParams;
@@ -7,29 +10,40 @@ declare namespace Task {
     task_id: number;
   };
 
-  // 任务项
-  type Item = {
+  // 操作任务的参数
+  type ActionParams = {
     id: number;
-    // 0: 一次性任务, 1: 循环任务
-    task_type: 0 | 1;
-    mr_tpl_id: number;
-    date_start: string;
-    date_end: string;
-    category_list: string;
-    // 0: 关闭, 1: 开启
-    status: 0 | 1;
-    // 循环任务的 cron 表达式
-    cron: string;
-    // 循环任务的间隔时间
-    interval: number;
-    // 并发数
-    concurrency: number;
-    // 执行次数
-    execute_count: number;
-    create_time: string;
-    update_time: string;
+    action: 'enable' | 'disable' | 'delete';
   };
+
+  // 任务项
+  type BaseItem = {
+    id: number;
+    task_type: TaskType;
+    rule_id: number;
+    status?: TaskStatus;
+    // 执行时间类型，定时任务、立即执行，当任务类型为一次性任务时存在
+    one_time_task_type?: OneTimeTaskType;
+    // 循环任务的 cron 表达式
+    cron?: string;
+    // 执行次数
+    exec_count: number;
+    create_time?: string;
+    update_time?: string;
+  };
+  type Item = {
+    // 任务环境变量，JSON 字符串
+    env_vars: string;
+    // 执行时间，当任务类型为一次性任务且执行时间类型为定时任务时存在
+    schedule_time?: string;
+  } & BaseItem;
   type List = Item[];
+  type CreateItem = {
+    // 任务环境变量，JSON 字符串
+    env_vars: [string, string][];
+    // 执行时间，当任务类型为一次性任务且执行时间类型为定时任务时存在
+    schedule_time?: Dayjs;
+  } & BaseItem;
 
   // 获取任务实例列表的参数
   type InstanceListParams = PaginationParams & {
@@ -40,8 +54,8 @@ declare namespace Task {
   type Instance = {
     id: number;
     task_id: number;
-    // 0: 进行中, 1: 已完成, 2: 失败
-    status: 0 | 1 | 2;
+    // 0: 待运行, 1: 运行中, 2: 已完成 (成功), 3: 已完成 (失败)
+    status: 0 | 1 | 2 | 3;
     task_start_time: string;
     task_duration: number;
     mr_total: number;
