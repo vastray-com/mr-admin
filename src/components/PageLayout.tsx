@@ -21,15 +21,15 @@ export const PageLayout: FC = () => {
 
   return (
     <Layout className="h-full w-full">
-      <Layout.Header className="h-[48px] w-full flex items-center justify-between px-[16px]">
+      <Layout.Header className="bg-white h-[48px] w-full flex items-center justify-between px-[16px] b-b-1 border-[#ddd]">
         <div className="flex items-center gap-x-[36px]">
           <div className="h-[28px] flex items-center gap-x-[12px]">
             <img
-              src="/vite.svg"
+              src="/ws_logo.svg"
               alt=""
               className="h-full aspect-ratio-square"
             />
-            <h1 className="text-white text-[20px] font-bold">伟世 AI</h1>
+            <h1 className="text-title text-[20px] font-bold">伟世 AI</h1>
           </div>
           <Select
             className="w-[128px]"
@@ -45,7 +45,7 @@ export const PageLayout: FC = () => {
               <i className="i-icon-park-outline:user text-white text-[16px]" />
             }
           />
-          <span className="text-white ml-[8px]">{user?.name}</span>
+          <span className="text-primary ml-[8px]">{user?.name}</span>
         </div>
       </Layout.Header>
 
