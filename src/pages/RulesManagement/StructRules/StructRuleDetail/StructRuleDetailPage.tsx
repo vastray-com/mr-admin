@@ -1,22 +1,16 @@
-import {
-  App,
-  Button,
-  Card,
-  Form,
-  Input,
-  InputNumber,
-  Select,
-  Tree,
-} from 'antd';
+import { App, Button, Card, Form, Input, Select, Tree } from 'antd';
 import { type FC, useCallback, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { useCacheStore } from '@/store/useCacheStore';
 import {
-  StructRuleFieldValueTypeOptions,
+  StructRuleFieldMappingType,
+  StructRuleFieldSourceType,
   StructRuleStatus,
-  structRuleFieldTypeOptions,
+  structRuleFieldMappingTypeOptions,
+  structRuleFieldSourceTypeOptions,
+  structRuleFieldValueTypeOptions,
 } from '@/typing/enum';
 import type { StructRule } from '@/typing/structRules';
 
@@ -84,6 +78,13 @@ const StructRuleDetailPage: FC = () => {
   const onFinish = useCallback(
     async (values: StructRule.Detail) => {
       console.log('保存病历模板:', values);
+      if (
+        values.code_snippets.length === 1 &&
+        !values.code_snippets[0].content
+      ) {
+        values.code_snippets = [];
+      }
+
       if (isNewRule.current) {
         const res = await ruleApi.createRule(values);
         if (res.code === 200) {
@@ -311,12 +312,10 @@ const StructRuleDetailPage: FC = () => {
                           <td>字段名称</td>
                           <td>大字段</td>
                           <td>父字段</td>
-                          <td>定义</td>
-                          <td>类型</td>
-                          <td>长度</td>
+                          <td>来源</td>
+                          <td>解析规则</td>
                           <td>值类型</td>
-                          <td>值描述</td>
-                          <td>源字段</td>
+                          <td>字段映射</td>
                           <td>是否落库</td>
                           <td className="sticky right-0">操作</td>
                         </tr>
@@ -434,109 +433,174 @@ const StructRuleDetailPage: FC = () => {
                               <Form.Item<StructRule.Detail['fields']>
                                 style={{ width: '160px' }}
                                 {...restField}
-                                name={[name, 'field_define']}
+                                name={[name, 'source_type']}
                                 rules={[
                                   {
                                     required: true,
-                                    message: '请输入数据项定义',
+                                    message: '请选择数据来源',
                                   },
-                                  {
-                                    whitespace: true,
-                                    message: '请输入数据项定义',
-                                  },
-                                ]}
-                              >
-                                <Input placeholder="请输入数据项定义" />
-                              </Form.Item>
-                            </td>
-
-                            <td>
-                              <Form.Item<StructRule.Detail['fields']>
-                                style={{ width: '160px' }}
-                                {...restField}
-                                name={[name, 'field_type']}
-                                rules={[
-                                  { required: true, message: '请选择字段类型' },
                                   {
                                     type: 'enum',
-                                    enum: structRuleFieldTypeOptions.map(
+                                    enum: structRuleFieldSourceTypeOptions.map(
                                       (item) => item.value,
                                     ),
-                                    message: '请选择正确的字段类型',
+                                    message: '请选择正确的来源',
                                   },
                                 ]}
                               >
                                 <Select
-                                  placeholder="请选择字段类型"
-                                  options={structRuleFieldTypeOptions}
+                                  placeholder="请选择数据来源"
+                                  options={structRuleFieldSourceTypeOptions}
                                 />
                               </Form.Item>
                             </td>
 
                             <td>
-                              <Form.Item<StructRule.Detail['fields']>
-                                style={{ width: '60px' }}
-                                {...restField}
-                                name={[name, 'field_len']}
-                                rules={[
-                                  { required: true, message: '请输入长度' },
-                                ]}
-                                getValueFromEvent={(e) => Number(e)}
-                                normalize={(v) => `${v}`}
-                              >
-                                <InputNumber
-                                  style={{ width: '60px' }}
-                                  placeholder="请输入长度"
-                                  precision={0}
-                                />
-                              </Form.Item>
-                            </td>
-
-                            <td>
-                              <Form.Item<StructRule.Detail['fields']>
-                                style={{ width: '150px' }}
-                                {...restField}
-                                name={[name, 'value_type']}
-                                rules={[
-                                  {
-                                    required: true,
-                                    message: '请选择值描述类型',
-                                  },
-                                  {
-                                    type: 'enum',
-                                    enum: StructRuleFieldValueTypeOptions.map(
-                                      (item) => item.value,
-                                    ),
-                                    message: '请选择正确的值描述类型',
-                                  },
-                                ]}
-                              >
-                                <Select
-                                  placeholder="请选择值描述类型"
-                                  options={StructRuleFieldValueTypeOptions}
-                                />
-                              </Form.Item>
-                            </td>
-
-                            <td>
-                              <Form.Item<StructRule.Detail['fields']>
+                              <Form.Item
                                 noStyle
-                                shouldUpdate={(prev, curr) =>
-                                  prev[name]?.value_type !==
-                                  curr[name]?.value_type
+                                shouldUpdate={(pre, cur) =>
+                                  pre[name]?.source_type !==
+                                  cur[name]?.source_type
                                 }
                               >
                                 {() =>
                                   form.getFieldValue([
                                     'fields',
                                     name,
-                                    'value_type',
-                                  ]) === 3 ? (
+                                    'source_type',
+                                  ]) ===
+                                  StructRuleFieldSourceType.QuoteResult ? (
+                                    <Form.Item<StructRule.Detail['fields']>
+                                      style={{ width: '160px' }}
+                                      {...restField}
+                                      name={[name, 'parsing_rule']}
+                                      rules={[
+                                        {
+                                          type: 'enum',
+                                          enum: parentOptions
+                                            .filter(
+                                              (item) =>
+                                                item.value !==
+                                                form.getFieldValue([
+                                                  'fields',
+                                                  name,
+                                                  'name_en',
+                                                ]),
+                                            )
+                                            .map((item) => item.value),
+                                          message: '请选择正确的源字段',
+                                        },
+                                      ]}
+                                    >
+                                      <Select
+                                        placeholder="请选择源字段"
+                                        options={parentOptions.filter(
+                                          (item) =>
+                                            item.value !==
+                                            form.getFieldValue([
+                                              'fields',
+                                              name,
+                                              'name_en',
+                                            ]),
+                                        )}
+                                      />
+                                    </Form.Item>
+                                  ) : (
+                                    <Form.Item<StructRule.Detail['fields']>
+                                      style={{ width: '160px' }}
+                                      {...restField}
+                                      name={[name, 'parsing_rule']}
+                                      rules={[
+                                        {
+                                          required: true,
+                                          message: '请输入解析规则',
+                                        },
+                                        {
+                                          whitespace: true,
+                                          message: '请输入解析规则',
+                                        },
+                                      ]}
+                                    >
+                                      <Input placeholder="请输入解析规则" />
+                                    </Form.Item>
+                                  )
+                                }
+                              </Form.Item>
+                            </td>
+
+                            <td>
+                              <Form.Item<StructRule.Detail['fields']>
+                                style={{ width: '100px' }}
+                                {...restField}
+                                name={[name, 'value_type']}
+                                rules={[
+                                  {
+                                    required: true,
+                                    message: '请选择值类型',
+                                  },
+                                  {
+                                    type: 'enum',
+                                    enum: structRuleFieldValueTypeOptions.map(
+                                      (item) => item.value,
+                                    ),
+                                    message: '请选择正确的值类型',
+                                  },
+                                ]}
+                              >
+                                <Select
+                                  placeholder="请选择值类型"
+                                  options={structRuleFieldValueTypeOptions}
+                                />
+                              </Form.Item>
+                            </td>
+
+                            <td className="flex gap-x-[8px]">
+                              <Form.Item<StructRule.Detail['fields']>
+                                style={{ width: '100px' }}
+                                {...restField}
+                                name={[name, 'mapping_type']}
+                                rules={[
+                                  {
+                                    required: true,
+                                    message: '请选择映射方式',
+                                  },
+                                  {
+                                    type: 'enum',
+                                    enum: structRuleFieldMappingTypeOptions.map(
+                                      (item) => item.value,
+                                    ),
+                                    message: '请选择正确的映射方式',
+                                  },
+                                ]}
+                              >
+                                <Select
+                                  placeholder="请选择映射方式"
+                                  options={structRuleFieldMappingTypeOptions}
+                                />
+                              </Form.Item>
+
+                              <Form.Item<StructRule.Detail['fields']>
+                                noStyle
+                                shouldUpdate={(prev, curr) =>
+                                  prev[name]?.mapping_type !==
+                                  curr[name]?.mapping_type
+                                }
+                              >
+                                {() =>
+                                  form.getFieldValue([
+                                    'fields',
+                                    name,
+                                    'mapping_type',
+                                  ]) === StructRuleFieldMappingType.Encode ? (
                                     <Form.Item<StructRule.Detail['fields']>
                                       style={{ width: '150px' }}
                                       {...restField}
-                                      name={[name, 'value_desc']}
+                                      name={[name, 'mapping_content']}
                                       rules={[
+                                        {
+                                          required: true,
+                                          message: '请选择码表',
+                                        },
                                         {
                                           type: 'enum',
                                           enum: encodeOptions.map(
@@ -555,62 +619,12 @@ const StructRuleDetailPage: FC = () => {
                                     <Form.Item<StructRule.Detail['fields']>
                                       style={{ width: '150px' }}
                                       {...restField}
-                                      name={[name, 'value_desc']}
-                                      rules={[
-                                        {
-                                          required: true,
-                                          message: '请输入值描述',
-                                        },
-                                        {
-                                          whitespace: true,
-                                          message: '请输入值描述',
-                                        },
-                                      ]}
+                                      name={[name, 'mapping_content']}
                                     >
-                                      <Input placeholder="请输入" />
+                                      <Input placeholder="请输入映射内容" />
                                     </Form.Item>
                                   )
                                 }
-                              </Form.Item>
-                            </td>
-
-                            <td>
-                              <Form.Item<StructRule.Detail['fields']>
-                                shouldUpdate
-                                style={{ width: '150px' }}
-                                {...restField}
-                                name={[name, 'value_source_name']}
-                                rules={[
-                                  {
-                                    type: 'enum',
-                                    enum: parentOptions
-                                      .filter(
-                                        (item) =>
-                                          item.value !==
-                                          form.getFieldValue([
-                                            'fields',
-                                            name,
-                                            'name_en',
-                                          ]),
-                                      )
-                                      .map((item) => item.value),
-                                    message: '请选择正确的源字段',
-                                  },
-                                ]}
-                              >
-                                <Select
-                                  allowClear
-                                  placeholder="请选择源字段"
-                                  options={parentOptions.filter(
-                                    (item) =>
-                                      item.value !==
-                                      form.getFieldValue([
-                                        'fields',
-                                        name,
-                                        'name_en',
-                                      ]),
-                                  )}
-                                />
                               </Form.Item>
                             </td>
 
@@ -620,8 +634,8 @@ const StructRuleDetailPage: FC = () => {
                                 {...restField}
                                 name={[name, 'need_store']}
                                 rules={[
-                                  { type: 'enum', enum: [0, 1] },
                                   { required: true, message: '请选择是否落库' },
+                                  { type: 'enum', enum: [0, 1] },
                                 ]}
                               >
                                 <Select
@@ -633,7 +647,7 @@ const StructRuleDetailPage: FC = () => {
                               </Form.Item>
                             </td>
 
-                            <td className="pt-0 sticky right-0 bg-white">
+                            <td className="py-[12px] sticky right-0 bg-white flex">
                               <Button
                                 size="small"
                                 type="link"

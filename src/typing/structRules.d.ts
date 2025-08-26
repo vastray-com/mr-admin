@@ -1,4 +1,9 @@
-import type { StructRuleFieldValueType, StructRuleStatus } from './enum';
+import {
+  type StructRuleFieldValueType,
+  type StructRuleStatus,
+  StructRuleFieldSourceType,
+  StructRuleFieldMappingType,
+} from './enum';
 
 export declare namespace StructRule {
   type GetListParams = PaginationParams & {
@@ -75,8 +80,6 @@ export declare namespace StructRule {
   type Field = {
     /// 自增ID
     id: number;
-    /// 唯一 ID UUID v7
-    // uid: string;
     /// 所属规则 ID
     rule_id: number;
     /// 父字段
@@ -88,25 +91,21 @@ export declare namespace StructRule {
     /// 字段键名称
     name_en: string;
     /// 字段定义
-    field_define: string;
-    /// 字段类型（VC/C）
-    field_type: string;
-    /// 字段长度
-    field_len: string;
-    /// 字段值类型（1: 文本 2: 枚举 3: 码表 4: 多项单字段文本 5: 多项单字段码表 6: 多项多字段 7: 多项多字段码表 ）
+    source_type: StructRuleFieldSourceType;
+    /// 解析规则 来源为 LLM 时为 prompt，为原始数据引用时为原始数据取数 path， 为结构化数据引用时为 name_en， 为静态值时为值内容
+    parsing_rule: string;
+    /// 字段值类型
     value_type: StructRuleFieldValueType;
-    /// 字段值描述（静态值类型为填入的内容，码表值类型为空，其他值类型为大模型 prompt）
-    value_desc?: string;
-    /// 值转换的来源字段 name_en，仅 码表 值类型存在
-    value_source_name?: string;
+    /// 映射类型 NULL 为不映射
+    mapping_type: StructRuleFieldMappingType | null;
+    //  映射内容 映射类型为空时忽略，为码表时为码表 ID，为枚举时为枚举列表内容
+    mapping_content: string;
     /// 字段是否需要最终入库 1: 需要 0: 不需要
     need_store: 0 | 1;
     /// 创建时间
     create_time: string;
     /// 更新时间
     update_time: string;
-    /// 子字段
-    // children: FieldTrees;
   };
   type Fields = Field[];
 
