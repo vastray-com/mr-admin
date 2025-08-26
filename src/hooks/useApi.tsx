@@ -8,32 +8,34 @@ export const useApi = () => {
   const task = useMemo(
     () => ({
       createTask: (params: Task.Item) =>
-        service.post('/task/create', params) as Promise<APIRes<number>>,
+        service.post('/admin/task/create', params) as Promise<APIRes<number>>,
       actionTask: (params: Task.ActionParams) =>
-        service.post('/task/action', params) as Promise<APIRes<null>>,
+        service.post('/admin/task/action', params) as Promise<APIRes<null>>,
       getTaskList: (params: Task.ListParams) =>
-        service.get('/task/list', { params }) as Promise<
+        service.get('/admin/task/list', { params }) as Promise<
           APIRes<PaginationData<Task.Item>>
         >,
       getTaskDetail: (params: Task.DetailParams) =>
-        service.get('/task/detail', { params }) as Promise<APIRes<Task.Item>>,
+        service.get('/admin/task/detail', { params }) as Promise<
+          APIRes<Task.Item>
+        >,
       getTaskInstanceList: (params: Task.InstanceListParams) =>
-        service.get('/task/instance_list', { params }) as Promise<
+        service.get('/admin/task/instance_list', { params }) as Promise<
           APIRes<PaginationData<Task.Instance>>
         >,
       getTaskInstanceDetail: (taskInstanceId: number) =>
-        service.get('/task/instance_detail', {
+        service.get('/admin/task/instance_detail', {
           params: { task_instance_id: taskInstanceId },
         }) as Promise<APIRes<Task.Instance>>,
       getTaskInstanceResultList: (taskInstanceId: number) =>
-        service.get('/task/instance_detail/result_list', {
+        service.get('/admin/task/instance_detail/result_list', {
           params: { task_instance_id: taskInstanceId },
         }) as Promise<APIRes<Task.ResultList>>,
       getTaskInstanceResultDetail: async (
         taskInstanceId: number,
         opEmNo: string,
       ) =>
-        service.get('/task/instance_detail/result_detail', {
+        service.get('/admin/task/instance_detail/result_detail', {
           params: {
             task_instance_id: taskInstanceId,
             op_em_no: opEmNo,
