@@ -1,6 +1,6 @@
 declare namespace Encode {
   // 获取码表列表的参数
-  type ListParams = PaginationParams & {
+  type ListParams = {
     name?: string;
     update_end?: string;
     update_start?: string;

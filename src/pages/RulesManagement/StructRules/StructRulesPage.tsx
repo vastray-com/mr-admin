@@ -44,8 +44,14 @@ const StructRulesPage: FC = () => {
 
   // 拉取列表分页数据
   const [list, setList] = useState<StructRule.List>([]);
+  const searchParams = useRef<StructRule.ListParams>({
+    name: undefined,
+    update_start: undefined,
+    update_end: undefined,
+  });
   const fetchData = useCallback(
-    async (params: PaginationParams) => ruleApi.getRuleList(params),
+    async (params: PaginationParams) =>
+      ruleApi.getRuleList({ ...params, ...searchParams.current }),
     [ruleApi.getRuleList],
   );
   const { PaginationComponent, refresh } = usePaginationData({
@@ -59,11 +65,13 @@ const StructRulesPage: FC = () => {
   // 查询表单提交处理函数
   const onFinish: FormProps<FormValues>['onFinish'] = async (values) => {
     const { name, range } = values;
-    const params: StructRule.GetListParams = { page_size: 100, page_num: 1 };
-    if (name) params.name = name;
+    searchParams.current.name = name ? name.trim() : undefined;
     if (range && range.length === 2) {
-      params.update_start = range[0].format('YYYY-MM-DD');
-      params.update_end = range[1].format('YYYY-MM-DD');
+      searchParams.current.update_start = range[0].format('YYYY-MM-DD');
+      searchParams.current.update_end = range[1].format('YYYY-MM-DD');
+    } else {
+      searchParams.current.update_start = undefined;
+      searchParams.current.update_end = undefined;
     }
     refresh();
   };

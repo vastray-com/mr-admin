@@ -6,7 +6,7 @@ import {
 } from './enum';
 
 export declare namespace StructRule {
-  type GetListParams = PaginationParams & {
+  type ListParams = {
     name?: string;
     update_end?: string;
     update_start?: string;
