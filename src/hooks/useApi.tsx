@@ -71,7 +71,7 @@ export const useApi = () => {
 
   const rule = useMemo(
     () => ({
-      getRuleList: (params: StructRule.GetListParams) =>
+      getRuleList: (params: StructRule.ListParams) =>
         service.get('/admin/structured_rule/list', { params }) as Promise<
           APIRes<PaginationData<StructRule.Item>>
         >,

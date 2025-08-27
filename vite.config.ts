@@ -12,7 +12,9 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, path.resolve(process.cwd(), ENV_DIR));
 
   return {
-    build: { outDir: getOutDir(mode ?? 'default') },
+    build: {
+      outDir: getOutDir(mode ?? 'default'),
+    },
     envDir: ENV_DIR,
     plugins: [react(), UnoCSS()],
     resolve: {

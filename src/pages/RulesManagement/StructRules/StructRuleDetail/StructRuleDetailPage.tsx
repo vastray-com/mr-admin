@@ -2,6 +2,7 @@ import { App, Button, Card, Form, Input, Select, Tree } from 'antd';
 import { type FC, useCallback, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
+import { MonacoEditor } from '@/components/MonacoEditor';
 import { useApi } from '@/hooks/useApi';
 import { useCacheStore } from '@/store/useCacheStore';
 import {
@@ -699,8 +700,9 @@ const StructRuleDetailPage: FC = () => {
             <Card title="后处理代码片段" className="mt-[12px]">
               <Form.Item<StructRule.Detail>
                 name={['code_snippets', 0, 'content']}
+                className="h-[500px]"
               >
-                <Input.TextArea rows={15} />
+                <MonacoEditor />
               </Form.Item>
             </Card>
           </div>
