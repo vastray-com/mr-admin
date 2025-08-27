@@ -13,8 +13,10 @@ import {
 import clsx from 'clsx';
 import dayjs from 'dayjs';
 import { useCallback, useRef, useState } from 'react';
+import { Link } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
+import { usePaginationData } from '@/hooks/usePaginationData';
 import { useCacheStore } from '@/store/useCacheStore';
 import {
   OneTimeTaskType,
@@ -32,28 +34,15 @@ const statusDisplay: Record<TaskStatus, [string, string]> = {
 };
 
 const TaskListPage = () => {
-  const isInitial = useRef(false);
-  const [data, setData] = useState<Task.List>([]);
   const { taskApi } = useApi();
   const { message } = App.useApp();
 
-  // 拉取列表
-  const fetchList = useCallback(async () => {
-    taskApi
-      .getTaskList({
-        page_num: 1,
-        page_size: 200,
-      })
-      .then((res) => {
-        if (res.code === 200) {
-          setData(res.data.data);
-        }
-      })
-      .catch((err) => console.error('获取任务列表失败：', err))
-      .finally(() => {
-        isInitial.current = true;
-      });
-  }, [taskApi]);
+  // 拉取列表分页数据
+  const [data, setData] = useState<Task.List>([]);
+  const { PaginationComponent, refresh } = usePaginationData({
+    fetchData: taskApi.getTaskList,
+    setData: setData,
+  });
 
   // 新建任务
   const ruleOptions = useCacheStore((s) => s.ruleOptions);
@@ -86,7 +75,7 @@ const TaskListPage = () => {
           if (res.code === 200) {
             message.success(`操作成功`);
             // 刷新任务列表
-            fetchList();
+            refresh();
           } else {
             message.error(`操作失败：${res.msg}`);
           }
@@ -96,7 +85,7 @@ const TaskListPage = () => {
           message.error('操作任务失败，请稍后重试');
         });
     },
-    [taskApi, fetchList, message.error, message.success],
+    [taskApi, refresh, message.error, message.success],
   );
 
   const onFinish = useCallback(
@@ -118,7 +107,7 @@ const TaskListPage = () => {
           setShowCreateModal(false);
           form.resetFields();
           // 刷新任务列表
-          await fetchList();
+          refresh();
         } else {
           message.error(`创建任务失败：${res.msg}`);
         }
@@ -127,13 +116,8 @@ const TaskListPage = () => {
         message.error('创建任务失败，请稍后重试');
       }
     },
-    [taskApi, fetchList, form.resetFields, message.error, message.success],
+    [taskApi, refresh, form.resetFields, message.error, message.success],
   );
-
-  if (!isInitial.current) {
-    fetchList();
-    return null;
-  }
 
   return (
     <>
@@ -146,7 +130,7 @@ const TaskListPage = () => {
         }
       >
         <Card>
-          <Table<Task.Item> dataSource={data} rowKey="id">
+          <Table<Task.Item> dataSource={data} rowKey="id" pagination={false}>
             <Table.Column title="任务编号" dataIndex="id" />
             <Table.Column
               title="任务类型"
@@ -194,12 +178,9 @@ const TaskListPage = () => {
                   <Button type="link" onClick={() => onCopy(record)}>
                     复制
                   </Button>
-                  <Button
-                    type="link"
-                    href={`/tasks_management/tasks/detail/${record.id}`}
-                  >
-                    详情
-                  </Button>{' '}
+                  <Link to={`/tasks_management/tasks/detail/${record.id}`}>
+                    <Button type="link">详情</Button>
+                  </Link>{' '}
                   {record.one_time_task_type !== OneTimeTaskType.Immediate &&
                     (record.status === TaskStatus.Disabled ? (
                       <Button
@@ -231,6 +212,10 @@ const TaskListPage = () => {
               )}
             />
           </Table>
+
+          <div className="mt-[20px] flex justify-end">
+            <PaginationComponent />
+          </div>
         </Card>
       </ContentLayout>
 

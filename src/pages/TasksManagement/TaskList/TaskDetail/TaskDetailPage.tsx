@@ -1,10 +1,11 @@
-import { Button, Card, Descriptions, Divider, Pagination, Table } from 'antd';
+import { Button, Card, Descriptions, Divider, Table } from 'antd';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
 import { useCallback, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
+import { usePaginationData } from '@/hooks/usePaginationData';
 import { useCacheStore } from '@/store/useCacheStore';
 import { taskTypeMap } from '@/typing/enum';
 import { formatCountToString, formatSecondsToTime } from '@/utils/helper';
@@ -25,67 +26,39 @@ const TaskDetailPage = () => {
   const { taskApi } = useApi();
 
   const isInitial = useRef(false);
+  const ruleOptions = useCacheStore((s) => s.ruleOptions);
+
   const [data, setData] = useState<Task.Item | null>(null);
 
-  const ruleOptions = useCacheStore((s) => s.ruleOptions);
+  // 拉取列表分页数据
   const [instanceList, setInstanceList] = useState<Task.InstanceList>([]);
-  const [listTotal, setListTotal] = useState(0);
-  const [pagination, setPagination] = useState<{ cur: number; size: number }>({
-    cur: 1,
-    size: 10,
-  });
-  const onPaginationChange = useCallback(
-    async (cur: number, size: number) => {
-      if (!taskId) return;
-      const result = await taskApi.getTaskInstanceList({
+  const fetchInstanceList = useCallback(
+    async (params: PaginationParams) => {
+      if (!taskId) await Promise.reject('任务 ID 不存在');
+      return taskApi.getTaskInstanceList({
+        ...params,
         task_id: Number(taskId),
-        page_num: cur,
-        page_size: size,
       });
-      if (result.code === 200) setInstanceList(result.data.data);
-      setListTotal(result.data.total);
-      setPagination({ cur, size });
     },
     [taskId, taskApi.getTaskInstanceList],
   );
+  const { PaginationComponent } = usePaginationData({
+    fetchData: fetchInstanceList,
+    setData: setInstanceList,
+  });
 
-  if (!taskId) {
-    return null;
-  }
-
+  if (!taskId) return null;
   if (!isInitial.current) {
-    const promiseList = [
-      taskApi.getTaskDetail({ task_id: Number(taskId) }),
-      taskApi.getTaskInstanceList({
-        task_id: Number(taskId),
-        page_num: pagination.cur,
-        page_size: pagination.size,
-      }),
-    ];
-    Promise.all(promiseList)
-      .then((result) => {
-        const [detailRes, instancesRes] = result as [
-          APIRes<Task.Item>,
-          APIRes<PaginationData<Task.Instance>>,
-        ];
-        if (detailRes.code === 200) setData(detailRes.data);
-        if (instancesRes.code === 200) {
-          setListTotal(instancesRes.data.total);
-          setInstanceList(instancesRes.data.data);
-        }
+    isInitial.current = true;
+    taskApi
+      .getTaskDetail({ task_id: Number(taskId) })
+      .then((res) => {
+        if (res.code === 200) setData(res.data);
       })
-      .catch((e) => {
-        console.error('获取任务详情失败：', e);
-      })
-      .finally(() => {
-        isInitial.current = true;
-      });
+      .catch((e) => console.error('获取任务详情失败：', e));
     return null;
   }
-
-  if (!data) {
-    return null;
-  }
+  if (!data) return null;
 
   return (
     <ContentLayout
@@ -180,33 +153,24 @@ const TaskDetailPage = () => {
             key="action"
             render={(_, record: Task.Item) => (
               <>
-                <Button
-                  type="link"
-                  href={`/tasks_management/tasks/detail/${record.id}`}
+                <Link
+                  to={`/tasks_management/tasks/detail/${taskId}/${record.id}`}
                 >
-                  下载
-                </Button>
+                  <Button type="link">下载</Button>
+                </Link>
                 <Divider type="vertical" />
-                <Button
-                  type="link"
-                  href={`/tasks_management/tasks/detail/${taskId}/${record.id}`}
+                <Link
+                  to={`/tasks_management/tasks/detail/${taskId}/${record.id}`}
                 >
-                  查看结果
-                </Button>
+                  <Button type="link">查看结果</Button>
+                </Link>
               </>
             )}
           />
         </Table>
 
         <div className="mt-[20px] flex justify-end">
-          <Pagination
-            showTotal={(total) => `共 ${total} 条`}
-            showSizeChanger
-            current={pagination.cur}
-            pageSize={pagination.size}
-            onChange={onPaginationChange}
-            total={listTotal}
-          />
+          <PaginationComponent />
         </div>
       </Card>
     </ContentLayout>
