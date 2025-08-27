@@ -14,6 +14,7 @@ import { type FC, useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
+import { usePaginationData } from '@/hooks/usePaginationData';
 import { useCacheStore } from '@/store/useCacheStore';
 import { StructRuleStatus } from '@/typing/enum';
 import { downloadFile } from '@/utils/helper';
@@ -28,11 +29,9 @@ type FormValues = {
 const StructRulesPage: FC = () => {
   const { ruleApi } = useApi();
   const { message, modal } = App.useApp();
-  const isFirst = useRef(true);
   const nav = useNavigate();
 
   const setRuleListCache = useCacheStore((state) => state.setStructRuleList);
-  const [list, setList] = useState<StructRule.List>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   // 禁止选择超过今天的日期和 6 个月前的日期
@@ -43,16 +42,19 @@ const StructRulesPage: FC = () => {
       return current > todayEnd || current < todayEnd.add(-6, 'month');
     };
 
-  // 拉取病历模板列表
-  const fetchList = useCallback(
-    async (params: StructRule.GetListParams) => {
-      const data = await ruleApi.getRuleList(params);
-      console.log('拉取结构化规则列表成功:', data);
-      setList(data.data.data);
-      setRuleListCache(data.data.data); // 缓存病历模板列表
-    },
-    [ruleApi, setRuleListCache],
+  // 拉取列表分页数据
+  const [list, setList] = useState<StructRule.List>([]);
+  const fetchData = useCallback(
+    async (params: PaginationParams) => ruleApi.getRuleList(params),
+    [ruleApi.getRuleList],
   );
+  const { PaginationComponent, refresh } = usePaginationData({
+    fetchData,
+    setData: (v) => {
+      setList(v);
+      setRuleListCache(v);
+    },
+  });
 
   // 查询表单提交处理函数
   const onFinish: FormProps<FormValues>['onFinish'] = async (values) => {
@@ -63,7 +65,7 @@ const StructRulesPage: FC = () => {
       params.update_start = range[0].format('YYYY-MM-DD');
       params.update_end = range[1].format('YYYY-MM-DD');
     }
-    await fetchList(params);
+    refresh();
   };
 
   // 导入病历模版
@@ -90,7 +92,7 @@ const StructRulesPage: FC = () => {
         // 成功后清空导入文本
         importText.current = '';
         // 刷新列表
-        await fetchList({ page_num: 1, page_size: 100 });
+        refresh();
       } else {
         message.error(res.msg || '新建病历模板失败');
       }
@@ -98,7 +100,7 @@ const StructRulesPage: FC = () => {
       console.error('新建病历模板失败:', error);
       message.error('新建病历模板失败，请检查导入文本格式是否正确。');
     }
-  }, [fetchList, message, ruleApi]);
+  }, [refresh, message, ruleApi]);
 
   const onOpenImportModal = useCallback(() => {
     modal.confirm({
@@ -159,20 +161,13 @@ const StructRulesPage: FC = () => {
       const res = await ruleApi.actionRule({ id: record.id, action });
       if (res.code === 200) {
         message.success(`操作成功`);
-        fetchList({ page_num: 1, page_size: 100 });
+        refresh();
       } else {
         message.error(`操作失败: ${res.msg}`);
       }
     },
-    [fetchList, message, ruleApi],
+    [refresh, message, ruleApi],
   );
-
-  // 如果是第一次加载，返回 null，避免重复渲染
-  if (isFirst.current) {
-    fetchList({ page_num: 1, page_size: 100 });
-    isFirst.current = false; // 设置为 false，避免重复加载
-    return null;
-  }
 
   // 页面渲染
   return (
@@ -238,12 +233,11 @@ const StructRulesPage: FC = () => {
               type: 'checkbox',
               onChange: (ids) => setSelectedIds(ids as number[]),
             }}
+            pagination={false}
           >
             <Table.Column title="病历名称" dataIndex="name_cn" />
             <Table.Column title="病历英文名" dataIndex="name_en" />
             <Table.Column title="病历 ID" dataIndex="id" />
-            {/*<Table.Column title="所属分类" dataIndex="mr_type" />*/}
-            {/*<Table.Column title="排序" dataIndex="sort_index" />*/}
             <Table.Column
               title="更新时间"
               dataIndex="update_time"
@@ -315,6 +309,10 @@ const StructRulesPage: FC = () => {
               )}
             />
           </Table>
+
+          <div className="flex justify-end mt-[16px]">
+            <PaginationComponent />
+          </div>
         </Card>
       </div>
     </ContentLayout>

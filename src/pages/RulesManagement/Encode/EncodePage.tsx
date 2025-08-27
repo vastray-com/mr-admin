@@ -14,6 +14,7 @@ import { type FC, useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
+import { usePaginationData } from '@/hooks/usePaginationData';
 import { useCacheStore } from '@/store/useCacheStore';
 import { downloadFile } from '@/utils/helper';
 import type { FormProps } from 'antd';
@@ -26,11 +27,9 @@ type FormValues = {
 const EncodePage: FC = () => {
   const { encodeApi } = useApi();
   const { message, modal } = App.useApp();
-  const isFirst = useRef(true);
   const nav = useNavigate();
 
   const setEncodeListCache = useCacheStore((s) => s.setEncodeList);
-  const [list, setList] = useState<Encode.List>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   // 禁止选择超过今天的日期和 6 个月前的日期
@@ -41,16 +40,19 @@ const EncodePage: FC = () => {
       return current > todayEnd || current < todayEnd.add(-6, 'month');
     };
 
-  // 拉取病历模板列表
-  const fetchList = useCallback(
-    async (params: Encode.ListParams) => {
-      const data = await encodeApi.getEncodeList(params);
-      console.log('拉取码表列表成功:', data);
-      setList(data.data.data);
-      setEncodeListCache(data.data.data); // 缓存列表数据
-    },
-    [encodeApi.getEncodeList, setEncodeListCache],
+  // 拉取列表分页数据
+  const [list, setList] = useState<Encode.List>([]);
+  const fetchData = useCallback(
+    async (params: PaginationParams) => encodeApi.getEncodeList(params),
+    [encodeApi.getEncodeList],
   );
+  const { PaginationComponent, refresh } = usePaginationData({
+    fetchData,
+    setData: (v) => {
+      setList(v);
+      setEncodeListCache(v); // 缓存列表数据
+    },
+  });
 
   // 查询表单提交处理函数
   const onFinish: FormProps<FormValues>['onFinish'] = async (values) => {
@@ -61,7 +63,7 @@ const EncodePage: FC = () => {
       params.update_start = range[0].format('YYYY-MM-DD');
       params.update_end = range[1].format('YYYY-MM-DD');
     }
-    await fetchList(params);
+    refresh();
   };
 
   // 导入病历模版
@@ -88,7 +90,7 @@ const EncodePage: FC = () => {
         // 成功后清空导入文本
         importText.current = '';
         // 刷新列表
-        await fetchList({ page_num: 1, page_size: 100 });
+        refresh();
       } else {
         message.error(res.msg || '新建码表失败');
       }
@@ -96,7 +98,7 @@ const EncodePage: FC = () => {
       console.error('新建码表失败:', error);
       message.error('新建码表失败，请检查导入文本格式是否正确。');
     }
-  }, [encodeApi.createEncode, message.error, message.success, fetchList]);
+  }, [encodeApi.createEncode, message.error, message.success, refresh]);
 
   const onOpenImportModal = useCallback(() => {
     modal.confirm({
@@ -160,7 +162,7 @@ const EncodePage: FC = () => {
           onOk: async () => {
             await encodeApi.actionEncode({ id: record.id, is_deleted: 1 });
             message.success(`删除码表 ${record.name_cn} 成功`);
-            await fetchList({ page_num: 1, page_size: 100 });
+            refresh();
           },
         });
         return;
@@ -179,17 +181,10 @@ const EncodePage: FC = () => {
       await encodeApi.actionEncode(params);
       message.success(`操作码表 ${record.name_cn} 成功`);
       // 刷新列表
-      await fetchList({ page_num: 1, page_size: 100 });
+      refresh();
     },
-    [encodeApi.actionEncode, message.success, modal.confirm, fetchList],
+    [encodeApi.actionEncode, message.success, modal.confirm, refresh],
   );
-
-  // 如果是第一次加载，返回 null，避免重复渲染
-  if (isFirst.current) {
-    fetchList({ page_num: 1, page_size: 100 });
-    isFirst.current = false; // 设置为 false，避免重复加载
-    return null;
-  }
 
   // 页面渲染
   return (
@@ -334,6 +329,10 @@ const EncodePage: FC = () => {
               )}
             />
           </Table>
+
+          <div className="flex justify-end mt-[16px]">
+            <PaginationComponent />
+          </div>
         </Card>
       </div>
     </ContentLayout>
