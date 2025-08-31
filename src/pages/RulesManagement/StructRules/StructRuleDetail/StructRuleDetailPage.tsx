@@ -511,16 +511,6 @@ const StructRuleDetailPage: FC = () => {
                                       style={{ width: '160px' }}
                                       {...restField}
                                       name={[name, 'parsing_rule']}
-                                      rules={[
-                                        {
-                                          required: true,
-                                          message: '请输入解析规则',
-                                        },
-                                        {
-                                          whitespace: true,
-                                          message: '请输入解析规则',
-                                        },
-                                      ]}
                                     >
                                       <Input placeholder="请输入解析规则" />
                                     </Form.Item>
