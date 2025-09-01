@@ -312,7 +312,6 @@ const StructRuleDetailPage: FC = () => {
                           <td>数据项</td>
                           <td>字段名称</td>
                           <td>大字段</td>
-                          <td>父字段</td>
                           <td>来源</td>
                           <td>解析规则</td>
                           <td>值类型</td>
@@ -373,11 +372,6 @@ const StructRuleDetailPage: FC = () => {
                                 ]}
                               >
                                 <Select
-                                  disabled={form.getFieldValue([
-                                    'fields',
-                                    name,
-                                    'parent_name',
-                                  ])}
                                   allowClear
                                   placeholder="请选择大字段分类"
                                   options={categoryOptions}
@@ -385,50 +379,50 @@ const StructRuleDetailPage: FC = () => {
                               </Form.Item>
                             </td>
 
-                            <td>
-                              <Form.Item<StructRule.Detail['fields']>
-                                shouldUpdate
-                                style={{ width: '150px' }}
-                                {...restField}
-                                name={[name, 'parent_name']}
-                                rules={[
-                                  {
-                                    type: 'enum',
-                                    enum: parentOptions
-                                      .filter(
-                                        (item) =>
-                                          item.value !==
-                                          form.getFieldValue([
-                                            'fields',
-                                            name,
-                                            'name_en',
-                                          ]),
-                                      )
-                                      .map((item) => item.value),
-                                    message: '请选择正确的父字段',
-                                  },
-                                ]}
-                              >
-                                <Select
-                                  disabled={form.getFieldValue([
-                                    'fields',
-                                    name,
-                                    'category_name',
-                                  ])}
-                                  allowClear
-                                  placeholder="请选择父字段"
-                                  options={parentOptions.filter(
-                                    (item) =>
-                                      item.value !==
-                                      form.getFieldValue([
-                                        'fields',
-                                        name,
-                                        'name_en',
-                                      ]),
-                                  )}
-                                />
-                              </Form.Item>
-                            </td>
+                            {/*<td>*/}
+                            {/*  <Form.Item<StructRule.Detail['fields']>*/}
+                            {/*    shouldUpdate*/}
+                            {/*    style={{ width: '150px' }}*/}
+                            {/*    {...restField}*/}
+                            {/*    name={[name, 'parent_name']}*/}
+                            {/*    rules={[*/}
+                            {/*      {*/}
+                            {/*        type: 'enum',*/}
+                            {/*        enum: parentOptions*/}
+                            {/*          .filter(*/}
+                            {/*            (item) =>*/}
+                            {/*              item.value !==*/}
+                            {/*              form.getFieldValue([*/}
+                            {/*                'fields',*/}
+                            {/*                name,*/}
+                            {/*                'name_en',*/}
+                            {/*              ]),*/}
+                            {/*          )*/}
+                            {/*          .map((item) => item.value),*/}
+                            {/*        message: '请选择正确的父字段',*/}
+                            {/*      },*/}
+                            {/*    ]}*/}
+                            {/*  >*/}
+                            {/*    <Select*/}
+                            {/*      disabled={form.getFieldValue([*/}
+                            {/*        'fields',*/}
+                            {/*        name,*/}
+                            {/*        'category_name',*/}
+                            {/*      ])}*/}
+                            {/*      allowClear*/}
+                            {/*      placeholder="请选择父字段"*/}
+                            {/*      options={parentOptions.filter(*/}
+                            {/*        (item) =>*/}
+                            {/*          item.value !==*/}
+                            {/*          form.getFieldValue([*/}
+                            {/*            'fields',*/}
+                            {/*            name,*/}
+                            {/*            'name_en',*/}
+                            {/*          ]),*/}
+                            {/*      )}*/}
+                            {/*    />*/}
+                            {/*  </Form.Item>*/}
+                            {/*</td>*/}
 
                             <td>
                               <Form.Item<StructRule.Detail['fields']>
@@ -743,7 +737,7 @@ const Preview: FC<PreviewProps> = ({ categories, fields }) => {
         nodes[`FIELD_${f.name_en}`] = {
           title: f.name_cn,
           key: `FIELD_${f.name_en}`,
-          children: [],
+          // children: [],
         };
       }
     });
@@ -753,11 +747,6 @@ const Preview: FC<PreviewProps> = ({ categories, fields }) => {
       const node = nodes[`FIELD_${f.name_en}`];
       if (f.category_name) {
         const parentNode = nodes[`CATEGORY_${f.category_name}`];
-        if (parentNode) {
-          parentNode.children?.push(node);
-        }
-      } else if (f.parent_name) {
-        const parentNode = nodes[`FIELD_${f.parent_name}`];
         if (parentNode) {
           parentNode.children?.push(node);
         }
@@ -771,7 +760,7 @@ const Preview: FC<PreviewProps> = ({ categories, fields }) => {
       }
     });
     process_fields.forEach((f) => {
-      if (!f.category_name && !f.parent_name && f.name_en && f.name_cn) {
+      if (!f.category_name && f.name_en && f.name_cn) {
         const node = nodes[`FIELD_${f.name_en}`];
         if (node) {
           tree.push(node);

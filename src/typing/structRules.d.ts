@@ -1,8 +1,8 @@
-import {
-  type StructRuleFieldValueType,
-  type StructRuleStatus,
-  StructRuleFieldSourceType,
+import type {
   StructRuleFieldMappingType,
+  StructRuleFieldSourceType,
+  StructRuleFieldValueType,
+  StructRuleStatus,
 } from './enum';
 
 export declare namespace StructRule {
@@ -82,8 +82,6 @@ export declare namespace StructRule {
     id: number;
     /// 所属规则 ID
     rule_id: number;
-    /// 父字段
-    parent_name?: string;
     /// 所属分类字段名
     category_name?: string;
     /// 提取字段名称
