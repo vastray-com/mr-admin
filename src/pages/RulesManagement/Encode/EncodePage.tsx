@@ -30,7 +30,7 @@ const EncodePage: FC = () => {
   const nav = useNavigate();
 
   const setEncodeListCache = useCacheStore((s) => s.setEncodeList);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [selectedUids, setSelectedUids] = useState<string[]>([]);
 
   // 禁止选择超过今天的日期和 6 个月前的日期
   const disabledDate: GetProps<typeof DatePicker.RangePicker>['disabledDate'] =
@@ -140,14 +140,14 @@ const EncodePage: FC = () => {
 
   // 导出选中病历模板
   const onExportRecords = useCallback(
-    async (ids: number[]) => {
-      if (ids.length === 0) {
+    async (uids: string[]) => {
+      if (uids.length === 0) {
         message.info('没有选中任何码表');
         return;
       }
       message.loading('正在导出码表...');
-      console.log('导出码表:', ids);
-      const res = await encodeApi.exportEncode({ ids });
+      console.log('导出码表:', uids);
+      const res = await encodeApi.exportEncode({ uids });
       downloadFile(res);
       message.success('导出成功!');
     },
@@ -158,7 +158,7 @@ const EncodePage: FC = () => {
   const onEdit = useCallback(
     (record: Encode.Item) => {
       console.log('编辑项目:', record);
-      nav(`/rules_management/encode/${record.id}`);
+      nav(`/rules_management/encode/${record.uid}`);
     },
     [nav],
   );
@@ -171,7 +171,7 @@ const EncodePage: FC = () => {
           title: '确认删除',
           content: `是否确认删除码表 ${record.name_cn}？`,
           onOk: async () => {
-            await encodeApi.actionEncode({ id: record.id, is_deleted: 1 });
+            await encodeApi.actionEncode({ uid: record.uid, is_deleted: 1 });
             message.success(`删除码表 ${record.name_cn} 成功`);
             refresh();
           },
@@ -180,7 +180,7 @@ const EncodePage: FC = () => {
       }
 
       // 启用或停用操作
-      const params: Encode.ActionParams = { id: record.id };
+      const params: Encode.ActionParams = { uid: record.uid };
       switch (action) {
         case 'enable':
           params.status = 1;
@@ -241,7 +241,7 @@ const EncodePage: FC = () => {
               <Form.Item noStyle>
                 <Button
                   htmlType="button"
-                  onClick={() => onExportRecords(selectedIds as number[])}
+                  onClick={() => onExportRecords(selectedUids as string[])}
                 >
                   导出
                 </Button>
@@ -256,10 +256,10 @@ const EncodePage: FC = () => {
         <Card className="h-[calc(100%_-_80px_-_16px)] mt-[16px]">
           <Table<Encode.Item>
             dataSource={list}
-            rowKey="id"
+            rowKey="uid"
             rowSelection={{
               type: 'checkbox',
-              onChange: (ids) => setSelectedIds(ids as number[]),
+              onChange: (uids) => setSelectedUids(uids as string[]),
             }}
           >
             <Table.Column title="码表名称" dataIndex="name_cn" />
@@ -273,7 +273,7 @@ const EncodePage: FC = () => {
                 </p>
               )}
             />
-            <Table.Column title="码表 ID" dataIndex="id" />
+            <Table.Column title="码表 ID" dataIndex="uid" />
             <Table.Column
               title="更新时间"
               dataIndex="update_time"

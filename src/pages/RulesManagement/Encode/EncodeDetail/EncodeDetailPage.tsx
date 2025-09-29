@@ -5,7 +5,7 @@ import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 
 const initialDetail: Encode.FormDetail = {
-  id: 0,
+  uid: '',
   name_cn: '',
   name_en: null,
   encode_type: 1,
@@ -14,18 +14,18 @@ const initialDetail: Encode.FormDetail = {
 };
 
 const EncodeDetailPage: FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { uid } = useParams<{ uid: string }>();
   const { message } = App.useApp();
   const nav = useNavigate();
   const { encodeApi } = useApi();
-  const isNewEncode = useRef(id === 'NEW');
+  const isNewEncode = useRef(uid === 'NEW');
   const isInit = useRef(isNewEncode.current);
 
   const [detail, setDetail] = useState<Encode.FormDetail>(initialDetail);
   const fetchDetail = useCallback(
-    async (id: string) => {
-      const res = await encodeApi.getEncodeDetail({ id: Number(id) });
-      if (!res.data.id) {
+    async (uid: string) => {
+      const res = await encodeApi.getEncodeDetail({ uid });
+      if (!res.data.uid) {
         console.error('未找到对应的码表详情');
         message.error('未找到对应的码表详情, 请检查 ID 是否正确');
         nav(-1);
@@ -63,11 +63,11 @@ const EncodeDetailPage: FC = () => {
     },
     [encodeApi],
   );
-  if (!isInit.current && !isNewEncode.current && id) {
-    fetchDetail(id);
+  if (!isInit.current && !isNewEncode.current && uid) {
+    fetchDetail(uid);
   }
 
-  if (!id || !isInit.current) return null;
+  if (!uid || !isInit.current) return null;
   return (
     <Form
       name="encode-save"

@@ -8,12 +8,14 @@ declare namespace Encode {
 
   // 获取码表详情的参数
   type DetailParams = {
-    id: number;
+    // UUID
+    uid: string;
   };
 
   // 操作码表的参数
   type ActionParams = {
-    id: number;
+    // UUID
+    uid: string;
     // 0: 默认 1: 删除
     is_deleted?: 0 | 1;
     // 0: 停用, 1: 启用
@@ -22,7 +24,8 @@ declare namespace Encode {
 
   // 码表列表项
   type Item = {
-    id: number;
+    // UUID
+    uid: string;
     name_cn: string;
     name_en?: string | null;
     // 0: 内置, 1: 自定义

@@ -7,20 +7,22 @@ declare namespace Task {
 
   // 获取任务详情的参数
   type DetailParams = {
-    task_id: number;
+    task_uid: string;
   };
 
   // 操作任务的参数
   type ActionParams = {
-    id: number;
+    // UUID
+    uid: string;
     action: 'enable' | 'disable' | 'delete';
   };
 
   // 任务项
   type BaseItem = {
-    id: number;
+    // UUID
+    uid: string;
     task_type: TaskType;
-    rule_id: number;
+    rule_uid: string;
     status?: TaskStatus;
     // 执行时间类型，定时任务、立即执行，当任务类型为一次性任务时存在
     one_time_task_type?: OneTimeTaskType;
@@ -47,13 +49,14 @@ declare namespace Task {
 
   // 获取任务实例列表的参数
   type InstanceListParams = PaginationParams & {
-    task_id: number;
+    task_uid: string;
   };
 
   // 实例项
   type Instance = {
-    id: number;
-    task_id: number;
+    // UUID
+    uid: string;
+    task_uid: string;
     // 0: 待运行, 1: 运行中, 2: 已完成 (成功), 3: 已完成 (失败)
     status: 0 | 1 | 2 | 3;
     task_start_time: string;
@@ -68,9 +71,10 @@ declare namespace Task {
 
   // 生成结果项
   type ResultListItem = {
-    id: number;
-    task_id: number;
-    task_instance_id: number;
+    // UUID
+    uid: string;
+    task_uid: string;
+    task_instance_uid: string;
     op_em_no: string;
     reg_date: string;
     visit_no: string;

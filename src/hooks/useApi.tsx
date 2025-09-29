@@ -23,21 +23,18 @@ export const useApi = () => {
         service.get('/admin/task/instance_list', { params }) as Promise<
           APIRes<PaginationData<Task.Instance>>
         >,
-      getTaskInstanceDetail: (taskInstanceId: number) =>
+      getTaskInstanceDetail: (taskInstanceUid: string) =>
         service.get('/admin/task/instance_detail', {
-          params: { task_instance_id: taskInstanceId },
+          params: { task_instance_uid: taskInstanceUid },
         }) as Promise<APIRes<Task.Instance>>,
-      getTaskInstanceResultList: (taskInstanceId: number) =>
+      getTaskInstanceResultList: (taskInstanceUid: string) =>
         service.get('/admin/task/instance_detail/result_list', {
-          params: { task_instance_id: taskInstanceId },
+          params: { task_instance_uid: taskInstanceUid },
         }) as Promise<APIRes<Task.ResultList>>,
-      getTaskInstanceResultDetail: async (
-        taskInstanceId: number,
-        opEmNo: string,
-      ) =>
+      getTaskInstanceResultDetail: (taskInstanceUid: string, opEmNo: string) =>
         service.get('/admin/task/instance_detail/result_detail', {
           params: {
-            task_instance_id: taskInstanceId,
+            task_instance_uid: taskInstanceUid,
             op_em_no: opEmNo,
           },
         }) as Promise<APIRes<Task.ResultDetail>>,
@@ -61,7 +58,7 @@ export const useApi = () => {
         service.post('/admin/encode/update', params) as Promise<APIRes<number>>,
       actionEncode: (params: Encode.ActionParams) =>
         service.post('/admin/encode/update', params) as Promise<APIRes<null>>,
-      exportEncode: (params: { ids: number[] }) =>
+      exportEncode: (params: { uids: string[] }) =>
         noInterceptorsService.post('/admin/encode/export', params, {
           responseType: 'blob', // 设置响应类型为 Blob
         }) as Promise<AxiosResponse<Blob>>,
@@ -81,17 +78,17 @@ export const useApi = () => {
         >,
       createRule: (params: StructRule.Detail) =>
         service.post('/admin/structured_rule/create', params) as Promise<
-          APIRes<number>
+          APIRes<string>
         >,
       updateRule: (params: StructRule.Detail) =>
         service.post('/admin/structured_rule/update', params) as Promise<
-          APIRes<number>
+          APIRes<string>
         >,
       actionRule: (params: StructRule.ActionParams) =>
         service.post('/admin/structured_rule/action', params) as Promise<
-          APIRes<number>
+          APIRes<string>
         >,
-      exportRules: (params: { ids: number[] }) =>
+      exportRules: (params: { uids: string[] }) =>
         noInterceptorsService.post('/admin/structured_rule/export', params, {
           responseType: 'blob', // 设置响应类型为 Blob
         }) as Promise<AxiosResponse<Blob>>,

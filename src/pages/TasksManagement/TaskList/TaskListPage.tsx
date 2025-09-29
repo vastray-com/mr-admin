@@ -67,10 +67,10 @@ const TaskListPage = () => {
   };
 
   const onAction = useCallback(
-    (id: number, action: Task.ActionParams['action']) => {
-      console.log(`执行操作：${action}，任务 ID：${id}`);
+    (uid: string, action: Task.ActionParams['action']) => {
+      console.log(`执行操作：${action}，任务 ID：${uid}`);
       taskApi
-        .actionTask({ id, action })
+        .actionTask({ uid, action })
         .then((res) => {
           if (res.code === 200) {
             message.success(`操作成功`);
@@ -130,8 +130,8 @@ const TaskListPage = () => {
         }
       >
         <Card>
-          <Table<Task.Item> dataSource={data} rowKey="id" pagination={false}>
-            <Table.Column title="任务编号" dataIndex="id" />
+          <Table<Task.Item> dataSource={data} rowKey="uid" pagination={false}>
+            <Table.Column title="任务编号" dataIndex="uid" />
             <Table.Column
               title="任务类型"
               dataIndex="task_type"
@@ -139,9 +139,9 @@ const TaskListPage = () => {
             />
             <Table.Column
               title="结构化规则"
-              dataIndex="rule_id"
-              render={(id) =>
-                ruleOptions.find((rule) => rule.value === id)?.label ?? '-'
+              dataIndex="rule_uid"
+              render={(uid) =>
+                ruleOptions.find((rule) => rule.value === uid)?.label ?? '-'
               }
             />
             <Table.Column
@@ -178,21 +178,21 @@ const TaskListPage = () => {
                   <Button type="link" onClick={() => onCopy(record)}>
                     复制
                   </Button>
-                  <Link to={`/tasks_management/tasks/detail/${record.id}`}>
+                  <Link to={`/tasks_management/tasks/detail/${record.uid}`}>
                     <Button type="link">详情</Button>
                   </Link>{' '}
                   {record.one_time_task_type !== OneTimeTaskType.Immediate &&
                     (record.status === TaskStatus.Disabled ? (
                       <Button
                         type="link"
-                        onClick={() => onAction(record.id, 'enable')}
+                        onClick={() => onAction(record.uid, 'enable')}
                       >
                         启用
                       </Button>
                     ) : (
                       <Button
                         type="link"
-                        onClick={() => onAction(record.id, 'disable')}
+                        onClick={() => onAction(record.uid, 'disable')}
                       >
                         禁用
                       </Button>
@@ -203,7 +203,7 @@ const TaskListPage = () => {
                     <Button
                       type="link"
                       danger
-                      onClick={() => onAction(record.id, 'delete')}
+                      onClick={() => onAction(record.uid, 'delete')}
                     >
                       删除
                     </Button>
@@ -250,7 +250,7 @@ const TaskListPage = () => {
 
           <Form.Item<Task.CreateItem>
             label="结构化规则"
-            name="rule_id"
+            name="rule_uid"
             rules={[
               {
                 required: true,

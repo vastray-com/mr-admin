@@ -30,14 +30,14 @@ export const useCacheStore = createWithEqualityFn<Store>((set) => ({
   ...initialState,
   setEncodeList: (list: Encode.List) => {
     const encodeOptions = list.map((encode) => ({
-      value: `${encode.id}`,
+      value: `${encode.uid}`,
       label: encode.name_cn,
     }));
     set({ encodeList: list, encodeOptions });
   },
   setStructRuleList: (list: StructRule.List) => {
     const ruleOptions = list.map((rule) => ({
-      value: rule.id,
+      value: rule.uid,
       label: rule.name_cn,
     }));
     set({ structRuleList: list, ruleOptions });

@@ -22,7 +22,7 @@ export const taskInstanceStatusDisplay: Record<
 };
 
 const TaskDetailPage = () => {
-  const { taskId } = useParams();
+  const { taskUid } = useParams();
   const { taskApi } = useApi();
 
   const isInitial = useRef(false);
@@ -34,24 +34,25 @@ const TaskDetailPage = () => {
   const [instanceList, setInstanceList] = useState<Task.InstanceList>([]);
   const fetchInstanceList = useCallback(
     async (params: PaginationParams) => {
-      if (!taskId) await Promise.reject('任务 ID 不存在');
-      return taskApi.getTaskInstanceList({
-        ...params,
-        task_id: Number(taskId),
-      });
+      return taskUid
+        ? taskApi.getTaskInstanceList({
+            ...params,
+            task_uid: taskUid,
+          })
+        : Promise.reject('任务 ID 不存在');
     },
-    [taskId, taskApi.getTaskInstanceList],
+    [taskUid, taskApi.getTaskInstanceList],
   );
   const { PaginationComponent } = usePaginationData({
     fetchData: fetchInstanceList,
     setData: setInstanceList,
   });
 
-  if (!taskId) return null;
+  if (!taskUid) return null;
   if (!isInitial.current) {
     isInitial.current = true;
     taskApi
-      .getTaskDetail({ task_id: Number(taskId) })
+      .getTaskDetail({ task_uid: taskUid })
       .then((res) => {
         if (res.code === 200) setData(res.data);
       })
@@ -81,7 +82,8 @@ const TaskDetailPage = () => {
               key: '2',
               label: '结构化规则',
               children:
-                ruleOptions.find((r) => r.value === data.rule_id)?.label || '-',
+                ruleOptions.find((r) => r.value === data.rule_uid)?.label ||
+                '-',
             },
             {
               key: '3',
@@ -96,10 +98,10 @@ const TaskDetailPage = () => {
       <Card title="执行记录" className="mt-[16px]">
         <Table<Task.Instance>
           dataSource={instanceList}
-          rowKey="id"
+          rowKey="uid"
           pagination={false}
         >
-          <Table.Column title="记录 ID" dataIndex="id" />
+          <Table.Column title="记录 ID" dataIndex="uid" />
           <Table.Column
             title="运行状态"
             dataIndex="status"
@@ -154,13 +156,13 @@ const TaskDetailPage = () => {
             render={(_, record: Task.Item) => (
               <>
                 <Link
-                  to={`/tasks_management/tasks/detail/${taskId}/${record.id}`}
+                  to={`/tasks_management/tasks/detail/${taskUid}/${record.uid}`}
                 >
                   <Button type="link">下载</Button>
                 </Link>
                 <Divider type="vertical" />
                 <Link
-                  to={`/tasks_management/tasks/detail/${taskId}/${record.id}`}
+                  to={`/tasks_management/tasks/detail/${taskUid}/${record.uid}`}
                 >
                   <Button type="link">查看结果</Button>
                 </Link>

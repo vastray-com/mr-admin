@@ -12,8 +12,8 @@ export declare namespace StructRule {
     update_start?: string;
   };
   type Item = {
-    /// 自增ID
-    id: number;
+    // UUID
+    uid: string;
     /// 规则名称
     name_cn: string;
     /// 规则英文名
@@ -31,7 +31,8 @@ export declare namespace StructRule {
 
   // 获取情的参数
   type DetailParams = {
-    id: number;
+    // UUID
+    uid: string;
   };
   // 规则详情
   type Detail = Item & {
@@ -44,10 +45,10 @@ export declare namespace StructRule {
   };
 
   type Category = {
-    /// 自增ID
-    id: number;
+    // UUID
+    uid: string;
     /// 所属规则 ID
-    rule_id: number;
+    rule_uid: string;
     /// 分类名称
     name_cn: string;
     /// 分类字段名（英文名）
@@ -64,10 +65,10 @@ export declare namespace StructRule {
   type Categories = Category[];
 
   type CodeSnippet = {
-    /// 自增ID
-    id: number;
+    // UUID
+    uid: string;
     /// 所属规则 ID
-    rule_id: number;
+    rule_uid: string;
     /// 代码片段内容
     content: string;
     /// 创建时间
@@ -78,10 +79,10 @@ export declare namespace StructRule {
   type CodeSnippets = CodeSnippet[];
 
   type Field = {
-    /// 自增ID
-    id: number;
+    // UUID
+    uid: string;
     /// 所属规则 ID
-    rule_id: number;
+    rule_uid: string;
     /// 所属分类字段名
     category_name?: string;
     /// 提取字段名称
@@ -108,7 +109,8 @@ export declare namespace StructRule {
   type Fields = Field[];
 
   type ActionParams = {
-    id: number;
+    // UUID
+    uid: string;
     action: 'enable' | 'disable' | 'delete';
   };
 }

@@ -16,7 +16,7 @@ import {
 import type { StructRule } from '@/typing/structRules';
 
 const initialDetail: StructRule.Detail = {
-  id: -1,
+  uid: '',
   name_cn: '',
   name_en: '',
   comment: '',
@@ -29,18 +29,18 @@ const initialDetail: StructRule.Detail = {
 };
 
 const StructRuleDetailPage: FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { uid } = useParams<{ uid: string }>();
   const { ruleApi } = useApi();
   const { message } = App.useApp();
   const nav = useNavigate();
-  const isNewRule = useRef(id === 'NEW');
+  const isNewRule = useRef(uid === 'NEW');
   const isInit = useRef(isNewRule.current);
 
   const encodeOptions = useCacheStore((s) => s.encodeOptions);
   const [detail, setDetail] = useState<StructRule.Detail>(initialDetail);
   const fetchDetail = useCallback(
-    async (id: string) => {
-      const res = await ruleApi.getRuleDetail({ id: Number(id) });
+    async (uid: string) => {
+      const res = await ruleApi.getRuleDetail({ uid });
       console.log('拉取病历模板详情成功:', res);
       setDetail(res.data);
       isInit.current = true;
@@ -107,11 +107,11 @@ const StructRuleDetailPage: FC = () => {
     [ruleApi, message, nav],
   );
 
-  if (!isInit.current && !isNewRule.current && id) {
-    fetchDetail(id);
+  if (!isInit.current && !isNewRule.current && uid) {
+    fetchDetail(uid);
   }
 
-  if (!id || !isInit.current) return null;
+  if (!uid || !isInit.current) return null;
   return (
     <Form<StructRule.Detail>
       name="struct-rules-save"
@@ -139,7 +139,7 @@ const StructRuleDetailPage: FC = () => {
           <div className="flex-1 w-[calc(100%_-_200px_-_200px_-_24px)] overflow-auto">
             <Card className="h-[220px]" title="基本信息">
               <div className="flex items-center gap-x-[24px] mb-[8px]">
-                <Form.Item<StructRule.Detail> name="id" hidden>
+                <Form.Item<StructRule.Detail> name="uid" hidden>
                   <Input />
                 </Form.Item>
 

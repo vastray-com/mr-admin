@@ -32,7 +32,7 @@ const StructRulesPage: FC = () => {
   const nav = useNavigate();
 
   const setRuleListCache = useCacheStore((state) => state.setStructRuleList);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [selectedUids, setSelectedUids] = useState<string[]>([]);
 
   // 禁止选择超过今天的日期和 6 个月前的日期
   const disabledDate: GetProps<typeof DatePicker.RangePicker>['disabledDate'] =
@@ -137,14 +137,14 @@ const StructRulesPage: FC = () => {
 
   // 导出选中病历模板
   const onExportRecords = useCallback(
-    async (ids: number[]) => {
-      if (ids.length === 0) {
+    async (uids: string[]) => {
+      if (uids.length === 0) {
         message.info('没有选中任何结构化规则');
         return;
       }
       message.loading('正在导出结构化规则...');
-      console.log('导出结构化规则:', ids);
-      const res = await ruleApi.exportRules({ ids });
+      console.log('导出结构化规则:', uids);
+      const res = await ruleApi.exportRules({ uids });
       downloadFile(res);
       message.success('导出成功!');
     },
@@ -155,7 +155,7 @@ const StructRulesPage: FC = () => {
   const onEdit = useCallback(
     (record: StructRule.Item) => {
       console.log('编辑项目:', record);
-      nav(`/rules_management/struct_rules/${record.id}`);
+      nav(`/rules_management/struct_rules/${record.uid}`);
     },
     [nav],
   );
@@ -166,7 +166,7 @@ const StructRulesPage: FC = () => {
       action: StructRule.ActionParams['action'],
     ) => {
       console.log(`执行 ${action} 操作:`, record);
-      const res = await ruleApi.actionRule({ id: record.id, action });
+      const res = await ruleApi.actionRule({ uid: record.uid, action });
       if (res.code === 200) {
         message.success(`操作成功`);
         refresh();
@@ -221,7 +221,7 @@ const StructRulesPage: FC = () => {
               <Form.Item noStyle>
                 <Button
                   htmlType="button"
-                  onClick={() => onExportRecords(selectedIds)}
+                  onClick={() => onExportRecords(selectedUids)}
                 >
                   导出
                 </Button>
@@ -236,16 +236,16 @@ const StructRulesPage: FC = () => {
         <Card className="h-[calc(100%_-_80px_-_16px)] mt-[16px]">
           <Table<StructRule.Item>
             dataSource={list}
-            rowKey="id"
+            rowKey="uid"
             rowSelection={{
               type: 'checkbox',
-              onChange: (ids) => setSelectedIds(ids as number[]),
+              onChange: (uids) => setSelectedUids(uids as string[]),
             }}
             pagination={false}
           >
-            <Table.Column title="病历名称" dataIndex="name_cn" />
-            <Table.Column title="病历英文名" dataIndex="name_en" />
-            <Table.Column title="病历 ID" dataIndex="id" />
+            <Table.Column title="规则名称" dataIndex="name_cn" />
+            <Table.Column title="规则英文名" dataIndex="name_en" />
+            <Table.Column title="规则 ID" dataIndex="uid" />
             <Table.Column
               title="更新时间"
               dataIndex="update_time"

@@ -1,5 +1,11 @@
 import { Pagination } from 'antd';
-import { type ReactNode, useCallback, useRef, useState } from 'react';
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 type Options<T> = {
   fetchData: (params: PaginationParams) => Promise<APIRes<PaginationData<T>>>;
@@ -37,10 +43,12 @@ export const usePaginationData: Hook = (opt) => {
     [opt.fetchData, opt.setData],
   );
 
-  if (!isInitial.current) {
-    isInitial.current = true;
-    onPaginationChange(pagination);
-  }
+  useEffect(() => {
+    if (!isInitial.current) {
+      isInitial.current = true;
+      onPaginationChange(pagination);
+    }
+  }, [onPaginationChange, pagination]);
 
   return {
     PaginationComponent: () => (

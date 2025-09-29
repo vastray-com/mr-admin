@@ -10,7 +10,7 @@ import { formatCountToString } from '@/utils/helper';
 import type { Task } from '@/typing/task';
 
 const InstanceDetailPage = () => {
-  const { taskId, instanceId } = useParams();
+  const { taskUid, instanceUid } = useParams();
 
   // 详情弹窗
   const [drawer, setDrawer] = useState<{
@@ -37,14 +37,14 @@ const InstanceDetailPage = () => {
 
   const { taskApi } = useApi();
 
-  if (!taskId || !instanceId) {
+  if (!taskUid || !instanceUid) {
     return null;
   }
 
   if (!isInitial.current) {
     const promiseList = [
-      taskApi.getTaskInstanceDetail(Number(instanceId)),
-      taskApi.getTaskInstanceResultList(Number(instanceId)),
+      taskApi.getTaskInstanceDetail(instanceUid),
+      taskApi.getTaskInstanceResultList(instanceUid),
     ];
     Promise.all(promiseList)
       .then((result) => {
@@ -77,7 +77,7 @@ const InstanceDetailPage = () => {
         { title: <Link to="/tasks_management/tasks">任务列表</Link> },
         {
           title: (
-            <Link to={`/tasks_management/tasks/detail/${taskId}`}>
+            <Link to={`/tasks_management/tasks/detail/${taskUid}`}>
               任务详情
             </Link>
           ),
@@ -89,7 +89,7 @@ const InstanceDetailPage = () => {
         <Descriptions
           column={2}
           items={[
-            { key: '1', label: '记录 ID', children: data.id },
+            { key: '1', label: '记录 ID', children: data.uid },
             {
               key: '2',
               label: '运行状态',
@@ -137,10 +137,10 @@ const InstanceDetailPage = () => {
       >
         <Table<Task.ResultListItem>
           dataSource={currentList}
-          rowKey="id"
+          rowKey="uid"
           pagination={false}
         >
-          <Table.Column title="记录 ID" dataIndex="id" />
+          <Table.Column title="记录 ID" dataIndex="uid" />
           <Table.Column title="病历标识" dataIndex="op_em_no" />
           <Table.Column title="输入数据" dataIndex="input_summary" />
           <Table.Column
@@ -156,9 +156,9 @@ const InstanceDetailPage = () => {
                 <Button
                   type="link"
                   onClick={async () => {
-                    console.log(`查看详情: ${record.id}`);
+                    console.log(`查看详情: ${record.uid}`);
                     const detail = await taskApi.getTaskInstanceResultDetail(
-                      Number(instanceId),
+                      instanceUid,
                       record.op_em_no,
                     );
                     setDrawer({ open: true, data: detail.data });

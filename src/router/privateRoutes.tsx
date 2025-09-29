@@ -73,14 +73,14 @@ const privateBaseRoutes: BaseRoute = [
         addToMenu: true,
       },
       {
-        key: '/tasks_management/tasks/detail/:taskId',
+        key: '/tasks_management/tasks/detail/:taskUid',
         element: <TaskDetailLazy />,
         label: '任务详情',
         addToMenu: false,
         selectedKeys: ['/tasks_management/tasks'],
       },
       {
-        key: '/tasks_management/tasks/detail/:taskId/:instanceId',
+        key: '/tasks_management/tasks/detail/:taskUid/:instanceUid',
         element: <InstanceDetailLazy />,
         label: '执行结果',
         addToMenu: false,
@@ -109,7 +109,7 @@ const privateBaseRoutes: BaseRoute = [
         addToMenu: true,
       },
       {
-        key: '/rules_management/struct_rules/:id',
+        key: '/rules_management/struct_rules/:uid',
         selectedKeys: ['/rules_management/struct_rules'],
         element: <StructRuleDetailLazy />,
         label: '结构化规则详情',
@@ -122,7 +122,7 @@ const privateBaseRoutes: BaseRoute = [
         addToMenu: true,
       },
       {
-        key: '/rules_management/encode/:id',
+        key: '/rules_management/encode/:uid',
         selectedKeys: ['/rules_management/encode'],
         element: <EncodeDetailLazy />,
         label: '码表详情',
