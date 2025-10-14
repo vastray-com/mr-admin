@@ -58,7 +58,7 @@ const TaskListPage = () => {
     newTaskData.current = {
       ...record,
       schedule_time: dayjs(record.schedule_time),
-      env_vars: Object.entries(JSON.parse(record.env_vars || '{}')),
+      env_vars: Object.entries(record.env_vars || {}),
     };
     console.log('复制的任务数据：', newTaskData.current);
     form.setFieldsValue(newTaskData.current);
@@ -96,8 +96,8 @@ const TaskListPage = () => {
         schedule_time: values.schedule_time?.toISOString(),
         env_vars:
           values.env_vars?.length > 0
-            ? JSON.stringify(Object.fromEntries(values.env_vars || []))
-            : '{}',
+            ? Object.fromEntries(values.env_vars || [])
+            : {},
       };
       console.log('转换后的新任务数据：', newTaskData);
       try {

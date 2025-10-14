@@ -1,5 +1,5 @@
-import type { OneTimeTaskType, TaskStatus, TaskType } from '@/typing/enum';
 import type { Dayjs } from 'dayjs';
+import type { OneTimeTaskType, TaskStatus, TaskType } from '@/typing/enum';
 
 declare namespace Task {
   // 获取任务列表的参数
@@ -35,7 +35,7 @@ declare namespace Task {
   };
   type Item = {
     // 任务环境变量，JSON 字符串
-    env_vars: string;
+    env_vars: Record<string, string>;
     // 执行时间，当任务类型为一次性任务且执行时间类型为定时任务时存在
     schedule_time?: string;
   } & BaseItem;

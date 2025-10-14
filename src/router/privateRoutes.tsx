@@ -60,7 +60,7 @@ const privateBaseRoutes: BaseRoute = [
     loader: ({ request }) => {
       const url = new URL(request.url);
       if (url.pathname === '/tasks_management') {
-        return redirect('/tasks_management/task_list');
+        return redirect('/tasks_management/tasks');
       }
       return null;
     },
