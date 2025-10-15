@@ -90,6 +90,6 @@ declare namespace Task {
   type ResultDetail = {
     op_em_no: string;
     input: string;
-    output: string;
+    output: Record<string, string>[];
   };
 }

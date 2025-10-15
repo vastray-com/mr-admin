@@ -200,7 +200,7 @@ const InstanceDetailPage = () => {
           <ScrollableCard title="提取结果">
             <Table
               pagination={false}
-              dataSource={JSON.parse(drawer.data?.output ?? '[]')}
+              dataSource={drawer.data?.output ?? []}
               rowKey="数据项"
               columns={[
                 {
