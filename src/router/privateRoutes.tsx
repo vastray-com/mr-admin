@@ -12,6 +12,15 @@ const StructRuleDetailLazy = lazy(
       '@/pages/RulesManagement/StructRules/StructRuleDetail/StructRuleDetailPage'
     ),
 );
+const PushRulesLazy = lazy(
+  () => import('@/pages/RulesManagement/PushRules/PushRulesPage'),
+);
+const PushRuleDetailLazy = lazy(
+  () =>
+    import(
+      '@/pages/RulesManagement/PushRules/PushRuleDetail/PushRuleDetailPage'
+    ),
+);
 const EncodeLazy = lazy(
   () => import('@/pages/RulesManagement/Encode/EncodePage'),
 );
@@ -113,6 +122,19 @@ const privateBaseRoutes: BaseRoute = [
         selectedKeys: ['/rules_management/struct_rules'],
         element: <StructRuleDetailLazy />,
         label: '结构化规则详情',
+        addToMenu: false,
+      },
+      {
+        key: '/rules_management/push_rules',
+        element: <PushRulesLazy />,
+        label: '推送规则',
+        addToMenu: true,
+      },
+      {
+        key: '/rules_management/push_rules/:uid',
+        selectedKeys: ['/rules_management/push_rules'],
+        element: <PushRuleDetailLazy />,
+        label: '推送规则详情',
         addToMenu: false,
       },
       {

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { noInterceptorsService, service } from '@/utils/service';
 import type { AxiosResponse } from 'axios';
+import type { PushRule } from '@/typing/pushRules';
 import type { StructRule } from '@/typing/structRules';
 import type { Task } from '@/typing/task';
 
@@ -96,9 +97,36 @@ export const useApi = () => {
     [],
   );
 
+  const pushRule = useMemo(
+    () => ({
+      getRuleList: (params: PushRule.ListParams) =>
+        service.get('/admin/push_rule/list', { params }) as Promise<
+          APIRes<PaginationData<PushRule.Item>>
+        >,
+      getRuleDetail: (params: PushRule.DetailParams) =>
+        service.get('/admin/push_rule/detail', { params }) as Promise<
+          APIRes<PushRule.Detail>
+        >,
+      createRule: (params: PushRule.Detail) =>
+        service.post('/admin/push_rule/create', params) as Promise<
+          APIRes<string>
+        >,
+      updateRule: (params: PushRule.Detail) =>
+        service.post('/admin/push_rule/update', params) as Promise<
+          APIRes<string>
+        >,
+      actionRule: (params: PushRule.ActionParams) =>
+        service.post('/admin/push_rule/action', params) as Promise<
+          APIRes<string>
+        >,
+    }),
+    [],
+  );
+
   return {
     taskApi: task,
     encodeApi: encode,
     ruleApi: rule,
+    pushRuleApi: pushRule,
   };
 };

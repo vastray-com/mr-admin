@@ -6,6 +6,7 @@ import { RouterProvider } from 'react-router/dom';
 import { createRoutes } from '@/router/route';
 import { useCacheStore } from '@/store/useCacheStore';
 import { service } from '@/utils/service';
+import type { PushRule } from '@/typing/pushRules';
 import type { StructRule } from '@/typing/structRules';
 
 const initApp = async () => {
@@ -38,6 +39,21 @@ const initApp = async () => {
     }
   } catch (e) {
     console.error('结构化规则列表初始化失败', e);
+    throw e;
+  }
+
+  // 初始化推送规则列表
+  try {
+    const res = await service.get('/admin/push_rule/list', {
+      params: { page_size: 1000, page_num: 1 },
+    });
+    const r = res as unknown as APIRes<PaginationData<PushRule.Item>>;
+    if (r.code === 200) {
+      // console.log('结构化规则列表初始化成功', res.data.data);
+      useCacheStore.getState().setPushRuleList(res.data.data);
+    }
+  } catch (e) {
+    console.error('推送规则列表初始化失败', e);
     throw e;
   }
 };

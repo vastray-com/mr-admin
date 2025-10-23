@@ -61,6 +61,32 @@ export const structRuleFieldMappingTypeOptions = [
   { value: StructRuleFieldMappingType.Encode, label: '码表' },
 ];
 
+// 推送目标类型
+export enum PushTargetDB {
+  SQLServer = 'sql-server',
+  MySQL = 'mysql',
+}
+
+export const pushTargetDBOptions = [
+  { value: PushTargetDB.SQLServer, label: 'Microsoft SQL Server' },
+  { value: PushTargetDB.MySQL, label: 'MySQL' },
+];
+
+// 推送字段数据类型
+export enum PushDataType {
+  String = 'string',
+  Int = 'int',
+  Float = 'float',
+  Bool = 'bool',
+}
+
+export const pushDataTypeOptions = [
+  { value: PushDataType.String, label: '字符串' },
+  { value: PushDataType.Int, label: '整数' },
+  { value: PushDataType.Float, label: '浮点数' },
+  { value: PushDataType.Bool, label: '布尔值' },
+];
+
 // 任务类型
 export enum TaskType {
   // 一次性任务
