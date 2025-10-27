@@ -17,10 +17,14 @@ export declare namespace PushRule {
     name_en: string;
     /// 规则备注
     comment?: string;
+    /// 原文映射列名，为空不做映射
+    source_map_field: string | null;
     /// 推送目标
     target_db: PushTargetDB;
     /// 目标地址
     target_uri: string;
+    // 目标表名
+    target_table: string;
     /// 创建时间
     create_time: string;
     /// 更新时间
@@ -29,6 +33,8 @@ export declare namespace PushRule {
   type List = Item[];
 
   type Detail = Item & {
+    // 数据过滤条件
+    filter: Filters;
     /// 规则内容
     content: Content;
   };
@@ -49,6 +55,17 @@ export declare namespace PushRule {
     data_type: PushDataType;
   };
   type Content = ContentItem[];
+
+  // 数据过滤条件
+  type Filter = {
+    // 原始字段
+    source: string;
+    // 过滤值
+    value: string;
+    // 过滤操作符，如 =, !=, >, <, LIKE 等
+    operator: string;
+  };
+  type Filters = Filter[];
 
   // 操作参数
   type ActionParams = {
