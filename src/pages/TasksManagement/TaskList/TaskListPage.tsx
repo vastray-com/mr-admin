@@ -12,7 +12,7 @@ import {
 } from 'antd';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
@@ -118,6 +118,14 @@ const TaskListPage = () => {
     },
     [taskApi, refresh, form.resetFields, message.error, message.success],
   );
+
+  // 推送规则联动
+  const pushRules = useCacheStore((s) => s.pushRuleOptions);
+  const rule_uid = Form.useWatch('rule_uid', form);
+  const pushRuleOptions = useMemo(() => {
+    if (!rule_uid) return [];
+    return pushRules[rule_uid] || [];
+  }, [rule_uid, pushRules]);
 
   return (
     <>
@@ -258,7 +266,24 @@ const TaskListPage = () => {
               },
             ]}
           >
-            <Select options={ruleOptions} placeholder="选择结构化规则" />
+            <Select
+              options={ruleOptions}
+              placeholder="选择结构化规则"
+              onChange={() => form.setFieldValue('push_uids', [])}
+            />
+          </Form.Item>
+
+          <Form.Item noStyle dependencies={['rule_uid']}>
+            {() => (
+              <Form.Item<Task.CreateItem> label="推送规则" name="push_uids">
+                <Select
+                  options={pushRuleOptions}
+                  placeholder="选择推送规则"
+                  allowClear
+                  mode="multiple"
+                />
+              </Form.Item>
+            )}
           </Form.Item>
 
           <Form.Item<Task.CreateItem>

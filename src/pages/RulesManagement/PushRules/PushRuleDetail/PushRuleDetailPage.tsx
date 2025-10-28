@@ -19,8 +19,8 @@ const operatorOptions = [
   { label: '大于等于', value: 'gte' },
   { label: '小于', value: 'lt' },
   { label: '小于等于', value: 'lte' },
-  { label: '包含', value: 'in' },
-  { label: '不包含', value: 'nin' },
+  { label: '包含', value: 'like' },
+  { label: '不包含', value: 'nlike' },
 ];
 
 const initialDetail: PushRule.Detail = {

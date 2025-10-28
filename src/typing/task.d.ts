@@ -23,6 +23,8 @@ declare namespace Task {
     uid: string;
     task_type: TaskType;
     rule_uid: string;
+    // 推送规则 UUID 列表
+    push_uids: string[];
     status?: TaskStatus;
     // 执行时间类型，定时任务、立即执行，当任务类型为一次性任务时存在
     one_time_task_type?: OneTimeTaskType;
@@ -64,6 +66,17 @@ declare namespace Task {
     mr_total: number;
     mr_finish: number;
     mr_fail: number;
+    push_status: {
+      push_rule_uid: string;
+      // 实例状态 （0: 待运行 1: 运行中 2: 完成 3: 失败）
+      status: number;
+      // 运行时长（秒）
+      duration: number;
+      // 备注
+      remark: string[];
+      // 推送时间
+      push_time: string;
+    }[];
     create_time: string;
     update_time: string;
   };
