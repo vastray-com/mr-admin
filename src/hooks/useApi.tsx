@@ -93,6 +93,10 @@ export const useApi = () => {
         noInterceptorsService.post('/admin/structured_rule/export', params, {
           responseType: 'blob', // 设置响应类型为 Blob
         }) as Promise<AxiosResponse<Blob>>,
+      getPresetFieldsList: () =>
+        service.get('/admin/structured_rule/get_preset_fields') as Promise<
+          APIRes<StructRule.PresetFields>
+        >,
     }),
     [],
   );

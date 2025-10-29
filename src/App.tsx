@@ -42,6 +42,19 @@ const initApp = async () => {
     throw e;
   }
 
+  // 初始化预设字段列表
+  try {
+    const res = await service.get('/admin/structured_rule/get_preset_fields');
+    const r = res as unknown as APIRes<StructRule.PresetFields>;
+    if (r.code === 200) {
+      console.log('结构化预设字段列表初始化成功', res.data);
+      useCacheStore.getState().setPresetFields(res.data);
+    }
+  } catch (e) {
+    console.error('预设字段列表初始化失败', e);
+    throw e;
+  }
+
   // 初始化推送规则列表
   try {
     const res = await service.get('/admin/push_rule/list', {

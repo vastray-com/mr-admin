@@ -11,6 +11,7 @@ type State = {
   encodeList: Encode.List;
   encodeOptions: SelectOptions;
   structRuleList: StructRule.List;
+  presetFields: StructRule.PresetFields;
   ruleOptions: SelectOptions;
   pushRuleList: PushRule.List;
   pushRuleOptions: Record<string, SelectOptions>;
@@ -18,6 +19,7 @@ type State = {
 type Actions = {
   setEncodeList: (list: Encode.List) => void;
   setStructRuleList: (list: StructRule.List) => void;
+  setPresetFields: (fields: StructRule.PresetFields) => void;
   setPushRuleList: (list: PushRule.List) => void;
   reset: () => void;
 };
@@ -27,6 +29,7 @@ const initialState: State = {
   encodeList: [],
   encodeOptions: [],
   structRuleList: [],
+  presetFields: [],
   ruleOptions: [],
   pushRuleList: [],
   pushRuleOptions: {},
@@ -48,6 +51,8 @@ export const useCacheStore = createWithEqualityFn<Store>((set) => ({
     }));
     set({ structRuleList: list, ruleOptions });
   },
+  setPresetFields: (fields: StructRule.PresetFields) =>
+    set({ presetFields: fields }),
   setPushRuleList: (list: PushRule.List) => {
     const pushRuleOptions: Record<string, SelectOptions> = {};
     list.forEach((item) => {

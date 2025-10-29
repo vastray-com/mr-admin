@@ -1,4 +1,4 @@
-import { App, Button, Card, Form, Input, Select, Tree } from 'antd';
+import { App, Button, Card, Flex, Form, Input, Select, Tree } from 'antd';
 import { type FC, useCallback, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
@@ -31,7 +31,7 @@ const initialDetail: StructRule.Detail = {
 const StructRuleDetailPage: FC = () => {
   const { uid } = useParams<{ uid: string }>();
   const { ruleApi } = useApi();
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const nav = useNavigate();
   const isNewRule = useRef(uid === 'NEW');
   const isInit = useRef(isNewRule.current);
@@ -74,6 +74,64 @@ const StructRuleDetailPage: FC = () => {
         })),
     [fields],
   );
+
+  // 添加预设字段
+  const presetFields = useCacheStore((s) => s.presetFields);
+  const presetFieldOptions = useMemo(() => {
+    return presetFields?.map((field) => {
+      const typeLabel = structRuleFieldValueTypeOptions.find(
+        (o) => o.value === field.value_type,
+      )?.label;
+      return {
+        label: field.name_cn,
+        value: field.id,
+        value_type: typeLabel ?? '未知类型',
+        parsing_rule: field.parsing_rule,
+      };
+    });
+  }, [presetFields]);
+  const selectedPresetFields = useRef<number[]>([]);
+  const onAddPresetField = useCallback(async () => {
+    console.log('添加预设字段:', selectedPresetFields.current);
+    const presetFieldsToAdd = presetFields
+      .filter((field) => selectedPresetFields.current.includes(field.id))
+      .map((f) => {
+        const { id, ...rest } = f;
+        return { ...rest };
+      });
+    form.setFieldValue('fields', [...fields, ...presetFieldsToAdd]);
+  }, [fields, form.setFieldValue, presetFields]);
+  const addPresetField = useCallback(() => {
+    console.log('新增预设字段');
+    modal.confirm({
+      title: '新增预设字段',
+      width: '48vw',
+      centered: true,
+      icon: null,
+      content: (
+        <Select
+          options={presetFieldOptions}
+          size="large"
+          style={{ width: '100%', margin: '24px 0' }}
+          mode="multiple"
+          allowClear
+          placeholder="请选择或搜索预设字段"
+          onChange={(value: number[]) => {
+            selectedPresetFields.current = value;
+          }}
+          optionRender={(option) =>
+            `${option.data.label} - ${option.data.value_type} - ${option.data.parsing_rule}`
+          }
+          filterOption={(input, option) =>
+            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+          }
+        />
+      ),
+      okText: '确认添加',
+      cancelText: '取消',
+      onOk: onAddPresetField,
+    });
+  }, [modal, onAddPresetField, presetFieldOptions]);
 
   // 保存
   const onFinish = useCallback(
@@ -664,15 +722,28 @@ const StructRuleDetailPage: FC = () => {
 
                         <tr>
                           <td colSpan={99} className="py-[12px]">
-                            <Button
-                              type="dashed"
-                              size="large"
-                              onClick={() => add({ need_store: 1 })}
-                              block
-                            >
-                              <i className="i-icon-park-outline:plus text-[16px]" />
-                              <span>新增一行</span>
-                            </Button>
+                            <Flex gap={16}>
+                              <Button
+                                color="primary"
+                                variant="dashed"
+                                size="large"
+                                onClick={addPresetField}
+                                block
+                              >
+                                <i className="i-icon-park-outline:plus text-[16px]" />
+                                <span>新增预设字段</span>
+                              </Button>
+
+                              <Button
+                                type="dashed"
+                                size="large"
+                                onClick={() => add({ need_store: 1 })}
+                                block
+                              >
+                                <i className="i-icon-park-outline:plus text-[16px]" />
+                                <span>新增自定义字段</span>
+                              </Button>
+                            </Flex>
                           </td>
                         </tr>
                       </tbody>
