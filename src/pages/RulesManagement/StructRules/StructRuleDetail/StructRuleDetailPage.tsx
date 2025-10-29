@@ -116,6 +116,7 @@ const StructRuleDetailPage: FC = () => {
     <Form<StructRule.Detail>
       name="struct-rules-save"
       onFinish={onFinish}
+      onFinishFailed={() => message.error(`配置有误，请检查`)}
       initialValues={detail}
       autoComplete="off"
       className="w-full h-full"

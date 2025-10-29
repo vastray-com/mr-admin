@@ -176,6 +176,7 @@ const PushRuleDetailPage: FC = () => {
     <Form<PushRule.Detail>
       name="push-rules-save"
       onFinish={onFinish}
+      onFinishFailed={() => message.error(`配置有误，请检查`)}
       initialValues={detail}
       autoComplete="off"
       className="w-full h-full"
@@ -303,7 +304,8 @@ const PushRuleDetailPage: FC = () => {
           <Card title="数据过滤" className="mt-[12px]">
             <Form.Item shouldUpdate noStyle>
               {sourceFieldOptions?.filter &&
-                sourceFieldOptions.filter.length > 0 && (
+                (sourceFieldOptions.filter.length > 0 ||
+                  filter?.length > 0) && (
                   <Form.List name="filter">
                     {(fields, { add, remove, move }) => (
                       <div className="h-full rounded-2xl overflow-auto pos-relative">
@@ -426,25 +428,28 @@ const PushRuleDetailPage: FC = () => {
                               </tr>
                             ))}
 
-                            <tr>
-                              <td colSpan={99} className="py-[12px]">
-                                <Button
-                                  type="dashed"
-                                  size="large"
-                                  onClick={() =>
-                                    add({
-                                      source: '',
-                                      operator: '',
-                                      value: '',
-                                    })
-                                  }
-                                  block
-                                >
-                                  <i className="i-icon-park-outline:plus text-[16px]" />
-                                  <span>新增一行</span>
-                                </Button>
-                              </td>
-                            </tr>
+                            {sourceFieldOptions.filter &&
+                              sourceFieldOptions.filter.length > 0 && (
+                                <tr>
+                                  <td colSpan={99} className="py-[12px]">
+                                    <Button
+                                      type="dashed"
+                                      size="large"
+                                      onClick={() =>
+                                        add({
+                                          source: '',
+                                          operator: '',
+                                          value: '',
+                                        })
+                                      }
+                                      block
+                                    >
+                                      <i className="i-icon-park-outline:plus text-[16px]" />
+                                      <span>新增一行</span>
+                                    </Button>
+                                  </td>
+                                </tr>
+                              )}
                           </tbody>
                         </table>
                       </div>
@@ -457,7 +462,8 @@ const PushRuleDetailPage: FC = () => {
           <Card title="推送字段" className="mt-[12px]">
             <Form.Item shouldUpdate noStyle>
               {sourceFieldOptions?.content &&
-                sourceFieldOptions.content.length > 0 && (
+                (sourceFieldOptions.content.length > 0 ||
+                  content?.length > 0) && (
                   <Form.List name="content">
                     {(fields, { add, remove, move }) => (
                       <div className="h-full rounded-2xl overflow-auto pos-relative">
@@ -581,25 +587,28 @@ const PushRuleDetailPage: FC = () => {
                               </tr>
                             ))}
 
-                            <tr>
-                              <td colSpan={99} className="py-[12px]">
-                                <Button
-                                  type="dashed"
-                                  size="large"
-                                  onClick={() =>
-                                    add({
-                                      source: '',
-                                      target: '',
-                                      data_type: null,
-                                    })
-                                  }
-                                  block
-                                >
-                                  <i className="i-icon-park-outline:plus text-[16px]" />
-                                  <span>新增一行</span>
-                                </Button>
-                              </td>
-                            </tr>
+                            {sourceFieldOptions?.content &&
+                              sourceFieldOptions.content.length > 0 && (
+                                <tr>
+                                  <td colSpan={99} className="py-[12px]">
+                                    <Button
+                                      type="dashed"
+                                      size="large"
+                                      onClick={() =>
+                                        add({
+                                          source: '',
+                                          target: '',
+                                          data_type: null,
+                                        })
+                                      }
+                                      block
+                                    >
+                                      <i className="i-icon-park-outline:plus text-[16px]" />
+                                      <span>新增一行</span>
+                                    </Button>
+                                  </td>
+                                </tr>
+                              )}
                           </tbody>
                         </table>
                       </div>
