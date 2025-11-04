@@ -1,4 +1,13 @@
-import { App, Button, Card, Form, Input, Select, type SelectProps } from 'antd';
+import {
+  App,
+  Button,
+  Card,
+  Form,
+  Input,
+  Select,
+  type SelectProps,
+  Spin,
+} from 'antd';
 import { type FC, useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
@@ -170,7 +179,13 @@ const PushRuleDetailPage: FC = () => {
     fetchDetail(uid);
   }
 
-  if (!uid || !isInit.current) return null;
+  if (!uid || !isInit.current)
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-y-4">
+        <Spin />
+        <p>加载表格中，请稍候...</p>
+      </div>
+    );
 
   return (
     <Form<PushRule.Detail>
