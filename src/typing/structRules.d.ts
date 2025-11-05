@@ -107,6 +107,11 @@ export declare namespace StructRule {
     update_time?: string;
   };
   type Fields = Field[];
+  type FEField = Omit<Field, 'mapping_type' | 'mapping_content'> & {
+    enumContent: string;
+    encodeContent: string;
+  };
+  type FEFields = FEField[];
 
   type ActionParams = {
     // UUID

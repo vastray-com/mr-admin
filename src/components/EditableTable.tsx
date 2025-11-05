@@ -5,6 +5,7 @@ import {
   Select,
   type SelectProps,
   Table,
+  Tooltip,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { HTMLAttributes, PropsWithChildren } from 'react';
@@ -50,7 +51,12 @@ const EditableCell = <T,>({
           {inputNode()}
         </Form.Item>
       ) : (
-        children
+        <Tooltip
+          placement="topLeft"
+          title={(record?.[dataIndex as keyof T] as string) ?? ''}
+        >
+          {children}
+        </Tooltip>
       )}
     </td>
   );
@@ -76,7 +82,7 @@ const EditableTable = <T,>(props: Props<T>) => {
       rowClassName="editable-row"
       pagination={{ onChange: () => props.onCancel?.() }}
       rowKey="uid"
-      scroll={{ x: 'max-content' }}
+      scroll={props.scroll}
     />
   );
 };

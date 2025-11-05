@@ -61,7 +61,7 @@ const StructRuleDetailPage: FC = () => {
   const [baseForm] =
     Form.useForm<Pick<StructRule.Detail, 'name_cn' | 'name_en' | 'comment'>>();
   const [categoryForm] = Form.useForm<StructRule.Category>();
-  const [fieldForm] = Form.useForm<StructRule.Field>();
+  const [fieldForm] = Form.useForm<StructRule.FEField>();
   const [codeSnippetForm] = Form.useForm<{ content: '' }>();
 
   // 添加预设字段
