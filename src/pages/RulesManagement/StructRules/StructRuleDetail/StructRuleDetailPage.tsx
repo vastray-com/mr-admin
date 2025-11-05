@@ -22,6 +22,7 @@ import {
   StructRuleFieldSourceType,
   StructRuleFieldValueType,
   StructRuleStatus,
+  structRuleFieldMappingTypeOptions,
   structRuleFieldSourceTypeOptions,
   structRuleFieldValueTypeOptions,
 } from '@/typing/enum';
@@ -98,10 +99,7 @@ const StructRuleDetailPage: FC = () => {
             ({
               ...f,
               uid: `${Math.random() * 1000000}`,
-              rule_uid: '',
               need_store: 1,
-              create_time: '',
-              update_time: '',
             }) as const,
         ),
       ],
@@ -140,6 +138,7 @@ const StructRuleDetailPage: FC = () => {
   }, [modal, onAddPresetField, presetFieldOptions]);
 
   // 保存
+  const encodeOptions = useCacheStore((s) => s.encodeOptions);
   const onFinish = useCallback(
     async (values: StructRule.Detail) => {
       console.log('保存病历模板:', values);
@@ -158,7 +157,7 @@ const StructRuleDetailPage: FC = () => {
         }
         if (err) {
           message.error(err);
-          return idx;
+          return true;
         }
       });
       if (errCategoryIdx !== -1) return;
@@ -172,12 +171,14 @@ const StructRuleDetailPage: FC = () => {
         if (!f.name_en) {
           err = `提交失败！明细字段序号 ${idx + 1} 字段名称不能为空`;
         }
+
         if (
           f.category_name &&
           !values.category.find((c) => c.name_en === f.category_name)
         ) {
           err = `提交失败！明细字段序号 ${idx + 1} 所属大字段不存在`;
         }
+
         if (
           !structRuleFieldSourceTypeOptions.find(
             (item) => item.value === f.source_type,
@@ -185,9 +186,46 @@ const StructRuleDetailPage: FC = () => {
         ) {
           err = `提交失败！明细字段序号 ${idx + 1} 字段来源类型不合法`;
         }
+
+        if (f.source_type === StructRuleFieldSourceType.QuoteResult) {
+          const isExist = values.fields.find(
+            (field) => field.name_en === f.parsing_rule,
+          );
+          if (!isExist) {
+            err = `提交失败！明细字段序号 ${idx + 1} 引用结果字段不存在`;
+          }
+        }
+
+        if (!f.parsing_rule) {
+          err = `提交失败！明细字段序号 ${idx + 1} 提取规则不能为空`;
+        }
+
+        if (
+          !structRuleFieldValueTypeOptions.find(
+            (item) => item.value === f.value_type,
+          )
+        ) {
+          err = `提交失败！明细字段序号 ${idx + 1} 字段值类型不合法`;
+        }
+
+        if (
+          structRuleFieldMappingTypeOptions.find(
+            (item) => item.value === f.mapping_type,
+          ) === undefined
+        ) {
+          err = `提交失败！明细字段序号 ${idx + 1} 字段映射类型不合法`;
+        }
+
+        if (
+          f.mapping_type === StructRuleFieldMappingType.Encode &&
+          !encodeOptions.find((o) => o.value === f.mapping_content)
+        ) {
+          err = `提交失败！明细字段序号 ${idx + 1} 字段映射码表不存在`;
+        }
+
         if (err) {
           message.error(err);
-          return idx;
+          return true;
         }
       });
       if (errFieldIdx !== -1) return;
@@ -217,7 +255,7 @@ const StructRuleDetailPage: FC = () => {
         }
       }
     },
-    [ruleApi, message, nav],
+    [ruleApi, message, nav, encodeOptions],
   );
 
   if (!isInit.current && !isNewRule.current && uid) {
