@@ -22,6 +22,7 @@ import {
   StructRuleFieldSourceType,
   StructRuleFieldValueType,
   StructRuleStatus,
+  structRuleFieldSourceTypeOptions,
   structRuleFieldValueTypeOptions,
 } from '@/typing/enum';
 import type { StructRule } from '@/typing/structRules';
@@ -61,7 +62,7 @@ const StructRuleDetailPage: FC = () => {
   const [baseForm] =
     Form.useForm<Pick<StructRule.Detail, 'name_cn' | 'name_en' | 'comment'>>();
   const [categoryForm] = Form.useForm<StructRule.Category>();
-  const [fieldForm] = Form.useForm<StructRule.FEField>();
+  const [fieldForm] = Form.useForm<StructRule.Field>();
   const [codeSnippetForm] = Form.useForm<{ content: '' }>();
 
   // 添加预设字段
@@ -144,11 +145,52 @@ const StructRuleDetailPage: FC = () => {
       console.log('保存病历模板:', values);
 
       // 校验大字段
-      for (const category of values.category) {
-        if (!category.name_cn || !category.name_en) {
-          message.error('大字段名称和英文名称不能为空');
+      const errCategoryIdx = values.category.findIndex((c, idx) => {
+        let err = '';
+        if (!c.name_cn) {
+          err = `提交失败！大字段序号 ${idx + 1} 提取字段名称不能为空`;
         }
-      }
+        if (!c.name_en) {
+          err = `提交失败！大字段序号 ${idx + 1} 字段名称不能为空`;
+        }
+        if (!c.content) {
+          err = `提交失败！大字段序号 ${idx + 1} 提取规则不能为空`;
+        }
+        if (err) {
+          message.error(err);
+          return idx;
+        }
+      });
+      if (errCategoryIdx !== -1) return;
+
+      // 校验明细字段
+      const errFieldIdx = values.fields.findIndex((f, idx) => {
+        let err = '';
+        if (!f.name_cn) {
+          err = `提交失败！明细字段序号 ${idx + 1} 数据项名称不能为空`;
+        }
+        if (!f.name_en) {
+          err = `提交失败！明细字段序号 ${idx + 1} 字段名称不能为空`;
+        }
+        if (
+          f.category_name &&
+          !values.category.find((c) => c.name_en === f.category_name)
+        ) {
+          err = `提交失败！明细字段序号 ${idx + 1} 所属大字段不存在`;
+        }
+        if (
+          !structRuleFieldSourceTypeOptions.find(
+            (item) => item.value === f.source_type,
+          )
+        ) {
+          err = `提交失败！明细字段序号 ${idx + 1} 字段来源类型不合法`;
+        }
+        if (err) {
+          message.error(err);
+          return idx;
+        }
+      });
+      if (errFieldIdx !== -1) return;
 
       if (
         values.code_snippets.length === 1 &&

@@ -7,63 +7,18 @@ import {
   type TableProps,
   Typography,
 } from 'antd';
-import { type FC, useEffect, useMemo, useRef, useState } from 'react';
+import { type FC, useMemo, useState } from 'react';
 import EditableTable from '@/components/EditableTable';
 import { useCacheStore } from '@/store/useCacheStore';
 import {
   StructRuleFieldMappingType,
   StructRuleFieldSourceType,
   StructRuleFieldValueType,
+  structRuleFieldMappingTypeOptions,
   structRuleFieldSourceTypeOptions,
   structRuleFieldValueTypeOptions,
 } from '@/typing/enum';
 import type { StructRule } from '@/typing/structRules';
-
-const feFieldToField = (feField: StructRule.FEField): StructRule.Field => {
-  const { encodeContent, enumContent, ...rest } = feField;
-  if (encodeContent) {
-    return {
-      ...rest,
-      mapping_type: StructRuleFieldMappingType.Encode,
-      mapping_content: encodeContent,
-    };
-  } else if (enumContent) {
-    return {
-      ...rest,
-      mapping_type: StructRuleFieldMappingType.Enum,
-      mapping_content: enumContent,
-    };
-  } else {
-    return {
-      ...rest,
-      mapping_type: StructRuleFieldMappingType.None,
-      mapping_content: '',
-    };
-  }
-};
-
-const fieldToFEField = (field: StructRule.Field): StructRule.FEField => {
-  const { mapping_type, mapping_content, ...rest } = field;
-  if (mapping_type === StructRuleFieldMappingType.Encode) {
-    return {
-      ...rest,
-      encodeContent: mapping_content,
-      enumContent: '',
-    };
-  } else if (mapping_type === StructRuleFieldMappingType.Enum) {
-    return {
-      ...rest,
-      encodeContent: '',
-      enumContent: mapping_content,
-    };
-  } else {
-    return {
-      ...rest,
-      encodeContent: '',
-      enumContent: '',
-    };
-  }
-};
 
 type Props = {
   form: FormInstance;
@@ -73,23 +28,20 @@ type Props = {
 const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
   const [editingKey, setEditingKey] = useState('');
   const isEditing = (key: string) => key === editingKey;
+  const resultFieldOptions = useMemo(
+    () =>
+      detail.fields.map((f) => ({
+        label: f.name_cn,
+        value: f.name_en,
+      })),
+    [detail.fields],
+  );
 
-  const enumContent = Form.useWatch('enumContent', form);
-  const encodeContent = Form.useWatch('encodeContent', form);
-  const needEmpty = useRef(false);
-  // 当修改其中一个时，清空另一个
-  useEffect(() => {
-    if (editingKey && needEmpty.current && enumContent) {
-      form.setFieldsValue({ encodeContent: '' });
-    }
-  }, [editingKey, enumContent, form]);
-  useEffect(() => {
-    if (editingKey && needEmpty.current && encodeContent) {
-      form.setFieldsValue({ enumContent: '' });
-    }
-  }, [editingKey, encodeContent, form]);
+  const name_en = Form.useWatch('name_en', form);
+  const sourceType = Form.useWatch('source_type', form);
+  const mappingType = Form.useWatch('mapping_type', form);
 
-  const edit = (record: Partial<StructRule.FEField>) => {
+  const edit = (record: Partial<StructRule.Field>) => {
     form.setFieldsValue({
       category_name: '',
       name_cn: '',
@@ -97,10 +49,11 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       source_type: StructRuleFieldSourceType.LLM,
       parsing_rule: '',
       value_type: StructRuleFieldValueType.Text,
+      mapping_type: StructRuleFieldMappingType.None,
+      mapping_content: '',
       need_store: 1,
       ...record,
     });
-    needEmpty.current = true;
     setEditingKey(record.uid || '');
   };
   const move = (key: string, position: -1 | 1) => {
@@ -118,23 +71,21 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
     onChange(newData);
   };
   const cancel = () => {
-    needEmpty.current = false;
     setEditingKey('');
   };
   const save = async (key: string) => {
     try {
-      const row = (await form.validateFields()) as StructRule.FEField;
+      const row = (await form.validateFields()) as StructRule.Field;
       const newData = [...detail.fields];
       const idx = newData.findIndex((item) => item.uid === key);
       if (idx > -1) {
         const item = newData[idx];
         newData.splice(idx, 1, {
           ...item,
-          ...feFieldToField(row),
+          ...row,
         });
         onChange(newData);
       }
-      needEmpty.current = false;
       setEditingKey('');
     } catch (errInfo) {
       console.log('Validate Failed:', errInfo);
@@ -161,7 +112,7 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       dataIndex: 'no',
       width: '80px',
       // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      render: (_: any, record: StructRule.FEField) =>
+      render: (_: any, record: StructRule.Field) =>
         detail.fields.findIndex((f) => f.uid === record.uid) + 1,
     },
     {
@@ -207,8 +158,16 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       dataIndex: 'parsing_rule',
       width: '360px',
       ellipsis: true,
-      inputType: 'text',
       editable: true,
+      render: (v: string, record: StructRule.Field) => {
+        if (record.source_type === StructRuleFieldSourceType.QuoteResult) {
+          return (
+            resultFieldOptions.find((option) => option.value === v)?.label || v
+          );
+        } else {
+          return v;
+        }
+      },
     },
     {
       title: '值类型',
@@ -221,35 +180,33 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
         structRuleFieldValueTypeOptions.find((option) => option.value === v)
           ?.label,
     },
-    // {
-    //   title: '字段映射',
-    //   dataIndex: 'mapping_type',
-    //   width: '120px',
-    //   inputType: 'select',
-    //   options: structRuleFieldMappingTypeOptions,
-    //   editable: true,
-    //   render: (v: StructRuleFieldMappingType) =>
-    //     structRuleFieldMappingTypeOptions.find((option) => option.value === v)
-    //       ?.label,
-    // },
     {
-      title: '码表映射',
-      dataIndex: 'encodeContent',
+      title: '字段映射',
+      dataIndex: 'mapping_type',
+      width: '120px',
+      inputType: 'select',
+      options: structRuleFieldMappingTypeOptions,
+      editable: true,
+      render: (v: StructRuleFieldMappingType) =>
+        structRuleFieldMappingTypeOptions.find((option) => option.value === v)
+          ?.label,
+    },
+    {
+      title: '映射内容',
+      dataIndex: 'mapping_content',
       width: '240px',
       ellipsis: true,
       inputType: 'select',
-      options: encodeOptions,
-      render: (v: string) =>
-        encodeOptions.find((option) => option.value === v)?.label || v,
       editable: true,
-    },
-    {
-      title: '枚举映射',
-      dataIndex: 'enumContent',
-      width: '240px',
-      ellipsis: true,
-      inputType: 'text',
-      editable: true,
+      render: (v: string, record: StructRule.Field) => {
+        if (record.mapping_type === StructRuleFieldMappingType.Encode) {
+          return encodeOptions.find((option) => option.value === v)?.label || v;
+        } else if (record.mapping_type === StructRuleFieldMappingType.Enum) {
+          return v;
+        } else {
+          return '';
+        }
+      },
     },
     {
       title: '是否落库',
@@ -268,7 +225,7 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       dataIndex: 'operation',
       width: '180px',
       // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      render: (_: any, record: StructRule.FEField) => {
+      render: (_: any, record: StructRule.Field) => {
         const editable = isEditing(record.uid);
         const idx = detail.fields.findIndex((item) => item.uid === record.uid);
         return editable ? (
@@ -316,9 +273,58 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
     },
   ];
 
-  const columnsMerged: TableProps<StructRule.FEField>['columns'] = columns.map(
+  const columnsMerged: TableProps<StructRule.Field>['columns'] = columns.map(
     (col) => {
       if (!col.editable) return col;
+      // 解析规则联动
+      if (col.dataIndex === 'parsing_rule') {
+        return {
+          ...col,
+          onCell: (record) => {
+            return {
+              record,
+              inputType:
+                sourceType === StructRuleFieldSourceType.QuoteResult
+                  ? 'select'
+                  : 'text',
+              ...(sourceType === StructRuleFieldSourceType.QuoteResult
+                ? {
+                    options: resultFieldOptions.filter(
+                      (o) => o.value !== name_en,
+                    ),
+                  }
+                : {}),
+              dataIndex: col.dataIndex,
+              title: col.title,
+              editing: isEditing(record.uid),
+            };
+          },
+        };
+      }
+
+      // 映射类型联动
+      if (col.dataIndex === 'mapping_content') {
+        return {
+          ...col,
+          onCell: (record) => {
+            return {
+              record,
+              inputType:
+                mappingType === StructRuleFieldMappingType.Encode
+                  ? 'select'
+                  : mappingType === StructRuleFieldMappingType.Enum
+                    ? 'text'
+                    : 'none',
+              ...(mappingType === StructRuleFieldMappingType.Encode
+                ? { options: encodeOptions }
+                : {}),
+              dataIndex: col.dataIndex,
+              title: col.title,
+              editing: isEditing(record.uid),
+            };
+          },
+        };
+      }
       return {
         ...col,
         onCell: (record) => {
@@ -337,8 +343,8 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
 
   return (
     <Form form={form} component={false}>
-      <EditableTable<StructRule.FEField>
-        dataSource={detail.fields.map((f) => fieldToFEField(f))}
+      <EditableTable<StructRule.Field>
+        dataSource={detail.fields}
         columns={columnsMerged}
         scroll={{ x: '2200px' }}
       />
