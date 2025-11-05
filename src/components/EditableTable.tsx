@@ -1,6 +1,5 @@
 import {
   Form,
-  type FormRule,
   Input,
   InputNumber,
   Select,
@@ -16,7 +15,6 @@ interface EditableCellProps<T> extends HTMLAttributes<HTMLElement> {
   title: string;
   inputType: 'none' | 'number' | 'text' | 'select';
   options?: SelectProps['options'];
-  rules?: FormRule[];
   record: T;
   index: number;
 }
@@ -28,7 +26,6 @@ const EditableCell = <T,>({
   inputType,
   options = [],
   record,
-  rules = [],
   index,
   children,
   ...restProps
@@ -46,13 +43,11 @@ const EditableCell = <T,>({
     }
   };
 
-  console.log('editing', editing);
-  console.log('inputNode', inputNode());
   return (
     <td {...restProps}>
       {editing ? (
-        <Form.Item name={dataIndex} style={{ margin: 0 }} rules={rules}>
-          {inputNode}
+        <Form.Item name={dataIndex} style={{ margin: 0 }}>
+          {inputNode()}
         </Form.Item>
       ) : (
         children
@@ -65,6 +60,10 @@ type Props<T> = {
   dataSource: T[];
   columns: ColumnsType<T>;
   onCancel?: () => void;
+  scroll?: {
+    x?: number | true | string;
+    y?: number | string;
+  };
 };
 
 const EditableTable = <T,>(props: Props<T>) => {
@@ -77,6 +76,7 @@ const EditableTable = <T,>(props: Props<T>) => {
       rowClassName="editable-row"
       pagination={{ onChange: () => props.onCancel?.() }}
       rowKey="uid"
+      scroll={{ x: 'max-content' }}
     />
   );
 };

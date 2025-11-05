@@ -3,6 +3,7 @@ import {
   Form,
   type FormInstance,
   Popconfirm,
+  Space,
   type TableProps,
   Typography,
 } from 'antd';
@@ -25,9 +26,9 @@ type Props = {
   onChange: (data: StructRule.Fields) => void;
 };
 const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
-  const [editingIdx, setEditingIdx] = useState<null | number>(null);
-  const isEditing = (idx: number) => idx === editingIdx;
-  const edit = (idx: number, record: Partial<StructRule.Field>) => {
+  const [editingKey, setEditingKey] = useState('');
+  const isEditing = (key: string) => key === editingKey;
+  const edit = (record: Partial<StructRule.Field>) => {
     form.setFieldsValue({
       category_name: '',
       name_cn: '',
@@ -40,25 +41,28 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       need_store: 1,
       ...record,
     });
-    setEditingIdx(idx);
+    setEditingKey(record.uid || '');
   };
-  const move = (idx: number, position: -1 | 1) => {
+  const move = (key: string, position: -1 | 1) => {
     const newData = [...detail.fields];
+    const idx = newData.findIndex((item) => item.uid === key);
     const item = newData[idx];
     newData.splice(idx, 1);
     newData.splice(idx + position, 0, item);
     onChange(newData);
   };
-  const remove = (idx: number) => {
+  const remove = (key: string) => {
     const newData = [...detail.fields];
+    const idx = newData.findIndex((item) => item.uid === key);
     newData.splice(idx, 1);
     onChange(newData);
   };
-  const cancel = () => setEditingIdx(null);
-  const save = async (idx: number) => {
+  const cancel = () => setEditingKey('');
+  const save = async (key: string) => {
     try {
       const row = (await form.validateFields()) as StructRule.Field;
       const newData = [...detail.fields];
+      const idx = newData.findIndex((item) => item.uid === key);
       if (idx > -1) {
         const item = newData[idx];
         newData.splice(idx, 1, {
@@ -67,7 +71,7 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
         });
         onChange(newData);
       }
-      setEditingIdx(null);
+      setEditingKey('');
     } catch (errInfo) {
       console.log('Validate Failed:', errInfo);
     }
@@ -89,61 +93,86 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
 
   const columns = [
     {
+      title: '序号',
+      dataIndex: 'no',
+      width: '80px',
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      render: (_: any, record: StructRule.Field) =>
+        detail.fields.findIndex((f) => f.uid === record.uid) + 1,
+    },
+    {
       title: '数据项',
       dataIndex: 'name_cn',
+      width: '200px',
+      ellipsis: true,
       inputType: 'text',
-      width: '15%',
       editable: true,
     },
     {
       title: '字段名称',
       dataIndex: 'name_en',
+      width: '200px',
+      ellipsis: true,
       inputType: 'text',
-      width: '15%',
       editable: true,
     },
     {
       title: '大字段',
       dataIndex: 'category_name',
+      width: '220px',
+      ellipsis: true,
       inputType: 'select',
       options: categoryOptions,
-      width: '40%',
       editable: true,
+      render: (v: string) =>
+        categoryOptions.find((option) => option.value === v)?.label,
     },
     {
       title: '来源',
       dataIndex: 'source_type',
+      width: '180px',
       inputType: 'select',
       options: structRuleFieldSourceTypeOptions,
-      width: '40%',
       editable: true,
+      render: (v: StructRuleFieldSourceType) =>
+        structRuleFieldSourceTypeOptions.find((option) => option.value === v)
+          ?.label,
     },
     {
       title: '解析规则',
       dataIndex: 'parsing_rule',
+      ellipsis: true,
       inputType: 'text',
-      width: '40%',
       editable: true,
+      width: '360px',
     },
     {
       title: '值类型',
       dataIndex: 'value_type',
+      width: '120px',
       inputType: 'select',
       options: structRuleFieldValueTypeOptions,
-      width: '40%',
       editable: true,
+      render: (v: StructRuleFieldValueType) =>
+        structRuleFieldValueTypeOptions.find((option) => option.value === v)
+          ?.label,
     },
     {
       title: '字段映射',
       dataIndex: 'mapping_type',
+      width: '120px',
       inputType: 'select',
       options: structRuleFieldMappingTypeOptions,
-      width: '40%',
       editable: true,
+      render: (v: StructRuleFieldMappingType) =>
+        structRuleFieldMappingTypeOptions.find((option) => option.value === v)
+          ?.label,
     },
     {
       title: '映射内容',
       dataIndex: 'mapping_content',
+      width: '120px',
+      ellipsis: true,
       inputType: (record: StructRule.Field) => {
         switch (record.mapping_type) {
           case StructRuleFieldMappingType.None:
@@ -163,66 +192,68 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
             return encodeOptions;
         }
       },
-      width: '40%',
       editable: true,
     },
     {
       title: '是否落库',
       dataIndex: 'need_store',
+      width: '96px',
       inputType: 'select',
       options: [
         { label: '是', value: 1 },
         { label: '否', value: 0 },
       ],
-      width: '40%',
       editable: true,
+      render: (v: number) => (v === 1 ? '是' : '否'),
     },
     {
       title: '操作',
       dataIndex: 'operation',
+      width: '180px',
       // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      render: (_: any, record: StructRule.Field, idx: number) => {
-        const editable = isEditing(idx);
+      render: (_: any, record: StructRule.Field) => {
+        const editable = isEditing(record.uid);
+        const idx = detail.fields.findIndex((item) => item.uid === record.uid);
         return editable ? (
-          <span>
+          <Space>
             <Typography.Link
-              onClick={() => save(idx)}
+              onClick={() => save(record.uid)}
               style={{ marginInlineEnd: 8 }}
             >
-              保存
+              确定
             </Typography.Link>
             <Popconfirm title="确定取消编辑?" onConfirm={cancel}>
               <Button type="link">取消</Button>
             </Popconfirm>
-          </span>
+          </Space>
         ) : (
-          <span>
+          <Space>
             <Typography.Link
-              disabled={editingIdx !== null}
-              onClick={() => edit(idx, record)}
+              disabled={editingKey !== ''}
+              onClick={() => edit(record)}
             >
               编辑
             </Typography.Link>
             <Typography.Link
-              disabled={idx === 0 || editingIdx !== null}
-              onClick={() => move(idx, -1)}
+              disabled={editingKey !== '' || idx === 0}
+              onClick={() => move(record.uid, -1)}
             >
               上移
             </Typography.Link>
             <Typography.Link
-              disabled={idx === detail.fields.length - 1 || editingIdx !== null}
-              onClick={() => move(idx, 1)}
+              disabled={editingKey !== '' || idx === detail.fields.length - 1}
+              onClick={() => move(record.uid, 1)}
             >
               下移
             </Typography.Link>
             <Typography.Link
               type="danger"
-              disabled={editingIdx !== null}
-              onClick={() => remove(idx)}
+              disabled={editingKey !== ''}
+              onClick={() => remove(record.uid)}
             >
               删除
             </Typography.Link>
-          </span>
+          </Space>
         );
       },
     },
@@ -245,7 +276,7 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
               : col.options,
           dataIndex: col.dataIndex,
           title: col.title,
-          editing: false,
+          editing: isEditing(record.uid),
         }),
       };
     },
@@ -256,6 +287,7 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       <EditableTable<StructRule.Field>
         dataSource={detail.fields}
         columns={columnsMerged}
+        scroll={{ x: 'max-content' }}
       />
     </Form>
   );

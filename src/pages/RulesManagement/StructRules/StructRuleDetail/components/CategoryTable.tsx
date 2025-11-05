@@ -3,6 +3,7 @@ import {
   Form,
   type FormInstance,
   Popconfirm,
+  Space,
   type TableProps,
   Typography,
 } from 'antd';
@@ -16,15 +17,9 @@ type Props = {
   onChange: (data: StructRule.Categories) => void;
 };
 const CategoryTable: FC<Props> = ({ form, detail, onChange }) => {
-  const [editingKey, setEditingKey] = useState<string>('');
-  // console.log('editingKey', editingKey);
-  const isEditing = (key: string) => {
-    console.log('comparing idx', key, editingKey, key === editingKey);
-    return key === editingKey;
-  };
+  const [editingKey, setEditingKey] = useState('');
+  const isEditing = (key: string) => key === editingKey;
   const edit = (record: Partial<StructRule.Category>) => {
-    // console.log('edit key', record.uid);
-    // console.log('record', record);
     form.setFieldsValue({
       name_cn: '',
       name_en: '',
@@ -36,6 +31,9 @@ const CategoryTable: FC<Props> = ({ form, detail, onChange }) => {
   const move = (key: string, position: -1 | 1) => {
     const newData = [...detail.category];
     const idx = newData.findIndex((item) => item.uid === key);
+    if (idx === 0 && position === -1) return;
+    if (idx === newData.length - 1 && position === 1) return;
+
     const item = newData[idx];
     newData.splice(idx, 1);
     newData.splice(idx + position, 0, item);
@@ -69,76 +67,60 @@ const CategoryTable: FC<Props> = ({ form, detail, onChange }) => {
 
   const columns = [
     {
+      title: '序号',
+      dataIndex: 'no',
+      width: '80px',
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      render: (_: any, record: StructRule.Category) =>
+        detail.category.findIndex((c) => c.uid === record.uid) + 1,
+    },
+    {
       title: '提取字段',
       dataIndex: 'name_cn',
+      ellipsis: true,
       inputType: 'text',
-      rules: [
-        {
-          required: true,
-          message: '请输入提取字段名称',
-        },
-        {
-          whitespace: true,
-          message: '请输入提取字段名称',
-        },
-      ],
-      width: '20%',
+      width: '160px',
       editable: true,
     },
     {
       title: '字段名称',
       dataIndex: 'name_en',
+      ellipsis: true,
       inputType: 'text',
-      rules: [
-        {
-          required: true,
-          message: '请输入字段名称',
-        },
-        {
-          whitespace: true,
-          message: '请输入字段名称',
-        },
-      ],
-      width: '20%',
+      width: '320px',
       editable: true,
     },
     {
       title: '提取规则',
       dataIndex: 'content',
+      ellipsis: true,
       inputType: 'text',
-      rules: [
-        {
-          required: true,
-          message: '请输入提取规则',
-        },
-        {
-          whitespace: true,
-          message: '请输入提取规则',
-        },
-      ],
-      width: '52%',
       editable: true,
     },
     {
       title: '操作',
       dataIndex: 'operation',
+      width: '180px',
       // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      render: (_: any, record: StructRule.Category, idx: number) => {
+      render: (_: any, record: StructRule.Category) => {
         const editable = isEditing(record.uid);
+        const idx = detail.category.findIndex(
+          (item) => item.uid === record.uid,
+        );
         return editable ? (
-          <span>
+          <Space>
             <Typography.Link
               onClick={() => save(record.uid)}
               style={{ marginInlineEnd: 8 }}
             >
-              保存
+              确定
             </Typography.Link>
             <Popconfirm title="确定取消编辑?" onConfirm={cancel}>
               <Button type="link">取消</Button>
             </Popconfirm>
-          </span>
+          </Space>
         ) : (
-          <span>
+          <Space>
             <Typography.Link
               disabled={editingKey !== ''}
               onClick={() => edit(record)}
@@ -146,13 +128,13 @@ const CategoryTable: FC<Props> = ({ form, detail, onChange }) => {
               编辑
             </Typography.Link>
             <Typography.Link
-              disabled={idx === 0 || editingKey !== ''}
+              disabled={editingKey !== '' || idx === 0}
               onClick={() => move(record.uid, -1)}
             >
               上移
             </Typography.Link>
             <Typography.Link
-              disabled={idx === detail.category.length - 1 || editingKey !== ''}
+              disabled={editingKey !== '' || idx === detail.category.length - 1}
               onClick={() => move(record.uid, 1)}
             >
               下移
@@ -164,7 +146,7 @@ const CategoryTable: FC<Props> = ({ form, detail, onChange }) => {
             >
               删除
             </Typography.Link>
-          </span>
+          </Space>
         );
       },
     },
@@ -176,8 +158,6 @@ const CategoryTable: FC<Props> = ({ form, detail, onChange }) => {
       return {
         ...col,
         onCell: (record) => {
-          // console.log('isEditing', record.uid, isEditing(record.uid), col);
-
           return {
             record,
             inputType: col.inputType,

@@ -1,4 +1,14 @@
-import { App, Button, Card, Form, Input, Select, Spin, Tree } from 'antd';
+import {
+  App,
+  Button,
+  Card,
+  Form,
+  Input,
+  Select,
+  Space,
+  Spin,
+  Tree,
+} from 'antd';
 import { type FC, useCallback, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
@@ -8,6 +18,9 @@ import CategoryTable from '@/pages/RulesManagement/StructRules/StructRuleDetail/
 import FieldTable from '@/pages/RulesManagement/StructRules/StructRuleDetail/components/FieldTable';
 import { useCacheStore } from '@/store/useCacheStore';
 import {
+  StructRuleFieldMappingType,
+  StructRuleFieldSourceType,
+  StructRuleFieldValueType,
   StructRuleStatus,
   structRuleFieldValueTypeOptions,
 } from '@/typing/enum';
@@ -47,21 +60,9 @@ const StructRuleDetailPage: FC = () => {
 
   const [baseForm] =
     Form.useForm<Pick<StructRule.Detail, 'name_cn' | 'name_en' | 'comment'>>();
-  const [categoryForm] = Form.useForm();
-  const [fieldForm] = Form.useForm();
-  const [codeSnippetForm] = Form.useForm();
-
-  // 父字段选择列表
-  const parentOptions = useMemo(
-    () =>
-      detail.fields
-        .filter((field) => field?.name_en && field?.name_cn)
-        .map((item) => ({
-          label: item.name_cn,
-          value: item.name_en,
-        })),
-    [detail.fields],
-  );
+  const [categoryForm] = Form.useForm<StructRule.Category>();
+  const [fieldForm] = Form.useForm<StructRule.Field>();
+  const [codeSnippetForm] = Form.useForm<{ content: '' }>();
 
   // 添加预设字段
   const presetFields = useCacheStore((s) => s.presetFields);
@@ -141,6 +142,14 @@ const StructRuleDetailPage: FC = () => {
   const onFinish = useCallback(
     async (values: StructRule.Detail) => {
       console.log('保存病历模板:', values);
+
+      // 校验大字段
+      for (const category of values.category) {
+        if (!category.name_cn || !category.name_en) {
+          message.error('大字段名称和英文名称不能为空');
+        }
+      }
+
       if (
         values.code_snippets.length === 1 &&
         !values.code_snippets[0].content
@@ -193,15 +202,23 @@ const StructRuleDetailPage: FC = () => {
       action={
         <Button
           type="primary"
-          onClick={() => {
-            console.log('点击保存按钮');
-            console.log('最新 detail:', {
+          onClick={() =>
+            onFinish({
+              ...detail,
               ...baseForm.getFieldsValue(),
               category: detail.category,
               fields: detail.fields,
-              code_snippets: codeSnippetForm.getFieldsValue(),
-            });
-          }}
+              code_snippets: codeSnippetForm.getFieldValue('content')
+                ? [
+                    {
+                      content: codeSnippetForm.getFieldValue(
+                        'content',
+                      ) as string,
+                    },
+                  ]
+                : [],
+            })
+          }
         >
           保存
         </Button>
@@ -257,31 +274,81 @@ const StructRuleDetailPage: FC = () => {
             </Form>
           </Card>
 
-          <Card title="大字段" className="mt-[12px]">
+          <Card
+            title="大字段"
+            className="mt-[12px]"
+            extra={
+              <Button
+                onClick={() => {
+                  setDetail((prev) => ({
+                    ...prev,
+                    category: [
+                      ...prev.category,
+                      {
+                        uid: `${Math.random() * 1000000}`,
+                        name_cn: '',
+                        name_en: '',
+                        content: '',
+                      },
+                    ],
+                  }));
+                }}
+                type="primary"
+              >
+                添加字段
+              </Button>
+            }
+          >
             <CategoryTable
               detail={detail}
               form={categoryForm}
-              onChange={(list) => {
-                console.log('新 category', list);
-              }}
+              onChange={(list) =>
+                setDetail((prev) => ({ ...prev, category: list }))
+              }
             />
           </Card>
 
           <Card
             title="明细字段"
             className="mt-[12px]"
-            extra={[
-              <Button key="addPresetField" onClick={addPresetField}>
-                添加预设字段
-              </Button>,
-            ]}
+            extra={
+              <Space>
+                <Button onClick={addPresetField} type="primary">
+                  添加预设字段
+                </Button>
+                <Button
+                  onClick={() => {
+                    setDetail((prev) => ({
+                      ...prev,
+                      fields: [
+                        ...prev.fields,
+                        {
+                          uid: `${Math.random() * 1000000}`,
+                          name_cn: '',
+                          name_en: '',
+                          category_name: '',
+                          source_type: StructRuleFieldSourceType.LLM,
+                          parsing_rule: '',
+                          value_type: StructRuleFieldValueType.Text,
+                          mapping_type: StructRuleFieldMappingType.None,
+                          mapping_content: '',
+                          need_store: 1,
+                        },
+                      ],
+                    }));
+                  }}
+                >
+                  添加新字段
+                </Button>
+              </Space>
+            }
           >
             <FieldTable
               form={fieldForm}
               detail={detail}
-              onChange={(list) => {
-                console.log('新 fields', list);
-              }}
+              onChange={(list) =>
+                setDetail((prev) => ({ ...prev, fields: list }))
+              }
             />
           </Card>
 
@@ -289,10 +356,10 @@ const StructRuleDetailPage: FC = () => {
             <Form
               form={codeSnippetForm}
               className="w-full h-full"
-              initialValues={detail.code_snippets || [{ content: '' }]}
+              initialValues={detail.code_snippets[0] || { content: '' }}
             >
-              <Form.Item<StructRule.Detail['code_snippets']>
-                name={[0, 'content']}
+              <Form.Item<{ content: string }>
+                name="content"
                 className="h-[500px]"
               >
                 <MonacoEditor />

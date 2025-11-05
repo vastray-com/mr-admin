@@ -48,7 +48,7 @@ export declare namespace StructRule {
     // UUID
     uid: string;
     /// 所属规则 ID
-    rule_uid: string;
+    rule_uid?: string;
     /// 分类名称
     name_cn: string;
     /// 分类字段名（英文名）
@@ -56,25 +56,25 @@ export declare namespace StructRule {
     /// 分类提取规则
     content: string;
     /// 分类排序（数字越小越靠前）
-    sort: number;
+    sort?: number;
     /// 创建时间
-    create_time: string;
+    create_time?: string;
     /// 更新时间
-    update_time: string;
+    update_time?: string;
   };
   type Categories = Category[];
 
   type CodeSnippet = {
     // UUID
-    uid: string;
+    uid?: string;
     /// 所属规则 ID
-    rule_uid: string;
+    rule_uid?: string;
     /// 代码片段内容
     content: string;
     /// 创建时间
-    create_time: string;
+    create_time?: string;
     /// 更新时间
-    update_time: string;
+    update_time?: string;
   };
   type CodeSnippets = CodeSnippet[];
 
@@ -82,7 +82,7 @@ export declare namespace StructRule {
     // UUID
     uid: string;
     /// 所属规则 ID
-    rule_uid: string;
+    rule_uid?: string;
     /// 所属分类字段名
     category_name?: string;
     /// 提取字段名称
@@ -102,9 +102,9 @@ export declare namespace StructRule {
     /// 字段是否需要最终入库 1: 需要 0: 不需要
     need_store: 0 | 1;
     /// 创建时间
-    create_time: string;
+    create_time?: string;
     /// 更新时间
-    update_time: string;
+    update_time?: string;
   };
   type Fields = Field[];
 
