@@ -10,6 +10,8 @@ export const useApi = () => {
     () => ({
       createTask: (params: Task.Item) =>
         service.post('/admin/task/create', params) as Promise<APIRes<number>>,
+      stopTaskInstance: (params: Task.InstanceActionParams) =>
+        service.post('/admin/task/stop', params) as Promise<APIRes<null>>,
       actionTask: (params: Task.ActionParams) =>
         service.post('/admin/task/action', params) as Promise<APIRes<null>>,
       getTaskList: (params: Task.ListParams) =>

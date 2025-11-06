@@ -17,6 +17,12 @@ declare namespace Task {
     action: 'enable' | 'disable' | 'delete';
   };
 
+  // 停止实例
+  type InstanceActionParams = {
+    // 任务实例 UUID
+    task_instance_uid: string;
+  };
+
   // 任务项
   type BaseItem = {
     // UUID

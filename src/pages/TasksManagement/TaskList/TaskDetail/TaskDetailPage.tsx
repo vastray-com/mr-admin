@@ -1,4 +1,4 @@
-import { Button, Card, Descriptions, Divider, Table } from 'antd';
+import { App, Button, Card, Descriptions, Divider, Table } from 'antd';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
 import { useCallback, useRef, useState } from 'react';
@@ -24,6 +24,7 @@ export const taskInstanceStatusDisplay: Record<
 const TaskDetailPage = () => {
   const { taskUid } = useParams();
   const { taskApi } = useApi();
+  const { message } = App.useApp();
 
   const isInitial = useRef(false);
   const ruleOptions = useCacheStore((s) => s.ruleOptions);
@@ -43,10 +44,31 @@ const TaskDetailPage = () => {
     },
     [taskUid, taskApi.getTaskInstanceList],
   );
-  const { PaginationComponent } = usePaginationData({
+  const { PaginationComponent, refresh } = usePaginationData({
     fetchData: fetchInstanceList,
     setData: setInstanceList,
   });
+
+  // 停止任务实例
+  const stopInstance = useCallback(
+    (instanceUid: string) => {
+      taskApi
+        .stopTaskInstance({ task_instance_uid: instanceUid })
+        .then((res) => {
+          if (res.code === 200) {
+            refresh();
+            message.success('停止任务执行成功');
+          } else {
+            message.error(`停止任务执行失败：${res.msg}`);
+          }
+        })
+        .catch((e) => {
+          console.error('停止任务实例失败：', e);
+          message.error(`${e.response.data?.message ?? e.message}`);
+        });
+    },
+    [taskApi, refresh, message],
+  );
 
   if (!taskUid) return null;
   if (!isInitial.current) {
@@ -153,7 +175,7 @@ const TaskDetailPage = () => {
           <Table.Column
             title="操作"
             key="action"
-            render={(_, record: Task.Item) => (
+            render={(_, record: Task.Instance) => (
               <>
                 <Link
                   to={`/tasks_management/tasks/detail/${taskUid}/${record.uid}`}
@@ -166,6 +188,15 @@ const TaskDetailPage = () => {
                 >
                   <Button type="link">查看结果</Button>
                 </Link>
+                {record.status === 1 && (
+                  <Button
+                    type="link"
+                    danger
+                    onClick={() => stopInstance(record.uid)}
+                  >
+                    停止执行
+                  </Button>
+                )}
               </>
             )}
           />
