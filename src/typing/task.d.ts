@@ -65,8 +65,8 @@ declare namespace Task {
     // UUID
     uid: string;
     task_uid: string;
-    // 0: 待运行, 1: 运行中, 2: 已完成 (成功), 3: 已完成 (失败)
-    status: 0 | 1 | 2 | 3;
+    // 0: 待运行, 1: 运行中, 2: 已完成 (成功), 3: 已完成 (失败) , 4: 已停止 (手动停止), 5: 已暂停
+    status: 0 | 1 | 2 | 3 | 4 | 5;
     task_start_time: string;
     task_duration: number;
     mr_total: number;

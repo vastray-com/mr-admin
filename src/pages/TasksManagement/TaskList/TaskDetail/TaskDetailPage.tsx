@@ -15,10 +15,12 @@ export const taskInstanceStatusDisplay: Record<
   Task.Instance['status'],
   [string, string]
 > = {
-  0: ['#FAAD14', '待运行'],
-  1: ['#52C41A', '运行中'],
-  2: ['#F5222D', '运行完成'],
-  3: ['#FAAD14', '运行失败'],
+  0: ['#EC622B', '待运行'],
+  1: ['#108ee9', '运行中'],
+  2: ['#87d068', '运行完成'],
+  3: ['#BD342B', '运行失败'],
+  4: ['#BFBFBF', '已停止'],
+  5: ['#F1BB59', '已暂停'],
 };
 
 const TaskDetailPage = () => {
