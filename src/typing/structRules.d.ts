@@ -95,6 +95,8 @@ export declare namespace StructRule {
     parsing_rule: string;
     /// 字段值类型
     value_type: StructRuleFieldValueType;
+    // 是否数组
+    is_array: boolean;
     /// 映射类型 NULL 为不映射
     mapping_type: StructRuleFieldMappingType | null;
     //  映射内容 映射类型为空时忽略，为码表时为码表 ID，为枚举时为枚举列表内容
@@ -124,8 +126,10 @@ export declare namespace StructRule {
     source_type: number;
     // 解析规则 来源为 LLM 时为 prompt，为原始数据引用时为原始数据取数path， 为结构化数据引用时为 name_en， 为静态值时为值内容
     parsing_rule: string;
-    // 字段值类型 1: 文本 2: 日期 3: 数字 4: 数组 5: 多字段
-    value_type: number;
+    // 字段值类型
+    value_type: StructRuleFieldValueType;
+    // 是否数组
+    is_array: boolean;
     // 映射类型 0: 不映射 1: 枚举 2: 码表
     mapping_type: number;
     // 映射内容 映射类型为空时忽略，为码表时为码表 ID，为枚举时为枚举列表内容

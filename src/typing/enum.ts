@@ -26,23 +26,20 @@ export const structRuleFieldSourceTypeOptions = [
 // 字段值类型
 export enum StructRuleFieldValueType {
   // 文本
-  Text = 1,
+  Text = 'text',
   // 日期
-  Date,
+  Date = 'date',
   // 数字
-  Number,
-  // 数组
-  Array,
-  // 多字段
-  Multi,
+  Number = 'number',
+  // 布尔
+  Boolean = 'boolean',
 }
 
 export const structRuleFieldValueTypeOptions = [
   { value: StructRuleFieldValueType.Text, label: '文本' },
   { value: StructRuleFieldValueType.Date, label: '日期' },
   { value: StructRuleFieldValueType.Number, label: '数字' },
-  { value: StructRuleFieldValueType.Array, label: '数组' },
-  { value: StructRuleFieldValueType.Multi, label: '多字段' },
+  { value: StructRuleFieldValueType.Boolean, label: '布尔' },
 ];
 
 // 字段映射类型

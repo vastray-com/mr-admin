@@ -410,6 +410,7 @@ const StructRuleDetailPage: FC = () => {
                           source_type: StructRuleFieldSourceType.LLM,
                           parsing_rule: '',
                           value_type: StructRuleFieldValueType.Text,
+                          is_array: false,
                           mapping_type: StructRuleFieldMappingType.None,
                           mapping_content: '',
                           need_store: 1,

@@ -49,6 +49,7 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       source_type: StructRuleFieldSourceType.LLM,
       parsing_rule: '',
       value_type: StructRuleFieldValueType.Text,
+      is_array: false,
       mapping_type: StructRuleFieldMappingType.None,
       mapping_content: '',
       need_store: 1,
@@ -179,6 +180,18 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       render: (v: StructRuleFieldValueType) =>
         structRuleFieldValueTypeOptions.find((option) => option.value === v)
           ?.label,
+    },
+    {
+      title: '是否数组',
+      dataIndex: 'is_array',
+      width: '120px',
+      inputType: 'select',
+      options: [
+        { label: '是', value: true },
+        { label: '否', value: false },
+      ],
+      editable: true,
+      render: (v: boolean) => (v ? '是' : '否'),
     },
     {
       title: '字段映射',
