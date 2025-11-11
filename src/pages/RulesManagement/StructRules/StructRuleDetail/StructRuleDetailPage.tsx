@@ -4,6 +4,7 @@ import {
   Card,
   Form,
   Input,
+  Modal,
   Select,
   Space,
   Spin,
@@ -258,6 +259,32 @@ const StructRuleDetailPage: FC = () => {
     [ruleApi, message, nav, encodeOptions],
   );
 
+  // 测试结构化规则
+  const testRecord = useRef('');
+  const [testResult, setTestResult] = useState('');
+  const [openTestRuleModal, setOpenTestRuleModal] = useState(false);
+  const [testRuleLoading, setTestRuleLoading] = useState(false);
+  const confirmTestRule = useCallback(async () => {
+    if (!uid || !testRecord.current) return;
+    console.log('确认测试结构化规则，病历内容为:', testRecord.current);
+    setTestRuleLoading(true);
+    // 调用测试接口
+    try {
+      const res = await ruleApi.testRule({ uid, content: testRecord.current });
+      if (res.code === 200) {
+        setTestResult(JSON.stringify(res.data, null, 2));
+        message.success('测试结构化规则成功');
+        setOpenTestRuleModal(true);
+      } else {
+        message.error(res.msg || '测试结构化规则失败，请重新测试');
+      }
+    } catch (_) {
+      message.error('测试结构化规则失败，请重新测试');
+    } finally {
+      setTestRuleLoading(false);
+    }
+  }, [ruleApi, uid, message]);
+
   if (!isInit.current && !isNewRule.current && uid) {
     fetchDetail(uid);
   }
@@ -280,30 +307,69 @@ const StructRuleDetailPage: FC = () => {
       ]}
       title={isNewRule.current ? '新建病历模板' : '编辑病历模板'}
       action={
-        <Button
-          type="primary"
-          onClick={() =>
-            onFinish({
-              ...detail,
-              ...baseForm.getFieldsValue(),
-              category: detail.category,
-              fields: detail.fields,
-              code_snippets: codeSnippetForm.getFieldValue('content')
-                ? [
-                    {
-                      content: codeSnippetForm.getFieldValue(
-                        'content',
-                      ) as string,
-                    },
-                  ]
-                : [],
-            })
-          }
-        >
-          保存
-        </Button>
+        <Space>
+          <Button onClick={() => setOpenTestRuleModal(true)}>
+            测试结构化规则
+          </Button>
+          <Button
+            type="primary"
+            onClick={() =>
+              onFinish({
+                ...detail,
+                ...baseForm.getFieldsValue(),
+                category: detail.category,
+                fields: detail.fields,
+                code_snippets: codeSnippetForm.getFieldValue('content')
+                  ? [
+                      {
+                        content: codeSnippetForm.getFieldValue(
+                          'content',
+                        ) as string,
+                      },
+                    ]
+                  : [],
+              })
+            }
+          >
+            保存
+          </Button>
+        </Space>
       }
     >
+      <Modal
+        title="测试结构化规则"
+        width="64vw"
+        open={openTestRuleModal}
+        onOk={confirmTestRule}
+        okText="测试"
+        cancelText="取消"
+        centered
+        confirmLoading={testRuleLoading}
+        onCancel={() => setOpenTestRuleModal(false)}
+      >
+        <div className="flex items-start gap-x-[24px]">
+          <div className="w-[24vw] shrink-0 grow-0">
+            <Input.TextArea
+              size="large"
+              rows={20}
+              style={{ width: '100%', margin: '24px 0' }}
+              allowClear
+              placeholder="请输入病历内容"
+              onChange={(v) => {
+                testRecord.current = v.target.value;
+              }}
+            />
+          </div>
+
+          <div className="h-[518px] w-full flex-1 overflow-y-auto my-[24px]">
+            <h2 className="text-[16px] h-[24px] font-medium">测试结果</h2>
+            <p className="h-[494px] whitespace-pre-wrap overflow-y-auto">
+              {testResult}
+            </p>
+          </div>
+        </div>
+      </Modal>
+
       <div className="flex h-full">
         <div className="flex-1 w-[calc(100%_-_200px_-_200px_-_24px)] overflow-auto">
           <Card className="h-[220px]" title="基本信息">

@@ -136,4 +136,9 @@ export declare namespace StructRule {
     mapping_content: string;
   };
   type PresetFields = PresetField[];
+
+  type TestRuleParams = {
+    uid: string;
+    content: string;
+  };
 }

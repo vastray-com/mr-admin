@@ -99,6 +99,10 @@ export const useApi = () => {
         service.get('/admin/structured_rule/get_preset_fields') as Promise<
           APIRes<StructRule.PresetFields>
         >,
+      testRule: (params: StructRule.TestRuleParams) =>
+        service.post('/admin/structured_rule/test', params) as Promise<
+          APIRes<Record<string, string>>
+        >,
     }),
     [],
   );
