@@ -2,6 +2,7 @@ import {
   App,
   Button,
   Card,
+  Checkbox,
   Form,
   Input,
   Modal,
@@ -260,6 +261,7 @@ const StructRuleDetailPage: FC = () => {
   );
 
   // 测试结构化规则
+  const [testIsThinking, setTestIsThinking] = useState(false);
   const testRecord = useRef('');
   const [testResult, setTestResult] = useState('');
   const [openTestRuleModal, setOpenTestRuleModal] = useState(false);
@@ -270,7 +272,11 @@ const StructRuleDetailPage: FC = () => {
     setTestRuleLoading(true);
     // 调用测试接口
     try {
-      const res = await ruleApi.testRule({ uid, content: testRecord.current });
+      const res = await ruleApi.testRule({
+        uid,
+        content: testRecord.current,
+        is_thinking: testIsThinking,
+      });
       if (res.code === 200) {
         setTestResult(JSON.stringify(res.data, null, 2));
         message.success('测试结构化规则成功');
@@ -283,7 +289,7 @@ const StructRuleDetailPage: FC = () => {
     } finally {
       setTestRuleLoading(false);
     }
-  }, [ruleApi, uid, message]);
+  }, [ruleApi, uid, message, testIsThinking]);
 
   if (!isInit.current && !isNewRule.current && uid) {
     fetchDetail(uid);
@@ -368,6 +374,10 @@ const StructRuleDetailPage: FC = () => {
             </p>
           </div>
         </div>
+
+        <Checkbox onChange={(v) => setTestIsThinking(v.target.checked)}>
+          开启模型思考
+        </Checkbox>
       </Modal>
 
       <div className="flex h-full">

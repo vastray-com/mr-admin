@@ -140,5 +140,6 @@ export declare namespace StructRule {
   type TestRuleParams = {
     uid: string;
     content: string;
+    is_thinking: boolean;
   };
 }
