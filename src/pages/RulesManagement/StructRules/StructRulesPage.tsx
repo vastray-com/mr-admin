@@ -6,6 +6,7 @@ import {
   Form,
   type GetProps,
   Input,
+  Popconfirm,
   Table,
 } from 'antd';
 import clsx from 'clsx';
@@ -305,14 +306,17 @@ const StructRulesPage: FC = () => {
                       ? '停用'
                       : '启用'}
                   </Button>
-                  <Button
-                    size="small"
-                    type="link"
-                    danger
-                    onClick={() => onAction(record, 'delete')}
+                  <Popconfirm
+                    title="删除结构化规则"
+                    description="确定要删除该结构化规则吗？此操作不可恢复。"
+                    onConfirm={() => onAction(record, 'delete')}
+                    okText="确认"
+                    cancelText="取消"
                   >
-                    删除
-                  </Button>
+                    <Button size="small" type="link" danger>
+                      删除
+                    </Button>
+                  </Popconfirm>
                 </div>
               )}
             />

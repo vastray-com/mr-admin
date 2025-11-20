@@ -2,7 +2,9 @@ import {
   Button,
   Form,
   type FormInstance,
+  InputNumber,
   Popconfirm,
+  Popover,
   Space,
   type TableProps,
   Typography,
@@ -65,6 +67,28 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
     newData.splice(idx + position, 0, item);
     onChange(newData);
   };
+  // 快速移动
+  const [fastMoveTarget, setFastMoveTarget] = useState<string | number | null>(
+    null,
+  );
+  const fastMove = (key: string, position: string | number | null) => {
+    if (position === null) return;
+    const posNum = Number(position);
+    if (
+      posNum < 1 ||
+      Number.isNaN(posNum) ||
+      posNum - 1 >= detail.fields.length
+    )
+      return;
+    const newData = [...detail.fields];
+    const idx = newData.findIndex((item) => item.uid === key);
+    if (idx === -1 || posNum - 1 === idx) return;
+    const item = newData[idx];
+    newData.splice(idx, 1);
+    newData.splice(posNum - 1, 0, item);
+    onChange(newData);
+    setFastMoveTarget(null);
+  };
   const remove = (key: string) => {
     const newData = [...detail.fields];
     const idx = newData.findIndex((item) => item.uid === key);
@@ -123,6 +147,7 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       ellipsis: true,
       inputType: 'text',
       editable: true,
+      enableSearch: true,
     },
     {
       title: '字段名称',
@@ -131,6 +156,7 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       ellipsis: true,
       inputType: 'text',
       editable: true,
+      enableSearch: true,
     },
     {
       title: '大字段',
@@ -140,6 +166,9 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       inputType: 'select',
       options: categoryOptions,
       editable: true,
+      filters: categoryOptions.map((o) => ({ text: o.label, value: o.value })),
+      onFilter: (value: any, record: StructRule.Field) =>
+        record.category_name?.indexOf(value as string) === 0,
       render: (v: string) =>
         categoryOptions.find((option) => option.value === v)?.label,
     },
@@ -150,6 +179,12 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       inputType: 'select',
       options: structRuleFieldSourceTypeOptions,
       editable: true,
+      filters: structRuleFieldSourceTypeOptions.map((o) => ({
+        text: o.label,
+        value: o.value,
+      })),
+      onFilter: (value: any, record: StructRule.Field) =>
+        record.source_type === value,
       render: (v: StructRuleFieldSourceType) =>
         structRuleFieldSourceTypeOptions.find((option) => option.value === v)
           ?.label,
@@ -160,6 +195,7 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       width: '360px',
       ellipsis: true,
       editable: true,
+      enableSearch: true,
       render: (v: string, record: StructRule.Field) => {
         if (record.source_type === StructRuleFieldSourceType.QuoteResult) {
           return (
@@ -177,6 +213,12 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       inputType: 'select',
       options: structRuleFieldValueTypeOptions,
       editable: true,
+      filters: structRuleFieldValueTypeOptions.map((o) => ({
+        text: o.label,
+        value: o.value,
+      })),
+      onFilter: (value: any, record: StructRule.Field) =>
+        record.value_type === value,
       render: (v: StructRuleFieldValueType) =>
         structRuleFieldValueTypeOptions.find((option) => option.value === v)
           ?.label,
@@ -191,6 +233,12 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
         { label: '否', value: false },
       ],
       editable: true,
+      filters: [
+        { text: '是', value: true },
+        { text: '否', value: false },
+      ],
+      onFilter: (value: any, record: StructRule.Field) =>
+        record.is_array === value,
       render: (v: boolean) => (v ? '是' : '否'),
     },
     {
@@ -200,6 +248,12 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       inputType: 'select',
       options: structRuleFieldMappingTypeOptions,
       editable: true,
+      filters: structRuleFieldMappingTypeOptions.map((o) => ({
+        text: o.label,
+        value: o.value,
+      })),
+      onFilter: (value: any, record: StructRule.Field) =>
+        record.mapping_type === value,
       render: (v: StructRuleFieldMappingType) =>
         structRuleFieldMappingTypeOptions.find((option) => option.value === v)
           ?.label,
@@ -236,7 +290,7 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
     {
       title: '操作',
       dataIndex: 'operation',
-      width: '180px',
+      width: '240px',
       // biome-ignore lint/suspicious/noExplicitAny: <explanation>
       render: (_: any, record: StructRule.Field) => {
         const editable = isEditing(record.uid);
@@ -273,6 +327,32 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
             >
               下移
             </Typography.Link>
+            <Popover
+              content={
+                <Space>
+                  <span>请输入目标位置：</span>
+                  <InputNumber
+                    size="small"
+                    min={1}
+                    max={detail.fields.length}
+                    value={fastMoveTarget}
+                    onChange={setFastMoveTarget}
+                  />
+                  <Button
+                    size="small"
+                    type="primary"
+                    onClick={() => fastMove(record.uid, fastMoveTarget)}
+                  >
+                    确定
+                  </Button>
+                </Space>
+              }
+              trigger="click"
+            >
+              <Typography.Link disabled={editingKey !== ''}>
+                快移
+              </Typography.Link>
+            </Popover>
             <Typography.Link
               type="danger"
               disabled={editingKey !== ''}

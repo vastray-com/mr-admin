@@ -36,8 +36,6 @@ const initialDetail: StructRule.Detail = {
   name_en: '',
   comment: '',
   status: StructRuleStatus.Enabled,
-  create_time: '',
-  update_time: '',
   category: [],
   fields: [],
   code_snippets: [],
@@ -314,9 +312,7 @@ const StructRuleDetailPage: FC = () => {
       title={isNewRule.current ? '新建病历模板' : '编辑病历模板'}
       action={
         <Space>
-          <Button onClick={() => setOpenTestRuleModal(true)}>
-            测试结构化规则
-          </Button>
+          <Button onClick={() => setOpenTestRuleModal(true)}>模型提取</Button>
           <Button
             type="primary"
             onClick={() =>
@@ -343,11 +339,11 @@ const StructRuleDetailPage: FC = () => {
       }
     >
       <Modal
-        title="测试结构化规则"
+        title="模型提取"
         width="64vw"
         open={openTestRuleModal}
         onOk={confirmTestRule}
-        okText="测试"
+        okText="提取"
         cancelText="取消"
         centered
         confirmLoading={testRuleLoading}
@@ -368,10 +364,12 @@ const StructRuleDetailPage: FC = () => {
           </div>
 
           <div className="h-[518px] w-full flex-1 overflow-y-auto my-[24px]">
-            <h2 className="text-[16px] h-[24px] font-medium">测试结果</h2>
-            <p className="h-[494px] whitespace-pre-wrap overflow-y-auto">
-              {testResult}
-            </p>
+            <h2 className="text-[16px] h-[32px] font-medium">模型提取结果</h2>
+            <textarea
+              value={testResult}
+              readOnly
+              className="p-[8px] b-1 b-[#ccc] w-full h-[486px] whitespace-pre-wrap overflow-y-auto"
+            />
           </div>
         </div>
 
@@ -526,7 +524,7 @@ const StructRuleDetailPage: FC = () => {
         </div>
 
         <div className="ml-[12px] w-[220px] shrink-0 grow-0 h-full">
-          <Card title="预览" className="h-full">
+          <Card title="预览" className="h-full overflow-y-auto">
             <Preview categories={detail.category} fields={detail.fields} />
           </Card>
         </div>

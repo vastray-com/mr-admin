@@ -23,9 +23,9 @@ export declare namespace StructRule {
     /// 状态（1: 启用，0: 停用）
     status: StructRuleStatus;
     /// 创建时间
-    create_time: string;
+    create_time?: string;
     /// 更新时间
-    update_time: string;
+    update_time?: string;
   };
   type List = Item[];
 
