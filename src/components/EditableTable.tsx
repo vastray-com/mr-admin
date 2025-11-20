@@ -50,7 +50,19 @@ const EditableCell = <T,>({
       case 'text':
         return <Input />;
       case 'select':
-        return <Select allowClear placeholder="请选择" options={options} />;
+        return (
+          <Select
+            showSearch
+            allowClear
+            placeholder="请选择"
+            options={options}
+            filterOption={(input, option) =>
+              ((option?.label ?? '') as string)
+                .toLowerCase()
+                .includes(input.toLowerCase())
+            }
+          />
+        );
     }
   };
 
