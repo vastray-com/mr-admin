@@ -3,7 +3,7 @@ import { ls } from '@/utils/ls';
 
 export const service = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
-  timeout: 60000,
+  timeout: 600000,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
