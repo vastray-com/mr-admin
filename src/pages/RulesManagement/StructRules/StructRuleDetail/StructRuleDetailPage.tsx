@@ -153,11 +153,33 @@ const StructRuleDetailPage: FC = () => {
       if (errCategoryIdx !== -1) return;
 
       // 校验明细字段
+      const nameCnList = values.fields.map((field) => field.name_cn);
+      const nameEnList = values.fields.map((field) => field.name_en);
+      const duplicateNameCn = nameCnList.findIndex(
+        (item, index) => nameCnList.indexOf(item) !== index && item,
+      );
+      if (duplicateNameCn !== -1) {
+        message.error(
+          `提交失败！明细字段序号 ${duplicateNameCn + 1}【${nameCnList[duplicateNameCn]}】中文名称重复`,
+        );
+        return;
+      }
+      const duplicateNameEn = nameEnList.findIndex(
+        (item, index) => nameEnList.indexOf(item) !== index && item,
+      );
+      if (duplicateNameEn !== -1) {
+        message.error(
+          `提交失败！明细字段 ${duplicateNameEn + 1}【${nameEnList[duplicateNameEn]}】英文名称重复`,
+        );
+        return;
+      }
+
       const errFieldIdx = values.fields.findIndex((f, idx) => {
         let err = '';
         if (!f.name_cn) {
           err = `提交失败！明细字段序号 ${idx + 1} 数据项名称不能为空`;
         }
+
         if (!f.name_en) {
           err = `提交失败！明细字段序号 ${idx + 1} 字段名称不能为空`;
         }
