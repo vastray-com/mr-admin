@@ -44,7 +44,7 @@ const initialDetail: StructRule.Detail = {
 const StructRuleDetailPage: FC = () => {
   const { uid } = useParams<{ uid: string }>();
   const { ruleApi } = useApi();
-  const { message, modal } = App.useApp();
+  const { message } = App.useApp();
   const nav = useNavigate();
   const isNewRule = useRef(uid === 'NEW');
   const isInit = useRef(isNewRule.current);
@@ -81,61 +81,51 @@ const StructRuleDetailPage: FC = () => {
       };
     });
   }, [presetFields]);
-  const selectedPresetFields = useRef<number[]>([]);
+
+  const [openPresetModal, setOpenPresetModal] = useState(false);
+  const [selectedPresetFields, setSelectedPresetFields] = useState<
+    (number | string)[]
+  >([]);
+  const [searchField, setSearchField] = useState('');
   const onAddPresetField = useCallback(async () => {
-    console.log('添加预设字段:', selectedPresetFields.current);
-    const presetFieldsToAdd = presetFields
-      .filter((field) => selectedPresetFields.current.includes(field.id))
-      .map((f) => {
-        const { id, ...rest } = f;
-        return { ...rest };
-      });
+    console.log('添加字段:', selectedPresetFields);
+    const fieldsToAdd = selectedPresetFields.map((item) => {
+      // 如果是预设字段
+      if (typeof item === 'number') {
+        const presetField = presetFields.find((f) => f.id === item);
+        if (presetField) {
+          const { id, ...rest } = presetField;
+          return {
+            ...rest,
+            uid: `${Math.random() * 1000000}`,
+            need_store: 1,
+          } as const;
+        }
+      }
+
+      // 如果是自定义字段
+      return {
+        uid: `${Math.random() * 1000000}`,
+        name_cn: `${item}`,
+        name_en: '',
+        category_name: '',
+        source_type: StructRuleFieldSourceType.LLM,
+        parsing_rule: '',
+        value_type: StructRuleFieldValueType.Text,
+        is_array: false,
+        mapping_type: StructRuleFieldMappingType.None,
+        mapping_content: '',
+        need_store: 1,
+      } as const;
+    });
+
     setDetail((prev) => ({
       ...prev,
-      fields: [
-        ...prev.fields,
-        ...presetFieldsToAdd.map(
-          (f) =>
-            ({
-              ...f,
-              uid: `${Math.random() * 1000000}`,
-              need_store: 1,
-            }) as const,
-        ),
-      ],
+      fields: [...prev.fields, ...fieldsToAdd],
     }));
-  }, [presetFields]);
-  const addPresetField = useCallback(() => {
-    console.log('新增预设字段');
-    modal.confirm({
-      title: '新增预设字段',
-      width: '48vw',
-      centered: true,
-      icon: null,
-      content: (
-        <Select
-          options={presetFieldOptions}
-          size="large"
-          style={{ width: '100%', margin: '24px 0' }}
-          mode="multiple"
-          allowClear
-          placeholder="请选择或搜索预设字段"
-          onChange={(value: number[]) => {
-            selectedPresetFields.current = value;
-          }}
-          optionRender={(option) =>
-            `${option.data.label} - ${option.data.value_type} - ${option.data.parsing_rule}`
-          }
-          filterOption={(input, option) =>
-            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-          }
-        />
-      ),
-      okText: '确认添加',
-      cancelText: '取消',
-      onOk: onAddPresetField,
-    });
-  }, [modal, onAddPresetField, presetFieldOptions]);
+    setOpenPresetModal(false);
+    setSelectedPresetFields([]);
+  }, [presetFields, selectedPresetFields]);
 
   // 保存
   const encodeOptions = useCacheStore((s) => s.encodeOptions);
@@ -339,6 +329,48 @@ const StructRuleDetailPage: FC = () => {
       }
     >
       <Modal
+        title="添加字段"
+        width="48vw"
+        open={openPresetModal}
+        onOk={onAddPresetField}
+        okText="确认添加"
+        cancelText="取消"
+        centered
+        onCancel={() => setOpenPresetModal(false)}
+      >
+        <Select
+          options={presetFieldOptions}
+          size="large"
+          style={{ width: '100%', margin: '24px 0' }}
+          mode="multiple"
+          allowClear
+          autoClearSearchValue
+          placeholder="请选择或搜索预设字段"
+          searchValue={searchField}
+          onSearch={setSearchField}
+          value={selectedPresetFields}
+          onChange={setSelectedPresetFields}
+          optionRender={(option) =>
+            `${option.data.label} - ${option.data.value_type} - ${option.data.parsing_rule}`
+          }
+          filterOption={(input, option) =>
+            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+          }
+          notFoundContent={
+            <Button
+              block
+              onClick={() => {
+                setSelectedPresetFields((prev) => [...prev, searchField]);
+                setSearchField('');
+              }}
+            >
+              添加自定义字段
+            </Button>
+          }
+        />
+      </Modal>
+
+      <Modal
         title="模型提取"
         width="64vw"
         open={openTestRuleModal}
@@ -466,36 +498,9 @@ const StructRuleDetailPage: FC = () => {
             title="明细字段"
             className="mt-[12px]"
             extra={
-              <Space>
-                <Button onClick={addPresetField} type="primary">
-                  添加预设字段
-                </Button>
-                <Button
-                  onClick={() => {
-                    setDetail((prev) => ({
-                      ...prev,
-                      fields: [
-                        ...prev.fields,
-                        {
-                          uid: `${Math.random() * 1000000}`,
-                          name_cn: '',
-                          name_en: '',
-                          category_name: '',
-                          source_type: StructRuleFieldSourceType.LLM,
-                          parsing_rule: '',
-                          value_type: StructRuleFieldValueType.Text,
-                          is_array: false,
-                          mapping_type: StructRuleFieldMappingType.None,
-                          mapping_content: '',
-                          need_store: 1,
-                        },
-                      ],
-                    }));
-                  }}
-                >
-                  添加新字段
-                </Button>
-              </Space>
+              <Button onClick={() => setOpenPresetModal(true)} type="primary">
+                添加字段
+              </Button>
             }
           >
             <FieldTable
