@@ -488,6 +488,7 @@ const PushRuleDetailPage: FC = () => {
                               <td>源字段</td>
                               <td>目标字段</td>
                               <td>目标数据类型</td>
+                              <td>枚举映射</td>
                               <td className="sticky right-0">操作</td>
                             </tr>
                           </thead>
@@ -517,6 +518,9 @@ const PushRuleDetailPage: FC = () => {
                                     <Select
                                       placeholder="请选择源字段"
                                       options={sourceFieldOptions.content}
+                                      onChange={(v) => {
+                                        console.log(v);
+                                      }}
                                     />
                                   </Form.Item>
                                 </td>
@@ -573,6 +577,16 @@ const PushRuleDetailPage: FC = () => {
                                   </Form.Item>
                                 </td>
 
+                                <td>
+                                  <Form.Item<PushRule.Detail['content']>
+                                    style={{ width: '360px' }}
+                                    {...restField}
+                                    name={[name, 'mapping_content']}
+                                  >
+                                    <Input placeholder="请输入枚举映射内容" />
+                                  </Form.Item>
+                                </td>
+
                                 <td className="py-[12px] sticky right-0 bg-white flex">
                                   <Button
                                     size="small"
@@ -614,6 +628,7 @@ const PushRuleDetailPage: FC = () => {
                                           source: '',
                                           target: '',
                                           data_type: null,
+                                          mapping_content: null,
                                         })
                                       }
                                       block

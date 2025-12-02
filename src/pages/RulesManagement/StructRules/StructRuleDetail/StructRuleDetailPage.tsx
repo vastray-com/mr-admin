@@ -208,7 +208,10 @@ const StructRuleDetailPage: FC = () => {
           }
         }
 
-        if (!f.parsing_rule) {
+        if (
+          !f.parsing_rule &&
+          f.source_type !== StructRuleFieldSourceType.Static
+        ) {
           err = `提交失败！明细字段序号 ${idx + 1} 提取规则不能为空`;
         }
 
