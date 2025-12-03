@@ -1,3 +1,4 @@
+import { service } from '@/utils/service';
 import type { AxiosResponse } from 'axios';
 
 export const formatSecondsToTime = (seconds: number): string => {
@@ -47,4 +48,25 @@ export const downloadFile = (response: AxiosResponse<Blob>) => {
   // 释放 URL 对象和移除 a 元素
   URL.revokeObjectURL(url);
   a.remove();
+};
+
+export const generateCurlExample = (
+  method: 'GET' | 'POST',
+  path: string,
+  params?: Record<string, any>,
+): string => {
+  const url = service.defaults.baseURL + path;
+  let curl = `curl -X ${method} '${url}' \\\n  -H 'Content-Type: application/json'`;
+
+  if (method === 'POST' && params) {
+    const dataString = JSON.stringify(params, null, 2)
+      .split('\n')
+      .map((line) => `  ${line}`)
+      .join('\n');
+    curl += ` \\\n  -d '${dataString}'`;
+  } else if (method === 'GET' && params) {
+    const queryParams = new URLSearchParams(params).toString();
+    curl = `curl -X ${method} '${url}?${queryParams}' \\\n  -H 'Content-Type: application/json'`;
+  }
+  return curl;
 };

@@ -139,6 +139,7 @@ export declare namespace StructRule {
 
   type TestRuleParams = {
     uid: string;
+    output_filter: string[];
     content: string;
     is_thinking: boolean;
   };

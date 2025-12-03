@@ -5,12 +5,16 @@ import { useEffect, useState } from 'react';
 import { RouterProvider } from 'react-router/dom';
 import { createRoutes } from '@/router/route';
 import { useCacheStore } from '@/store/useCacheStore';
+import { _initHighlighter } from '@/utils/highlighter';
 import { service } from '@/utils/service';
 import type { PushRule } from '@/typing/pushRules';
 import type { StructRule } from '@/typing/structRules';
 
 const initApp = async () => {
   console.log('initialize App');
+
+  // 初始化全局 highlighter
+  await _initHighlighter();
 
   // 数据接口初始化
   const paginationParams = { page_size: 1000, page_num: 1 };
