@@ -1,36 +1,14 @@
-import {
-  App,
-  Button,
-  Card,
-  Form,
-  Input,
-  Select,
-  type SelectProps,
-  Spin,
-} from 'antd';
+import { App, Button, Card, Form, Input, Select, Spin } from 'antd';
 import { type FC, useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
+import FilterTable from '@/pages/RulesManagement/PushRules/PushRuleDetail/components/FilterTable';
+import PushTable from '@/pages/RulesManagement/PushRules/PushRuleDetail/components/PushTable';
 import { useCacheStore } from '@/store/useCacheStore';
-import {
-  PushTargetDB,
-  pushDataTypeOptions,
-  pushTargetDBOptions,
-} from '@/typing/enum';
+import { PushDataType, PushTargetDB, pushTargetDBOptions } from '@/typing/enum';
 import type { PushRule } from '@/typing/pushRules';
 import type { StructRule } from '@/typing/structRules';
-
-const operatorOptions = [
-  { label: '等于', value: 'eq' },
-  { label: '不等于', value: 'neq' },
-  { label: '大于', value: 'gt' },
-  { label: '大于等于', value: 'gte' },
-  { label: '小于', value: 'lt' },
-  { label: '小于等于', value: 'lte' },
-  { label: '包含', value: 'like' },
-  { label: '不包含', value: 'nlike' },
-];
 
 const initialDetail: PushRule.Detail = {
   uid: '',
@@ -68,30 +46,48 @@ const PushRuleDetailPage: FC = () => {
     [pushRuleApi],
   );
 
-  const [form] = Form.useForm<PushRule.Detail>();
-  const structuredRuleUid = Form.useWatch('structured_rule_uid', form);
-  const content = Form.useWatch('content', form);
-  const filter = Form.useWatch('filter', form);
+  const [baseForm] =
+    Form.useForm<
+      Pick<
+        PushRule.Detail,
+        | 'uid'
+        | 'name_cn'
+        | 'name_en'
+        | 'structured_rule_uid'
+        | 'comment'
+        | 'target_db'
+        | 'target_uri'
+        | 'target_table'
+        | 'source_map_field'
+      >
+    >();
+  const [filterForm] = Form.useForm<PushRule.Filter>();
+  const [pushForm] = Form.useForm<PushRule.ContentItem>();
+  const structuredRuleUid = Form.useWatch('structured_rule_uid', baseForm);
 
   // 获取当前关联的结构化规则的字段
   const [sourceFieldOptions, setSourceFieldOptions] = useState<{
-    filter: SelectProps['options'];
-    content: SelectProps['options'];
+    filter: { label: string; value: string }[];
+    content: { label: string; value: string }[];
   }>({ filter: [], content: [] });
-  const currentStructuredRuleFieldsCache = useRef<
-    Record<string, StructRule.Fields>
-  >({});
+  const [
+    currentStructuredRuleFieldsCache,
+    setCurrentStructuredRuleFieldsCache,
+  ] = useState<Record<string, StructRule.Fields>>({});
   const getCurrentStructuredRuleFields = useCallback(
     async (uid: string) => {
       if (!uid) return [];
-      if (currentStructuredRuleFieldsCache.current[uid]) {
-        return currentStructuredRuleFieldsCache.current[uid];
+      if (currentStructuredRuleFieldsCache[uid]) {
+        return currentStructuredRuleFieldsCache[uid];
       }
       console.log('拉取结构化规则字段:', uid);
       try {
         const res = await ruleApi.getRuleDetail({ uid });
         if (res.code === 200) {
-          currentStructuredRuleFieldsCache.current[uid] = res.data.fields;
+          setCurrentStructuredRuleFieldsCache((prev) => ({
+            ...prev,
+            [uid]: res.data.fields,
+          }));
           return res.data.fields;
         }
         console.error('获取结构化规则字段失败:', res.msg);
@@ -101,7 +97,7 @@ const PushRuleDetailPage: FC = () => {
         return [];
       }
     },
-    [ruleApi.getRuleDetail],
+    [ruleApi.getRuleDetail, currentStructuredRuleFieldsCache],
   );
   // 获取结构化规则字段可选选项
   const lastStructuredRuleUid = useRef<string>('');
@@ -112,8 +108,11 @@ const PushRuleDetailPage: FC = () => {
       structuredRuleUid !== lastStructuredRuleUid.current;
     // 关联的结构化规则变更，清空已配置的推送字段
     if (structuredRuleChanged && lastStructuredRuleUid.current) {
-      form.setFieldValue('content', []);
-      form.setFieldValue('filter', []);
+      setDetail((prev) => ({
+        ...prev,
+        filter: [],
+        content: [],
+      }));
     }
     if (structuredRuleChanged) {
       lastStructuredRuleUid.current = structuredRuleUid;
@@ -122,30 +121,16 @@ const PushRuleDetailPage: FC = () => {
     const currentStructuredRuleFields =
       await getCurrentStructuredRuleFields(structuredRuleUid);
     // 计算当前可选的结构化规则字段
-    const c = currentStructuredRuleFields
-      .filter(
-        (field) => !content || !content.some((d) => d.source === field.name_en),
-      )
-      .map((field) => ({
-        label: field.name_cn,
-        value: field.name_en,
-      }));
-    const f = currentStructuredRuleFields
-      .filter(
-        (field) => !filter || !filter.some((d) => d.source === field.name_en),
-      )
-      .map((field) => ({
-        label: field.name_cn,
-        value: field.name_en,
-      }));
+    const c = currentStructuredRuleFields.map((field) => ({
+      label: `${field.name_en} (${field.name_cn})`,
+      value: field.name_en,
+    }));
+    const f = currentStructuredRuleFields.map((field) => ({
+      label: `${field.name_en} (${field.name_cn})`,
+      value: field.name_en,
+    }));
     setSourceFieldOptions({ filter: f, content: c });
-  }, [
-    getCurrentStructuredRuleFields,
-    form.setFieldValue,
-    structuredRuleUid,
-    content,
-    filter,
-  ]);
+  }, [getCurrentStructuredRuleFields, structuredRuleUid]);
   useEffect(() => {
     fetchStructuredRuleFieldOptions();
   }, [fetchStructuredRuleFieldOptions]);
@@ -188,31 +173,37 @@ const PushRuleDetailPage: FC = () => {
     );
 
   return (
-    <Form<PushRule.Detail>
-      name="push-rules-save"
-      onFinish={onFinish}
-      onFinishFailed={() => message.error(`配置有误，请检查`)}
-      initialValues={detail}
-      autoComplete="off"
-      className="w-full h-full"
-      form={form}
+    <ContentLayout
+      breadcrumb={[
+        {
+          title: <Link to="/rules_management/push_rules">推送规则</Link>,
+        },
+        { title: '编辑推送规则' },
+      ]}
+      title={isNewRule.current ? '新建推送规则' : '编辑推送规则'}
+      action={
+        <Button
+          type="primary"
+          onClick={() =>
+            onFinish({
+              ...detail,
+              ...baseForm.getFieldsValue(),
+              filter: detail.filter,
+              content: detail.content,
+            })
+          }
+        >
+          保存
+        </Button>
+      }
     >
-      <ContentLayout
-        breadcrumb={[
-          {
-            title: <Link to="/rules_management/push_rules">推送规则</Link>,
-          },
-          { title: '编辑推送规则' },
-        ]}
-        title={isNewRule.current ? '新建推送规则' : '编辑推送规则'}
-        action={
-          <Button htmlType="submit" type="primary">
-            保存
-          </Button>
-        }
-      >
-        <div className="h-full">
-          <Card title="基本信息">
+      <div className="h-full">
+        <Card title="基本信息">
+          <Form
+            form={baseForm}
+            className="w-full h-full"
+            initialValues={detail}
+          >
             <div className="flex items-center gap-x-[24px] mb-[8px]">
               <Form.Item<PushRule.Detail> name="uid" hidden>
                 <Input />
@@ -314,342 +305,410 @@ const PushRuleDetailPage: FC = () => {
                 <Input placeholder="如需同时携带原始病历推送，请输入映射列名，不携带则留空" />
               </Form.Item>
             </div>
-          </Card>
+          </Form>
+        </Card>
 
-          <Card title="数据过滤" className="mt-[12px]">
-            <Form.Item shouldUpdate noStyle>
-              {sourceFieldOptions?.filter &&
-                (sourceFieldOptions.filter.length > 0 ||
-                  filter?.length > 0) && (
-                  <Form.List name="filter">
-                    {(fields, { add, remove, move }) => (
-                      <div className="h-full rounded-2xl overflow-auto pos-relative">
-                        <table className="w-full">
-                          <thead className="sticky top-0 z-1">
-                            <tr className="children:(pl-[24px] font-medium text-fg-title py-[16px] bg-[#f0f0f0])">
-                              <td>源字段</td>
-                              <td>过滤条件</td>
-                              <td>过滤值</td>
-                              <td className="sticky right-0">操作</td>
-                            </tr>
-                          </thead>
+        <Card
+          title="数据过滤"
+          className="mt-[12px]"
+          extra={
+            <Button
+              onClick={() => {
+                setDetail((prev) => ({
+                  ...prev,
+                  filter: [
+                    ...prev.filter,
+                    {
+                      source: '',
+                      value: '',
+                      operator: '',
+                    },
+                  ],
+                }));
+              }}
+              type="primary"
+            >
+              添加字段
+            </Button>
+          }
+        >
+          <FilterTable
+            detail={detail}
+            form={filterForm}
+            sourceOptions={sourceFieldOptions.filter}
+            onChange={(filter) => setDetail((prev) => ({ ...prev, filter }))}
+          />
+        </Card>
 
-                          <tbody>
-                            {fields.map(({ key, name, ...restField }) => (
-                              <tr
-                                key={key}
-                                className="b-b-1 b-divider children:(pt-[24px] px-[16px])"
-                              >
-                                <td>
-                                  <Form.Item<PushRule.Detail['filter']>
-                                    style={{ width: '360px' }}
-                                    {...restField}
-                                    name={[name, 'source']}
-                                    rules={[
-                                      {
-                                        required: true,
-                                        message: '请选择源字段',
-                                      },
-                                      {
-                                        whitespace: true,
-                                        message: '请选择源字段',
-                                      },
-                                    ]}
-                                  >
-                                    <Select
-                                      placeholder="请选择源字段"
-                                      options={sourceFieldOptions.filter}
-                                    />
-                                  </Form.Item>
-                                </td>
+        <Card
+          title="推送字段"
+          className="mt-[12px]"
+          extra={
+            <Button
+              onClick={() => {
+                setDetail((prev) => ({
+                  ...prev,
+                  content: [
+                    ...prev.content,
+                    {
+                      source: '',
+                      target: '',
+                      data_type: PushDataType.String,
+                      max_length: null,
+                      mapping_content: null,
+                    },
+                  ],
+                }));
+              }}
+              type="primary"
+            >
+              添加字段
+            </Button>
+          }
+        >
+          <PushTable
+            detail={detail}
+            form={pushForm}
+            sourceOptions={sourceFieldOptions.content}
+            structuredRuleFields={
+              currentStructuredRuleFieldsCache[structuredRuleUid]
+            }
+            onChange={(content) => setDetail((prev) => ({ ...prev, content }))}
+          />
+        </Card>
 
-                                <td>
-                                  <Form.Item<PushRule.Detail['filter']>
-                                    style={{ width: '160px' }}
-                                    {...restField}
-                                    name={[name, 'operator']}
-                                    rules={[
-                                      {
-                                        required: true,
-                                        message: '请选择操作符',
-                                      },
-                                      {
-                                        whitespace: true,
-                                        message: '请选择操作符',
-                                      },
-                                      {
-                                        type: 'enum',
-                                        enum: operatorOptions.map(
-                                          (item) => item.value,
-                                        ),
-                                        message: '请选择正确的操作符',
-                                      },
-                                    ]}
-                                  >
-                                    <Select
-                                      placeholder="请选择操作符"
-                                      options={operatorOptions}
-                                    />
-                                  </Form.Item>
-                                </td>
+        {/*<Card title="数据过滤" className="mt-[12px]">*/}
+        {/*  <Form.Item shouldUpdate noStyle>*/}
+        {/*    {sourceFieldOptions?.filter &&*/}
+        {/*      (sourceFieldOptions.filter.length > 0 || filter?.length > 0) && (*/}
+        {/*        <Form.List name="filter">*/}
+        {/*          {(fields, { add, remove, move }) => (*/}
+        {/*            <div className="h-full rounded-2xl overflow-auto pos-relative">*/}
+        {/*              <table className="w-full">*/}
+        {/*                <thead className="sticky top-0 z-1">*/}
+        {/*                  <tr className="children:(pl-[24px] font-medium text-fg-title py-[16px] bg-[#f0f0f0])">*/}
+        {/*                    <td>源字段</td>*/}
+        {/*                    <td>过滤条件</td>*/}
+        {/*                    <td>过滤值</td>*/}
+        {/*                    <td className="sticky right-0">操作</td>*/}
+        {/*                  </tr>*/}
+        {/*                </thead>*/}
 
-                                <td>
-                                  <Form.Item<PushRule.Detail['filter']>
-                                    style={{ width: '200px' }}
-                                    {...restField}
-                                    name={[name, 'value']}
-                                    shouldUpdate
-                                    rules={[
-                                      {
-                                        required: true,
-                                        message: '请输入过滤值',
-                                      },
-                                      {
-                                        whitespace: true,
-                                        message: '请输入过滤值',
-                                      },
-                                    ]}
-                                  >
-                                    <Input placeholder="请输入过滤值" />
-                                  </Form.Item>
-                                </td>
+        {/*                <tbody>*/}
+        {/*                  {fields.map(({ key, name, ...restField }) => (*/}
+        {/*                    <tr*/}
+        {/*                      key={key}*/}
+        {/*                      className="b-b-1 b-divider children:(pt-[24px] px-[16px])"*/}
+        {/*                    >*/}
+        {/*                      <td>*/}
+        {/*                        <Form.Item<PushRule.Detail['filter']>*/}
+        {/*                          style={{ width: '360px' }}*/}
+        {/*                          {...restField}*/}
+        {/*                          name={[name, 'source']}*/}
+        {/*                          rules={[*/}
+        {/*                            {*/}
+        {/*                              required: true,*/}
+        {/*                              message: '请选择源字段',*/}
+        {/*                            },*/}
+        {/*                            {*/}
+        {/*                              whitespace: true,*/}
+        {/*                              message: '请选择源字段',*/}
+        {/*                            },*/}
+        {/*                          ]}*/}
+        {/*                        >*/}
+        {/*                          <Select*/}
+        {/*                            placeholder="请选择源字段"*/}
+        {/*                            options={sourceFieldOptions.filter}*/}
+        {/*                          />*/}
+        {/*                        </Form.Item>*/}
+        {/*                      </td>*/}
 
-                                <td className="py-[12px] sticky right-0 bg-white flex">
-                                  <Button
-                                    size="small"
-                                    type="link"
-                                    onClick={() => move(name, name - 1)}
-                                    disabled={name === 0}
-                                  >
-                                    上移
-                                  </Button>
-                                  <Button
-                                    size="small"
-                                    type="link"
-                                    onClick={() => move(name, name + 1)}
-                                    disabled={name === fields.length - 1}
-                                  >
-                                    下移
-                                  </Button>
-                                  <Button
-                                    size="small"
-                                    type="link"
-                                    danger
-                                    onClick={() => remove(name)}
-                                  >
-                                    删除
-                                  </Button>
-                                </td>
-                              </tr>
-                            ))}
+        {/*                      <td>*/}
+        {/*                        <Form.Item<PushRule.Detail['filter']>*/}
+        {/*                          style={{ width: '160px' }}*/}
+        {/*                          {...restField}*/}
+        {/*                          name={[name, 'operator']}*/}
+        {/*                          rules={[*/}
+        {/*                            {*/}
+        {/*                              required: true,*/}
+        {/*                              message: '请选择操作符',*/}
+        {/*                            },*/}
+        {/*                            {*/}
+        {/*                              whitespace: true,*/}
+        {/*                              message: '请选择操作符',*/}
+        {/*                            },*/}
+        {/*                            {*/}
+        {/*                              type: 'enum',*/}
+        {/*                              enum: operatorOptions.map(*/}
+        {/*                                (item) => item.value,*/}
+        {/*                              ),*/}
+        {/*                              message: '请选择正确的操作符',*/}
+        {/*                            },*/}
+        {/*                          ]}*/}
+        {/*                        >*/}
+        {/*                          <Select*/}
+        {/*                            placeholder="请选择操作符"*/}
+        {/*                            options={operatorOptions}*/}
+        {/*                          />*/}
+        {/*                        </Form.Item>*/}
+        {/*                      </td>*/}
 
-                            {sourceFieldOptions.filter &&
-                              sourceFieldOptions.filter.length > 0 && (
-                                <tr>
-                                  <td colSpan={99} className="py-[12px]">
-                                    <Button
-                                      type="dashed"
-                                      size="large"
-                                      onClick={() =>
-                                        add({
-                                          source: '',
-                                          operator: '',
-                                          value: '',
-                                        })
-                                      }
-                                      block
-                                    >
-                                      <i className="i-icon-park-outline:plus text-[16px]" />
-                                      <span>新增一行</span>
-                                    </Button>
-                                  </td>
-                                </tr>
-                              )}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </Form.List>
-                )}
-            </Form.Item>
-          </Card>
+        {/*                      <td>*/}
+        {/*                        <Form.Item<PushRule.Detail['filter']>*/}
+        {/*                          style={{ width: '200px' }}*/}
+        {/*                          {...restField}*/}
+        {/*                          name={[name, 'value']}*/}
+        {/*                          shouldUpdate*/}
+        {/*                          rules={[*/}
+        {/*                            {*/}
+        {/*                              required: true,*/}
+        {/*                              message: '请输入过滤值',*/}
+        {/*                            },*/}
+        {/*                            {*/}
+        {/*                              whitespace: true,*/}
+        {/*                              message: '请输入过滤值',*/}
+        {/*                            },*/}
+        {/*                          ]}*/}
+        {/*                        >*/}
+        {/*                          <Input placeholder="请输入过滤值" />*/}
+        {/*                        </Form.Item>*/}
+        {/*                      </td>*/}
 
-          <Card title="推送字段" className="mt-[12px]">
-            <Form.Item shouldUpdate noStyle>
-              {sourceFieldOptions?.content &&
-                (sourceFieldOptions.content.length > 0 ||
-                  content?.length > 0) && (
-                  <Form.List name="content">
-                    {(fields, { add, remove, move }) => (
-                      <div className="h-full rounded-2xl overflow-auto pos-relative">
-                        <table className="w-full">
-                          <thead className="sticky top-0 z-1">
-                            <tr className="children:(pl-[24px] font-medium text-fg-title py-[16px] bg-[#f0f0f0])">
-                              <td>源字段</td>
-                              <td>目标字段</td>
-                              <td>目标数据类型</td>
-                              <td>枚举映射</td>
-                              <td className="sticky right-0">操作</td>
-                            </tr>
-                          </thead>
+        {/*                      <td className="py-[12px] sticky right-0 bg-white flex">*/}
+        {/*                        <Button*/}
+        {/*                          size="small"*/}
+        {/*                          type="link"*/}
+        {/*                          onClick={() => move(name, name - 1)}*/}
+        {/*                          disabled={name === 0}*/}
+        {/*                        >*/}
+        {/*                          上移*/}
+        {/*                        </Button>*/}
+        {/*                        <Button*/}
+        {/*                          size="small"*/}
+        {/*                          type="link"*/}
+        {/*                          onClick={() => move(name, name + 1)}*/}
+        {/*                          disabled={name === fields.length - 1}*/}
+        {/*                        >*/}
+        {/*                          下移*/}
+        {/*                        </Button>*/}
+        {/*                        <Button*/}
+        {/*                          size="small"*/}
+        {/*                          type="link"*/}
+        {/*                          danger*/}
+        {/*                          onClick={() => remove(name)}*/}
+        {/*                        >*/}
+        {/*                          删除*/}
+        {/*                        </Button>*/}
+        {/*                      </td>*/}
+        {/*                    </tr>*/}
+        {/*                  ))}*/}
 
-                          <tbody>
-                            {fields.map(({ key, name, ...restField }) => (
-                              <tr
-                                key={key}
-                                className="b-b-1 b-divider children:(pt-[24px] px-[16px])"
-                              >
-                                <td>
-                                  <Form.Item<PushRule.Detail['content']>
-                                    style={{ width: '360px' }}
-                                    {...restField}
-                                    name={[name, 'source']}
-                                    rules={[
-                                      {
-                                        required: true,
-                                        message: '请选择源字段',
-                                      },
-                                      {
-                                        whitespace: true,
-                                        message: '请选择源字段',
-                                      },
-                                    ]}
-                                  >
-                                    <Select
-                                      placeholder="请选择源字段"
-                                      options={sourceFieldOptions.content}
-                                      onChange={(v) => {
-                                        console.log(v);
-                                      }}
-                                    />
-                                  </Form.Item>
-                                </td>
+        {/*                  {sourceFieldOptions.filter &&*/}
+        {/*                    sourceFieldOptions.filter.length > 0 && (*/}
+        {/*                      <tr>*/}
+        {/*                        <td colSpan={99} className="py-[12px]">*/}
+        {/*                          <Button*/}
+        {/*                            type="dashed"*/}
+        {/*                            size="large"*/}
+        {/*                            onClick={() =>*/}
+        {/*                              add({*/}
+        {/*                                source: '',*/}
+        {/*                                operator: '',*/}
+        {/*                                value: '',*/}
+        {/*                              })*/}
+        {/*                            }*/}
+        {/*                            block*/}
+        {/*                          >*/}
+        {/*                            <i className="i-icon-park-outline:plus text-[16px]" />*/}
+        {/*                            <span>新增一行</span>*/}
+        {/*                          </Button>*/}
+        {/*                        </td>*/}
+        {/*                      </tr>*/}
+        {/*                    )}*/}
+        {/*                </tbody>*/}
+        {/*              </table>*/}
+        {/*            </div>*/}
+        {/*          )}*/}
+        {/*        </Form.List>*/}
+        {/*      )}*/}
+        {/*  </Form.Item>*/}
+        {/*</Card>*/}
 
-                                <td>
-                                  <Form.Item<PushRule.Detail['content']>
-                                    style={{ width: '360px' }}
-                                    {...restField}
-                                    name={[name, 'target']}
-                                    rules={[
-                                      {
-                                        required: true,
-                                        message: '请输入目标字段名',
-                                      },
-                                      {
-                                        whitespace: true,
-                                        message: '请输入目标字段名',
-                                      },
-                                    ]}
-                                  >
-                                    <Input placeholder="请输入目标字段名" />
-                                  </Form.Item>
-                                </td>
+        {/*<Card title="推送字段" className="mt-[12px]">*/}
+        {/*  <Form.Item shouldUpdate noStyle>*/}
+        {/*    {sourceFieldOptions?.content &&*/}
+        {/*      (sourceFieldOptions.content.length > 0 ||*/}
+        {/*        content?.length > 0) && (*/}
+        {/*        <Form.List name="content">*/}
+        {/*          {(fields, { add, remove, move }) => (*/}
+        {/*            <div className="h-full rounded-2xl overflow-auto pos-relative">*/}
+        {/*              <table className="w-full">*/}
+        {/*                <thead className="sticky top-0 z-1">*/}
+        {/*                  <tr className="children:(pl-[24px] font-medium text-fg-title py-[16px] bg-[#f0f0f0])">*/}
+        {/*                    <td>源字段</td>*/}
+        {/*                    <td>目标字段</td>*/}
+        {/*                    <td>目标数据类型</td>*/}
+        {/*                    <td>枚举映射</td>*/}
+        {/*                    <td className="sticky right-0">操作</td>*/}
+        {/*                  </tr>*/}
+        {/*                </thead>*/}
 
-                                <td>
-                                  <Form.Item<PushRule.Detail['content']>
-                                    style={{ width: '200px' }}
-                                    {...restField}
-                                    name={[name, 'data_type']}
-                                    shouldUpdate
-                                    rules={[
-                                      {
-                                        required: true,
-                                        message: '请选择正确的数据类型',
-                                      },
-                                      {
-                                        whitespace: true,
-                                        message: '请选择正确的数据类型',
-                                      },
-                                      {
-                                        type: 'enum',
-                                        enum: pushDataTypeOptions.map(
-                                          (item) => item.value,
-                                        ),
-                                        message: '请选择正确的数据类型',
-                                      },
-                                    ]}
-                                  >
-                                    <Select
-                                      allowClear
-                                      placeholder="请选择目标数据类型"
-                                      options={pushDataTypeOptions}
-                                    />
-                                  </Form.Item>
-                                </td>
+        {/*                <tbody>*/}
+        {/*                  {fields.map(({ key, name, ...restField }) => (*/}
+        {/*                    <tr*/}
+        {/*                      key={key}*/}
+        {/*                      className="b-b-1 b-divider children:(pt-[24px] px-[16px])"*/}
+        {/*                    >*/}
+        {/*                      <td>*/}
+        {/*                        <Form.Item<PushRule.Detail['content']>*/}
+        {/*                          style={{ width: '360px' }}*/}
+        {/*                          {...restField}*/}
+        {/*                          name={[name, 'source']}*/}
+        {/*                          rules={[*/}
+        {/*                            {*/}
+        {/*                              required: true,*/}
+        {/*                              message: '请选择源字段',*/}
+        {/*                            },*/}
+        {/*                            {*/}
+        {/*                              whitespace: true,*/}
+        {/*                              message: '请选择源字段',*/}
+        {/*                            },*/}
+        {/*                          ]}*/}
+        {/*                        >*/}
+        {/*                          <Select*/}
+        {/*                            placeholder="请选择源字段"*/}
+        {/*                            options={sourceFieldOptions.content}*/}
+        {/*                            onChange={(v) => {*/}
+        {/*                              console.log(v);*/}
+        {/*                            }}*/}
+        {/*                          />*/}
+        {/*                        </Form.Item>*/}
+        {/*                      </td>*/}
 
-                                <td>
-                                  <Form.Item<PushRule.Detail['content']>
-                                    style={{ width: '360px' }}
-                                    {...restField}
-                                    name={[name, 'mapping_content']}
-                                  >
-                                    <Input placeholder="请输入枚举映射内容" />
-                                  </Form.Item>
-                                </td>
+        {/*                      <td>*/}
+        {/*                        <Form.Item<PushRule.Detail['content']>*/}
+        {/*                          style={{ width: '360px' }}*/}
+        {/*                          {...restField}*/}
+        {/*                          name={[name, 'target']}*/}
+        {/*                          rules={[*/}
+        {/*                            {*/}
+        {/*                              required: true,*/}
+        {/*                              message: '请输入目标字段名',*/}
+        {/*                            },*/}
+        {/*                            {*/}
+        {/*                              whitespace: true,*/}
+        {/*                              message: '请输入目标字段名',*/}
+        {/*                            },*/}
+        {/*                          ]}*/}
+        {/*                        >*/}
+        {/*                          <Input placeholder="请输入目标字段名" />*/}
+        {/*                        </Form.Item>*/}
+        {/*                      </td>*/}
 
-                                <td className="py-[12px] sticky right-0 bg-white flex">
-                                  <Button
-                                    size="small"
-                                    type="link"
-                                    onClick={() => move(name, name - 1)}
-                                    disabled={name === 0}
-                                  >
-                                    上移
-                                  </Button>
-                                  <Button
-                                    size="small"
-                                    type="link"
-                                    onClick={() => move(name, name + 1)}
-                                    disabled={name === fields.length - 1}
-                                  >
-                                    下移
-                                  </Button>
-                                  <Button
-                                    size="small"
-                                    type="link"
-                                    danger
-                                    onClick={() => remove(name)}
-                                  >
-                                    删除
-                                  </Button>
-                                </td>
-                              </tr>
-                            ))}
+        {/*                      <td>*/}
+        {/*                        <Form.Item<PushRule.Detail['content']>*/}
+        {/*                          style={{ width: '200px' }}*/}
+        {/*                          {...restField}*/}
+        {/*                          name={[name, 'data_type']}*/}
+        {/*                          shouldUpdate*/}
+        {/*                          rules={[*/}
+        {/*                            {*/}
+        {/*                              required: true,*/}
+        {/*                              message: '请选择正确的数据类型',*/}
+        {/*                            },*/}
+        {/*                            {*/}
+        {/*                              whitespace: true,*/}
+        {/*                              message: '请选择正确的数据类型',*/}
+        {/*                            },*/}
+        {/*                            {*/}
+        {/*                              type: 'enum',*/}
+        {/*                              enum: pushDataTypeOptions.map(*/}
+        {/*                                (item) => item.value,*/}
+        {/*                              ),*/}
+        {/*                              message: '请选择正确的数据类型',*/}
+        {/*                            },*/}
+        {/*                          ]}*/}
+        {/*                        >*/}
+        {/*                          <Select*/}
+        {/*                            allowClear*/}
+        {/*                            placeholder="请选择目标数据类型"*/}
+        {/*                            options={pushDataTypeOptions}*/}
+        {/*                          />*/}
+        {/*                        </Form.Item>*/}
+        {/*                      </td>*/}
 
-                            {sourceFieldOptions?.content &&
-                              sourceFieldOptions.content.length > 0 && (
-                                <tr>
-                                  <td colSpan={99} className="py-[12px]">
-                                    <Button
-                                      type="dashed"
-                                      size="large"
-                                      onClick={() =>
-                                        add({
-                                          source: '',
-                                          target: '',
-                                          data_type: null,
-                                          mapping_content: null,
-                                        })
-                                      }
-                                      block
-                                    >
-                                      <i className="i-icon-park-outline:plus text-[16px]" />
-                                      <span>新增一行</span>
-                                    </Button>
-                                  </td>
-                                </tr>
-                              )}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </Form.List>
-                )}
-            </Form.Item>
-          </Card>
-        </div>
-      </ContentLayout>
-    </Form>
+        {/*                      <td>*/}
+        {/*                        <Form.Item<PushRule.Detail['content']>*/}
+        {/*                          style={{ width: '360px' }}*/}
+        {/*                          {...restField}*/}
+        {/*                          name={[name, 'mapping_content']}*/}
+        {/*                        >*/}
+        {/*                          <Input placeholder="请输入枚举映射内容" />*/}
+        {/*                        </Form.Item>*/}
+        {/*                      </td>*/}
+
+        {/*                      <td className="py-[12px] sticky right-0 bg-white flex">*/}
+        {/*                        <Button*/}
+        {/*                          size="small"*/}
+        {/*                          type="link"*/}
+        {/*                          onClick={() => move(name, name - 1)}*/}
+        {/*                          disabled={name === 0}*/}
+        {/*                        >*/}
+        {/*                          上移*/}
+        {/*                        </Button>*/}
+        {/*                        <Button*/}
+        {/*                          size="small"*/}
+        {/*                          type="link"*/}
+        {/*                          onClick={() => move(name, name + 1)}*/}
+        {/*                          disabled={name === fields.length - 1}*/}
+        {/*                        >*/}
+        {/*                          下移*/}
+        {/*                        </Button>*/}
+        {/*                        <Button*/}
+        {/*                          size="small"*/}
+        {/*                          type="link"*/}
+        {/*                          danger*/}
+        {/*                          onClick={() => remove(name)}*/}
+        {/*                        >*/}
+        {/*                          删除*/}
+        {/*                        </Button>*/}
+        {/*                      </td>*/}
+        {/*                    </tr>*/}
+        {/*                  ))}*/}
+
+        {/*                  {sourceFieldOptions?.content &&*/}
+        {/*                    sourceFieldOptions.content.length > 0 && (*/}
+        {/*                      <tr>*/}
+        {/*                        <td colSpan={99} className="py-[12px]">*/}
+        {/*                          <Button*/}
+        {/*                            type="dashed"*/}
+        {/*                            size="large"*/}
+        {/*                            onClick={() =>*/}
+        {/*                              add({*/}
+        {/*                                source: '',*/}
+        {/*                                target: '',*/}
+        {/*                                data_type: null,*/}
+        {/*                                mapping_content: null,*/}
+        {/*                              })*/}
+        {/*                            }*/}
+        {/*                            block*/}
+        {/*                          >*/}
+        {/*                            <i className="i-icon-park-outline:plus text-[16px]" />*/}
+        {/*                            <span>新增一行</span>*/}
+        {/*                          </Button>*/}
+        {/*                        </td>*/}
+        {/*                      </tr>*/}
+        {/*                    )}*/}
+        {/*                </tbody>*/}
+        {/*              </table>*/}
+        {/*            </div>*/}
+        {/*          )}*/}
+        {/*        </Form.List>*/}
+        {/*      )}*/}
+        {/*  </Form.Item>*/}
+        {/*</Card>*/}
+      </div>
+    </ContentLayout>
   );
 };
 

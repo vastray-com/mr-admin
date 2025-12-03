@@ -85,6 +85,7 @@ const EditableCell = <T,>({
 };
 
 type Props<T> = {
+  rowKey?: string;
   dataSource: T[];
   columns: Record<string, any>[];
   onCancel?: () => void;
@@ -211,7 +212,7 @@ const EditableTable = <T,>(props: Props<T>) => {
       }
       rowClassName="editable-row"
       pagination={{ onChange: () => props.onCancel?.() }}
-      rowKey="uid"
+      rowKey={props.rowKey ?? 'uid'}
       scroll={props.scroll}
     />
   );

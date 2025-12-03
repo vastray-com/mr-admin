@@ -593,8 +593,8 @@ const StructRuleDetailPage: FC = () => {
             <CategoryTable
               detail={detail}
               form={categoryForm}
-              onChange={(list) =>
-                setDetail((prev) => ({ ...prev, category: list }))
+              onChange={(category) =>
+                setDetail((prev) => ({ ...prev, category }))
               }
             />
           </Card>
@@ -611,9 +611,7 @@ const StructRuleDetailPage: FC = () => {
             <FieldTable
               form={fieldForm}
               detail={detail}
-              onChange={(list) =>
-                setDetail((prev) => ({ ...prev, fields: list }))
-              }
+              onChange={(fields) => setDetail((prev) => ({ ...prev, fields }))}
             />
           </Card>
 

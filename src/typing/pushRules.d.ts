@@ -53,6 +53,8 @@ export declare namespace PushRule {
     target: string;
     // 目标字段类型
     data_type: PushDataType;
+    // 截取长度
+    max_length: number | null;
     // 枚举映射内容
     mapping_content: string | null;
   };
