@@ -41,6 +41,10 @@ export const useApi = () => {
             op_em_no: opEmNo,
           },
         }) as Promise<APIRes<Task.ResultDetail>>,
+      taskInstanceRePush: (params: Task.RePushParams) =>
+        service.post('/admin/task/instance/re_push', params) as Promise<
+          APIRes<null>
+        >,
     }),
     [],
   );

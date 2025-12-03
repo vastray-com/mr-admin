@@ -1,5 +1,10 @@
 import type { Dayjs } from 'dayjs';
-import type { OneTimeTaskType, TaskStatus, TaskType } from '@/typing/enum';
+import {
+  type OneTimeTaskType,
+  type TaskStatus,
+  type TaskType,
+  TaskPushStatus,
+} from '@/typing/enum';
 
 declare namespace Task {
   // 获取任务列表的参数
@@ -60,6 +65,12 @@ declare namespace Task {
     task_uid: string;
   };
 
+  // 重新执行任务示例推送参数
+  type RePushParams = {
+    task_instance_uid: string;
+    push_rule_uid: string;
+  };
+
   // 实例项
   type Instance = {
     // UUID
@@ -75,7 +86,7 @@ declare namespace Task {
     push_status: {
       push_rule_uid: string;
       // 实例状态 （0: 待运行 1: 运行中 2: 完成 3: 失败）
-      status: number;
+      status: TaskPushStatus;
       // 运行时长（秒）
       duration: number;
       // 备注

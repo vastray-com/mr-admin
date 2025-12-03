@@ -127,3 +127,15 @@ export enum TaskStatus {
   Disabled = 0, // 已停用
   Enabled = 1, // 启用中
 }
+
+// 任务推送状态
+export enum TaskPushStatus {
+  // 0: 待运行
+  Pending = 0,
+  // 1: 运行中
+  Running = 1,
+  // 2: 完成
+  Completed = 2,
+  // 3: 失败
+  Failed = 3,
+}

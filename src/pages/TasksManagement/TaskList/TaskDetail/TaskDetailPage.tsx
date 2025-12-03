@@ -1,4 +1,4 @@
-import { App, Button, Card, Descriptions, Divider, Table } from 'antd';
+import { App, Button, Card, Descriptions, Divider, Popover, Table } from 'antd';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
 import { useCallback, useRef, useState } from 'react';
@@ -7,7 +7,7 @@ import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { usePaginationData } from '@/hooks/usePaginationData';
 import { useCacheStore } from '@/store/useCacheStore';
-import { taskTypeMap } from '@/typing/enum';
+import { TaskPushStatus, taskTypeMap } from '@/typing/enum';
 import { formatCountToString, formatSecondsToTime } from '@/utils/helper';
 import type { Task } from '@/typing/task';
 
@@ -30,6 +30,7 @@ const TaskDetailPage = () => {
 
   const isInitial = useRef(false);
   const ruleOptions = useCacheStore((s) => s.ruleOptions);
+  const pushRuleList = useCacheStore((s) => s.pushRuleList);
 
   const [data, setData] = useState<Task.Item | null>(null);
 
@@ -70,6 +71,28 @@ const TaskDetailPage = () => {
         });
     },
     [taskApi, refresh, message],
+  );
+
+  // 重新执行推送
+  const rePushTaskInstance = useCallback(
+    async (params: Task.RePushParams) => {
+      console.log('重新执行推送参数：', params);
+      try {
+        const res = await taskApi.taskInstanceRePush(params);
+        console.log('重新执行推送结果：', res);
+        if (res.code !== 200) {
+          message.error(`重新执行推送失败：${res.msg}`);
+          return;
+        }
+        message.success('重新执行推送成功，请稍后查看结果');
+        // 刷新列表
+        refresh();
+      } catch (e) {
+        console.error('重新执行推送失败：', e);
+        message.error('重新执行推送失败，请稍后重试');
+      }
+    },
+    [message, refresh, taskApi],
   );
 
   if (!taskUid) return null;
@@ -172,6 +195,69 @@ const TaskDetailPage = () => {
                 </span>
               </p>
             )}
+          />
+
+          <Table.Column
+            title="推送结果"
+            dataIndex="push"
+            render={(_, record: Task.Instance) =>
+              record.push_status && record.push_status.length > 0 ? (
+                <Popover
+                  content={record.push_status?.map((s) => {
+                    const rule = pushRuleList.find(
+                      (r) => r.uid === s.push_rule_uid,
+                    );
+                    const ruleName = rule ? rule.name_cn : '未知规则';
+                    const statusText =
+                      s.status === TaskPushStatus.Pending
+                        ? '待运行'
+                        : s.status === TaskPushStatus.Running
+                          ? '运行中'
+                          : s.status === TaskPushStatus.Completed
+                            ? '完成'
+                            : s.status === TaskPushStatus.Failed
+                              ? '失败'
+                              : '未知状态';
+                    return (
+                      <div key={s.push_time} className="mb-[16px]">
+                        <p>
+                          <span className="font-medium">{ruleName}</span>
+                          <span className="mx-[4px]">-</span>
+                          <span>{statusText}</span>
+                          {(s.status === TaskPushStatus.Failed ||
+                            s.status === TaskPushStatus.Completed) && (
+                            <Button
+                              className="ml-[8px]"
+                              type="link"
+                              onClick={() => {
+                                rePushTaskInstance({
+                                  task_instance_uid: record.uid,
+                                  push_rule_uid: s.push_rule_uid,
+                                });
+                              }}
+                            >
+                              重新执行
+                            </Button>
+                          )}
+                        </p>
+                        <p className="fg-tertiary">
+                          <span>推送时间:</span>
+                          <span>
+                            {s.push_time
+                              ? dayjs(s.push_time).format('YYYY-MM-DD HH:mm:ss')
+                              : '-'}
+                          </span>
+                        </p>
+                      </div>
+                    );
+                  })}
+                >
+                  <Button type="link">查看</Button>
+                </Popover>
+              ) : (
+                <span>未配置推送</span>
+              )
+            }
           />
 
           <Table.Column
