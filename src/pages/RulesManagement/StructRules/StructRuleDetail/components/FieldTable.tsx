@@ -14,10 +14,10 @@ import EditableTable from '@/components/EditableTable';
 import { useCacheStore } from '@/store/useCacheStore';
 import {
   StructRuleFieldMappingType,
-  StructRuleFieldSourceType,
+  StructRuleFieldParsingType,
   StructRuleFieldValueType,
   structRuleFieldMappingTypeOptions,
-  structRuleFieldSourceTypeOptions,
+  structRuleFieldParsingTypeOptions,
   structRuleFieldValueTypeOptions,
 } from '@/typing/enum';
 import type { StructRule } from '@/typing/structRules';
@@ -48,7 +48,7 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       category_name: '',
       name_cn: '',
       name_en: '',
-      source_type: StructRuleFieldSourceType.LLM,
+      source_type: StructRuleFieldParsingType.LLM,
       parsing_rule: '',
       value_type: StructRuleFieldValueType.Text,
       is_array: false,
@@ -126,9 +126,20 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
         .filter((category) => category.name_en && category.name_cn)
         .map((item) => ({
           label: item.name_cn,
-          value: item.name_en,
+          value: `category#${item.name_en}`,
         })),
     [detail.category],
+  );
+  // 小字段选择列表
+  const fieldOptions = useMemo(
+    () =>
+      detail.fields
+        .filter((field) => field.name_en && field.name_cn)
+        .map((item) => ({
+          label: item.name_cn,
+          value: `field#${item.name_en}`,
+        })),
+    [detail.fields],
   );
 
   const columns = [
@@ -159,52 +170,70 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       enableSearch: true,
     },
     {
-      title: '大字段',
-      dataIndex: 'category_name',
+      title: '数据来源',
+      dataIndex: 'data_source',
       width: '220px',
       ellipsis: true,
       inputType: 'select',
-      options: categoryOptions,
+      options: [
+        {
+          label: '大字段',
+          title: '大字段',
+          options: categoryOptions,
+        },
+        {
+          label: '明细字段',
+          title: '明细字段',
+          options: fieldOptions,
+        },
+      ],
       editable: true,
-      filters: categoryOptions.map((o) => ({ text: o.label, value: o.value })),
+      // enableSearch: true,
+      filters: categoryOptions
+        .map((o) => ({ text: `大字段: ${o.label}`, value: o.value }))
+        .concat(
+          fieldOptions.map((o) => ({
+            text: `明细字段: ${o.label}`,
+            value: o.value,
+          })),
+        ),
       onFilter: (value: any, record: StructRule.Field) =>
-        record.category_name?.indexOf(value as string) === 0,
-      render: (v: string) =>
-        categoryOptions.find((option) => option.value === v)?.label,
+        record.data_source?.indexOf(value as string) === 0,
+      render: (v: string) => {
+        if (!v) return '';
+        if (v.startsWith('category#')) {
+          return `大字段: ${categoryOptions.find((option) => option.value === v)?.label || v}`;
+        } else if (v.startsWith('field#')) {
+          return `明细字段: ${fieldOptions.find((option) => option.value === v)?.label || v}`;
+        }
+        return v;
+      },
     },
     {
-      title: '来源',
-      dataIndex: 'source_type',
+      title: '解析方式',
+      dataIndex: 'parsing_type',
       width: '180px',
       inputType: 'select',
-      options: structRuleFieldSourceTypeOptions,
+      options: structRuleFieldParsingTypeOptions,
       editable: true,
-      filters: structRuleFieldSourceTypeOptions.map((o) => ({
+      filters: structRuleFieldParsingTypeOptions.map((o) => ({
         text: o.label,
         value: o.value,
       })),
       onFilter: (value: any, record: StructRule.Field) =>
-        record.source_type === value,
-      render: (v: StructRuleFieldSourceType) =>
-        structRuleFieldSourceTypeOptions.find((option) => option.value === v)
+        record.parsing_type === value,
+      render: (v: StructRuleFieldParsingType) =>
+        structRuleFieldParsingTypeOptions.find((option) => option.value === v)
           ?.label,
     },
     {
       title: '解析规则',
       dataIndex: 'parsing_rule',
       width: '360px',
+      inputType: 'text',
       ellipsis: true,
       editable: true,
       enableSearch: true,
-      render: (v: string, record: StructRule.Field) => {
-        if (record.source_type === StructRuleFieldSourceType.QuoteResult) {
-          return (
-            resultFieldOptions.find((option) => option.value === v)?.label || v
-          );
-        } else {
-          return v;
-        }
-      },
     },
     {
       title: '值类型',
@@ -370,30 +399,30 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
     (col) => {
       if (!col.editable) return col;
       // 解析规则联动
-      if (col.dataIndex === 'parsing_rule') {
-        return {
-          ...col,
-          onCell: (record) => {
-            return {
-              record,
-              inputType:
-                sourceType === StructRuleFieldSourceType.QuoteResult
-                  ? 'select'
-                  : 'text',
-              ...(sourceType === StructRuleFieldSourceType.QuoteResult
-                ? {
-                    options: resultFieldOptions.filter(
-                      (o) => o.value !== name_en,
-                    ),
-                  }
-                : {}),
-              dataIndex: col.dataIndex,
-              title: col.title,
-              editing: isEditing(record.uid),
-            };
-          },
-        };
-      }
+      // if (col.dataIndex === 'parsing_rule') {
+      //   return {
+      //     ...col,
+      //     onCell: (record) => {
+      //       return {
+      //         record,
+      //         inputType:
+      //           sourceType === StructRuleFieldParsingType.QuoteResult
+      //             ? 'select'
+      //             : 'text',
+      //         ...(sourceType === StructRuleFieldParsingType.QuoteResult
+      //           ? {
+      //             options: resultFieldOptions.filter(
+      //               (o) => o.value !== name_en,
+      //             ),
+      //           }
+      //           : {}),
+      //         dataIndex: col.dataIndex,
+      //         title: col.title,
+      //         editing: isEditing(record.uid),
+      //       };
+      //     },
+      //   };
+      // }
 
       // 映射类型联动
       if (col.dataIndex === 'mapping_content') {
@@ -418,6 +447,7 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
           },
         };
       }
+
       return {
         ...col,
         onCell: (record) => {

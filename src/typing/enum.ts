@@ -5,22 +5,19 @@ export enum StructRuleStatus {
 }
 
 // 模版字段来源类型
-export enum StructRuleFieldSourceType {
+export enum StructRuleFieldParsingType {
   // LLM 大模型生成
   LLM = 1,
   // 原始数据字段引用
   QuoteOriginal,
   // 静态值
   Static,
-  // 结构化数据字段引用
-  QuoteResult,
 }
 
-export const structRuleFieldSourceTypeOptions = [
-  { value: StructRuleFieldSourceType.LLM, label: '大模型生成' },
-  { value: StructRuleFieldSourceType.QuoteOriginal, label: '原始数据引用' },
-  { value: StructRuleFieldSourceType.Static, label: '静态值' },
-  { value: StructRuleFieldSourceType.QuoteResult, label: '结构化结果引用' },
+export const structRuleFieldParsingTypeOptions = [
+  { value: StructRuleFieldParsingType.LLM, label: '大模型生成' },
+  { value: StructRuleFieldParsingType.QuoteOriginal, label: '原始数据引用' },
+  { value: StructRuleFieldParsingType.Static, label: '静态值' },
 ];
 
 // 字段值类型

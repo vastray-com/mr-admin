@@ -1,6 +1,6 @@
 import type {
   StructRuleFieldMappingType,
-  StructRuleFieldSourceType,
+  StructRuleFieldParsingType,
   StructRuleFieldValueType,
   StructRuleStatus,
 } from './enum';
@@ -83,15 +83,15 @@ export declare namespace StructRule {
     uid: string;
     /// 所属规则 ID
     rule_uid?: string;
-    /// 所属分类字段名
-    category_name?: string;
     /// 提取字段名称
     name_cn: string;
     /// 字段键名称
     name_en: string;
-    /// 字段定义
-    source_type: StructRuleFieldSourceType;
-    /// 解析规则 来源为 LLM 时为 prompt，为原始数据引用时为原始数据取数 path， 为结构化数据引用时为 name_en， 为静态值时为值内容
+    /// 数据来源，category/field#字段名
+    data_source?: string;
+    /// 解析方式 1: LLM 大模型生成 2: 原始数据字段引用 3: 静态值
+    parsing_type: StructRuleFieldParsingType;
+    /// 解析规则 来源为 LLM 时为 prompt，为原始数据引用时为原始数据取数 path，为静态值时为值内容
     parsing_rule: string;
     /// 字段值类型
     value_type: StructRuleFieldValueType;
@@ -122,8 +122,10 @@ export declare namespace StructRule {
     name_cn: string;
     // 字段键名称
     name_en: string;
-    // 来源类型 1: LLM 大模型生成 2: 原始数据字段引用 3: 静态值 4: 结构化数据字段引用
-    source_type: number;
+    // 数据来源，大字段/小字段#字段名
+    data_source: string;
+    // 解析方式 1: LLM 大模型生成 2: 原始数据字段引用 3: 静态值
+    parsing_type: number;
     // 解析规则 来源为 LLM 时为 prompt，为原始数据引用时为原始数据取数path， 为结构化数据引用时为 name_en， 为静态值时为值内容
     parsing_rule: string;
     // 字段值类型

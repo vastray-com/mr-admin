@@ -21,11 +21,11 @@ import FieldTable from '@/pages/RulesManagement/StructRules/StructRuleDetail/com
 import { useCacheStore } from '@/store/useCacheStore';
 import {
   StructRuleFieldMappingType,
-  StructRuleFieldSourceType,
+  StructRuleFieldParsingType,
   StructRuleFieldValueType,
   StructRuleStatus,
   structRuleFieldMappingTypeOptions,
-  structRuleFieldSourceTypeOptions,
+  structRuleFieldParsingTypeOptions,
   structRuleFieldValueTypeOptions,
 } from '@/typing/enum';
 import { generateCurlExample } from '@/utils/helper';
@@ -111,7 +111,7 @@ const StructRuleDetailPage: FC = () => {
         name_cn: `${item}`,
         name_en: '',
         category_name: '',
-        source_type: StructRuleFieldSourceType.LLM,
+        source_type: StructRuleFieldParsingType.LLM,
         parsing_rule: '',
         value_type: StructRuleFieldValueType.Text,
         is_array: false,
@@ -187,35 +187,40 @@ const StructRuleDetailPage: FC = () => {
         }
 
         if (
-          f.category_name &&
-          !values.category.find((c) => c.name_en === f.category_name)
+          f.data_source &&
+          !values.category.find(
+            (c) => `category#${c.name_en}` === f.data_source,
+          ) &&
+          !values.fields.find(
+            (field) => `field#${field.name_en}` === f.data_source,
+          )
         ) {
-          err = `提交失败！明细字段序号 ${idx + 1} 所属大字段不存在`;
+          err = `提交失败！明细字段序号 ${idx + 1} 数据来源不合法`;
         }
 
         if (
-          !structRuleFieldSourceTypeOptions.find(
-            (item) => item.value === f.source_type,
+          !structRuleFieldParsingTypeOptions.find(
+            (item) => item.value === f.parsing_type,
           )
         ) {
           err = `提交失败！明细字段序号 ${idx + 1} 字段来源类型不合法`;
         }
 
-        if (f.source_type === StructRuleFieldSourceType.QuoteResult) {
-          const isExist = values.fields.find(
-            (field) => field.name_en === f.parsing_rule,
-          );
-          if (!isExist) {
-            err = `提交失败！明细字段序号 ${idx + 1} 引用结果字段不存在`;
-          }
-        }
+        // if (f.parsing_type === StructRuleFieldParsingType.QuoteResult) {
+        //   const isExist = values.fields.find(
+        //     (field) => field.name_en === f.parsing_rule,
+        //   );
+        //   if (!isExist) {
+        //     err = `提交失败！明细字段序号 ${idx + 1} 引用结果字段不存在`;
+        //   }
+        // }
 
-        if (
-          !f.parsing_rule &&
-          f.source_type !== StructRuleFieldSourceType.Static
-        ) {
-          err = `提交失败！明细字段序号 ${idx + 1} 提取规则不能为空`;
-        }
+        // if (
+        //   !f.parsing_rule &&
+        //   f.parsing_type !== StructRuleFieldParsingType.Static
+        // ) {
+        //   err = `提交失败！明细字段序号 ${idx + 1} 提取规则不能为空`;
+        // }
 
         if (
           !structRuleFieldValueTypeOptions.find(
@@ -506,10 +511,9 @@ const StructRuleDetailPage: FC = () => {
               />
             ) : (
               <code
-                className="block bg-[#FAFAFA] b-1 b-[#d9d9d9] h-[532px] p-[16px] rounded-[6px] overflow-auto text-[14px] leading-[1.5]"
-                // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
+                className="block bg-[#FAFAFA] b-1 b-[#d9d9d9] h-[532px] p-[16px] rounded-[6px] overflow-auto text-[14px] leading-[1.5]" // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
                 dangerouslySetInnerHTML={{ __html: testCode[testShowContent] }}
-              ></code>
+              />
             )}
           </div>
         </div>
