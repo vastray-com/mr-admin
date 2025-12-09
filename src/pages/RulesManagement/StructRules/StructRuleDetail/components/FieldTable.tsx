@@ -30,17 +30,17 @@ type Props = {
 const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
   const [editingKey, setEditingKey] = useState('');
   const isEditing = (key: string) => key === editingKey;
-  const resultFieldOptions = useMemo(
-    () =>
-      detail.fields.map((f) => ({
-        label: f.name_cn,
-        value: f.name_en,
-      })),
-    [detail.fields],
-  );
-
-  const name_en = Form.useWatch('name_en', form);
-  const sourceType = Form.useWatch('source_type', form);
+  // const resultFieldOptions = useMemo(
+  //   () =>
+  //     detail.fields.map((f) => ({
+  //       label: f.name_cn,
+  //       value: f.name_en,
+  //     })),
+  //   [detail.fields],
+  // );
+  //
+  // const name_en = Form.useWatch('name_en', form);
+  // const sourceType = Form.useWatch('source_type', form);
   const mappingType = Form.useWatch('mapping_type', form);
 
   const edit = (record: Partial<StructRule.Field>) => {

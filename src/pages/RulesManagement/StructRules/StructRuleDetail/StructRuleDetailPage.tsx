@@ -110,8 +110,8 @@ const StructRuleDetailPage: FC = () => {
         uid: `${Math.random() * 1000000}`,
         name_cn: `${item}`,
         name_en: '',
-        category_name: '',
-        source_type: StructRuleFieldParsingType.LLM,
+        data_source: '',
+        parsing_type: StructRuleFieldParsingType.LLM,
         parsing_rule: '',
         value_type: StructRuleFieldValueType.Text,
         is_array: false,
@@ -680,7 +680,7 @@ const Preview: FC<PreviewProps> = ({ categories, fields }) => {
         nodes[`FIELD_${f.name_en}`] = {
           title: f.name_cn,
           key: `FIELD_${f.name_en}`,
-          // children: [],
+          children: [],
         };
       }
     });
@@ -688,10 +688,18 @@ const Preview: FC<PreviewProps> = ({ categories, fields }) => {
     // 再构建父子关系
     process_fields.forEach((f) => {
       const node = nodes[`FIELD_${f.name_en}`];
-      if (f.category_name) {
-        const parentNode = nodes[`CATEGORY_${f.category_name}`];
-        if (parentNode) {
-          parentNode.children?.push(node);
+      if (f.data_source) {
+        const [t, n] = f.data_source.split('#');
+        if (t === 'category') {
+          const parentNode = nodes[`CATEGORY_${n}`];
+          if (parentNode) {
+            parentNode.children?.push(node);
+          }
+        } else if (t === 'field') {
+          const parentNode = nodes[`FIELD_${n}`];
+          if (parentNode) {
+            parentNode.children?.push(node);
+          }
         }
       }
     });
@@ -703,7 +711,7 @@ const Preview: FC<PreviewProps> = ({ categories, fields }) => {
       }
     });
     process_fields.forEach((f) => {
-      if (!f.category_name && f.name_en && f.name_cn) {
+      if (!f.data_source && f.name_en && f.name_cn) {
         const node = nodes[`FIELD_${f.name_en}`];
         if (node) {
           tree.push(node);
