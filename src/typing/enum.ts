@@ -12,12 +12,15 @@ export enum StructRuleFieldParsingType {
   QuoteOriginal,
   // 静态值
   Static,
+  // 无操作
+  None,
 }
 
 export const structRuleFieldParsingTypeOptions = [
   { value: StructRuleFieldParsingType.LLM, label: '大模型生成' },
   { value: StructRuleFieldParsingType.QuoteOriginal, label: '原始数据引用' },
   { value: StructRuleFieldParsingType.Static, label: '静态值' },
+  { value: StructRuleFieldParsingType.None, label: '无' },
 ];
 
 // 字段值类型
