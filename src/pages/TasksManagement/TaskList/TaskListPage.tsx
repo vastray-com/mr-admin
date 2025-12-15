@@ -5,6 +5,7 @@ import {
   DatePicker,
   Form,
   Input,
+  InputNumber,
   Modal,
   Select,
   Space,
@@ -32,6 +33,29 @@ const statusDisplay: Record<TaskStatus, [string, string]> = {
   0: ['#D9D9D9', '已停用'],
   1: ['#52C41A', '已启用'],
 };
+
+const ENV_VAR_OPTIONS = [
+  {
+    label: '偏移天数（循环任务执行时取数向前 X 天）',
+    value: 'interval',
+    input_type: 'number',
+  },
+  {
+    label: '开始时间（一次性任务取数范围开始时间）',
+    value: 'start_time',
+    input_type: 'date',
+  },
+  {
+    label: '结束时间（一次性任务取数范围结束时间）',
+    value: 'end_time',
+    input_type: 'date',
+  },
+  {
+    label: '诊断过滤',
+    value: 'diagnosis',
+    input_type: 'multi_text',
+  },
+];
 
 const TaskListPage = () => {
   const { taskApi } = useApi();
@@ -91,13 +115,25 @@ const TaskListPage = () => {
   const onFinish = useCallback(
     async (values: Task.CreateItem) => {
       console.log('提交的新任务数据：', values);
+      // 转换日期格式
+      const envVars: Record<string, string> = {};
+      if (values.env_vars.length > 0) {
+        values.env_vars.forEach((v) => {
+          if (v && v.length === 2) {
+            const [key, val] = v;
+            const opt = ENV_VAR_OPTIONS.find((o) => o.value === key);
+            if (opt?.input_type === 'date' && dayjs(val).isValid()) {
+              envVars[key] = dayjs(val).toISOString();
+            } else {
+              envVars[key] = val;
+            }
+          }
+        });
+      }
       const newTaskData: Task.Item = {
         ...values,
         schedule_time: values.schedule_time?.toISOString(),
-        env_vars:
-          values.env_vars?.length > 0
-            ? Object.fromEntries(values.env_vars || [])
-            : {},
+        env_vars: envVars,
       };
       console.log('转换后的新任务数据：', newTaskData);
       try {
@@ -126,6 +162,14 @@ const TaskListPage = () => {
     if (!rule_uid) return [];
     return pushRules[rule_uid] || [];
   }, [rule_uid, pushRules]);
+
+  // 环境变量选择时过滤已选项
+  const envVars = Form.useWatch('env_vars', form);
+  const envVarOptions = useMemo(() => {
+    if (!envVars) return ENV_VAR_OPTIONS;
+    const selectedKeys = envVars.filter((v) => !!v && !!v[0]).map((v) => v[0]);
+    return ENV_VAR_OPTIONS.filter((o) => !selectedKeys.includes(o.value));
+  }, [envVars]);
 
   return (
     <>
@@ -232,7 +276,7 @@ const TaskListPage = () => {
         onCancel={() => setShowCreateModal(false)}
         open={showCreateModal}
         title="新建任务"
-        width={720}
+        width={830}
         footer={null}
       >
         <Form<Task.CreateItem>
@@ -240,6 +284,9 @@ const TaskListPage = () => {
           form={form}
           name="new-task-form"
           onFinish={onFinish}
+          onFinishFailed={(v) => {
+            console.log('表单提交失败：', v);
+          }}
           autoComplete="off"
           labelCol={{ span: 4 }}
         >
@@ -298,30 +345,52 @@ const TaskListPage = () => {
                       <Form.Item
                         {...restField}
                         name={[name, 0]}
-                        className="w-[250px]"
-                        rules={[
-                          {
-                            required: true,
-                            whitespace: true,
-                            message: '环境变量的字段名不能为空',
-                          },
-                        ]}
+                        className="w-[360px]"
                       >
-                        <Input placeholder="请输入字段名" />
+                        <Select
+                          placeholder="请选择配置项"
+                          options={envVarOptions}
+                          labelRender={(v) =>
+                            ENV_VAR_OPTIONS.find((o) => o.value === v.value)
+                              ?.label
+                          }
+                        />
                       </Form.Item>
-                      <Form.Item
-                        {...restField}
-                        name={[name, 1]}
-                        className="w-[250px]"
-                        rules={[
-                          {
-                            required: true,
-                            whitespace: true,
-                            message: '环境变量的字段值不能为空',
-                          },
-                        ]}
-                      >
-                        <Input placeholder="请输入字段值" />
+                      <Form.Item shouldUpdate noStyle>
+                        {() => {
+                          if (!envVars || !envVars[name]) return null;
+                          const opt = ENV_VAR_OPTIONS.find(
+                            (o) => o.value === envVars[name][0],
+                          );
+                          return opt?.input_type === 'number' ? (
+                            <Form.Item
+                              {...restField}
+                              name={[name, 1]}
+                              className="w-[250px]"
+                            >
+                              <InputNumber
+                                precision={0}
+                                style={{ width: '100%' }}
+                              />
+                            </Form.Item>
+                          ) : opt?.input_type === 'date' ? (
+                            <Form.Item
+                              {...restField}
+                              name={[name, 1]}
+                              className="w-[250px]"
+                            >
+                              <DatePicker showTime style={{ width: '100%' }} />
+                            </Form.Item>
+                          ) : opt?.input_type === 'multi_text' ? (
+                            <Form.Item
+                              {...restField}
+                              name={[name, 1]}
+                              className="w-[250px]"
+                            >
+                              <Select mode="tags" options={[]} open={false} />
+                            </Form.Item>
+                          ) : null;
+                        }}
                       </Form.Item>
 
                       <Button
@@ -335,16 +404,20 @@ const TaskListPage = () => {
                     </Space>
                   ))}
 
-                  <Form.Item>
-                    <Button
-                      type="dashed"
-                      onClick={() => add()}
-                      block
-                      icon={<i className="i-line-md:plus-circle text-[20px]" />}
-                    >
-                      添加
-                    </Button>
-                  </Form.Item>
+                  {envVars.length !== ENV_VAR_OPTIONS.length && (
+                    <Form.Item>
+                      <Button
+                        type="dashed"
+                        onClick={() => add()}
+                        block
+                        icon={
+                          <i className="i-line-md:plus-circle text-[20px]" />
+                        }
+                      >
+                        添加
+                      </Button>
+                    </Form.Item>
+                  )}
                 </>
               )}
             </Form.List>
