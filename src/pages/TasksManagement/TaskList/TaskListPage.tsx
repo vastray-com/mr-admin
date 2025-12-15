@@ -404,7 +404,7 @@ const TaskListPage = () => {
                     </Space>
                   ))}
 
-                  {envVars.length !== ENV_VAR_OPTIONS.length && (
+                  {(!envVars || envVars.length < ENV_VAR_OPTIONS.length) && (
                     <Form.Item>
                       <Button
                         type="dashed"
