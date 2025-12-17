@@ -13,6 +13,7 @@ import { type FC, useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
+import { useFileImport } from '@/hooks/useFileImport';
 import { usePaginationData } from '@/hooks/usePaginationData';
 import { useCacheStore } from '@/store/useCacheStore';
 import { type PushTargetDB, pushTargetDBOptions } from '@/typing/enum';
@@ -130,6 +131,13 @@ const PushRulesPage: FC = () => {
     });
   }, [onImport, modal]);
 
+  // 导入文件
+  const { FileImportModal, openFileImportModal } = useFileImport({
+    title: '通过文件导入推送规则',
+    path: '/admin/push_rule/import',
+    onSucceed: refresh,
+  });
+
   // 新建病历模板
   const onCreate = useCallback(() => {
     nav('/rules_management/push_rules/NEW');
@@ -143,8 +151,12 @@ const PushRulesPage: FC = () => {
         message.info({ key: msgKey, content: '没有选中任何推送规则' });
         return;
       }
-      message.loading('正在导出推送规则...');
-      console.log({ key: msgKey, content: '导出推送规则:', uids });
+      message.loading({
+        key: msgKey,
+        content: '正在导出推送规则...',
+        duration: 0,
+      });
+      console.log('导出推送规则:', uids);
       const res = await pushRuleApi.exportRule({ uids });
       downloadFile(res);
       message.success({ key: msgKey, content: '导出成功!' });
@@ -182,12 +194,17 @@ const PushRulesPage: FC = () => {
       action={
         <>
           <Button onClick={onOpenImportModal}>快速导入</Button>
+          <Button className="ml-[8px]" onClick={openFileImportModal}>
+            文件导入
+          </Button>
           <Button type="primary" className="ml-[8px]" onClick={onCreate}>
             新建推送规则
           </Button>
         </>
       }
     >
+      <FileImportModal />
+
       <div className="h-full">
         <Card className="h-[80px]">
           <Form

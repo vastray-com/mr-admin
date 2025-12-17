@@ -15,6 +15,7 @@ import { type FC, useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
+import { useFileImport } from '@/hooks/useFileImport';
 import { usePaginationData } from '@/hooks/usePaginationData';
 import { useCacheStore } from '@/store/useCacheStore';
 import { StructRuleStatus } from '@/typing/enum';
@@ -131,6 +132,13 @@ const StructRulesPage: FC = () => {
     });
   }, [onImport, modal]);
 
+  // 导入文件
+  const { FileImportModal, openFileImportModal } = useFileImport({
+    title: '通过文件导入结构化规则',
+    path: '/admin/structured_rule/import',
+    onSucceed: refresh,
+  });
+
   // 新建病历模板
   const onCreate = useCallback(() => {
     nav('/rules_management/struct_rules/NEW');
@@ -144,7 +152,11 @@ const StructRulesPage: FC = () => {
         message.info({ key: msgKey, content: '没有选中任何结构化规则' });
         return;
       }
-      message.loading({ key: msgKey, content: '正在导出结构化规则...' });
+      message.loading({
+        key: msgKey,
+        content: '正在导出结构化规则...',
+        duration: 0,
+      });
       console.log('导出结构化规则:', uids);
       const res = await ruleApi.exportRules({ uids });
       downloadFile(res);
@@ -186,12 +198,17 @@ const StructRulesPage: FC = () => {
       action={
         <>
           <Button onClick={onOpenImportModal}>快速导入</Button>
+          <Button className="ml-[8px]" onClick={openFileImportModal}>
+            文件导入
+          </Button>
           <Button type="primary" className="ml-[8px]" onClick={onCreate}>
             新建结构化规则
           </Button>
         </>
       }
     >
+      <FileImportModal />
+
       <div className="h-full">
         <Card className="h-[80px]">
           <Form

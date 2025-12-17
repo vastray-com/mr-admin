@@ -7,7 +7,6 @@ import {
   type GetProps,
   Input,
   Table,
-  Upload,
 } from 'antd';
 import clsx from 'clsx';
 import dayjs, { type Dayjs } from 'dayjs';
@@ -15,10 +14,10 @@ import { type FC, useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
+import { useFileImport } from '@/hooks/useFileImport';
 import { usePaginationData } from '@/hooks/usePaginationData';
 import { useCacheStore } from '@/store/useCacheStore';
 import { downloadFile } from '@/utils/helper';
-import { service } from '@/utils/service';
 import type { FormProps } from 'antd';
 
 type FormValues = {
@@ -133,46 +132,12 @@ const EncodePage: FC = () => {
     });
   }, [onImport, modal]);
 
-  const onOpenFileImportModal = useCallback(() => {
-    modal.confirm({
-      title: '通过文件导入码表',
-      width: '64vw',
-      centered: true,
-      icon: null,
-      footer: null,
-      closable: true,
-      content: (
-        <Upload.Dragger
-          accept=".zip"
-          action={`${service.defaults.baseURL}/admin/encode/import`}
-          showUploadList={false}
-          onChange={(v) => {
-            console.log('上传文件变化:', v);
-            const msgKey = 'upload-message';
-            if (v.file.status === 'uploading') {
-              message.loading({
-                key: msgKey,
-                content: '正在上传文件...',
-              });
-            } else if (v.file.status === 'error') {
-              message.error({
-                key: msgKey,
-                content: `文件上传失败: ${(typeof v.file.response === 'string' ? v.file.response : v.file.response?.message) || '未知错误'}`,
-              });
-            }
-          }}
-        >
-          <i className="i-icon-park-outline:folder-upload text-[48px] text-[#3875F6]" />
-          <p className="pt-[24px] pb-[8px] text-fg-primary text-[16px]">
-            单击或将文件拖到此区域上传
-          </p>
-          <p className="text-fg-tertiary">
-            仅支持本页面导出的压缩包文件（.zip），请勿上传其他格式文件。
-          </p>
-        </Upload.Dragger>
-      ),
-    });
-  }, [modal, message]);
+  // 导入文件
+  const { FileImportModal, openFileImportModal } = useFileImport({
+    title: '通过文件导入码表',
+    path: '/admin/encode/import',
+    onSucceed: refresh,
+  });
 
   // 新建码表
   const onCreate = useCallback(() => {
@@ -189,7 +154,7 @@ const EncodePage: FC = () => {
         message.info({ key: msgKey, content: '没有选中任何码表' });
         return;
       }
-      message.loading({ key: msgKey, content: '正在导出码表...' });
+      message.loading({ key: msgKey, content: '正在导出码表...', duration: 0 });
       console.log('导出码表:', uids);
       const res = await encodeApi.exportEncode({ uids });
       downloadFile(res);
@@ -248,7 +213,7 @@ const EncodePage: FC = () => {
       action={
         <>
           <Button onClick={onOpenImportModal}>快速导入</Button>
-          <Button className="ml-[8px]" onClick={onOpenFileImportModal}>
+          <Button className="ml-[8px]" onClick={openFileImportModal}>
             文件导入
           </Button>
           <Button type="primary" className="ml-[8px]" onClick={onCreate}>
@@ -257,6 +222,8 @@ const EncodePage: FC = () => {
         </>
       }
     >
+      <FileImportModal />
+
       <div className="h-full">
         <Card className="h-[80px]">
           <Form
