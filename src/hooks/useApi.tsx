@@ -133,6 +133,10 @@ export const useApi = () => {
         service.post('/admin/push_rule/action', params) as Promise<
           APIRes<string>
         >,
+      exportRule: (params: { uids: string[] }) =>
+        noInterceptorsService.post('/admin/push_rule/export', params, {
+          responseType: 'blob', // 设置响应类型为 Blob
+        }) as Promise<AxiosResponse<Blob>>,
     }),
     [],
   );

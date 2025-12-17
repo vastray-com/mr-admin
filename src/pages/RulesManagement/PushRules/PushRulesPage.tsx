@@ -16,6 +16,7 @@ import { useApi } from '@/hooks/useApi';
 import { usePaginationData } from '@/hooks/usePaginationData';
 import { useCacheStore } from '@/store/useCacheStore';
 import { type PushTargetDB, pushTargetDBOptions } from '@/typing/enum';
+import { downloadFile } from '@/utils/helper';
 import type { FormProps } from 'antd';
 import type { PushRule } from '@/typing/pushRules';
 
@@ -31,7 +32,7 @@ const PushRulesPage: FC = () => {
 
   const structuredRuleList = useCacheStore((state) => state.structRuleList);
   const setRuleListCache = useCacheStore((state) => state.setPushRuleList);
-  const [_, setSelectedUids] = useState<string[]>([]);
+  const [selectedUids, setSelectedUids] = useState<string[]>([]);
 
   // 禁止选择超过今天的日期和 6 个月前的日期
   const disabledDate: GetProps<typeof DatePicker.RangePicker>['disabledDate'] =
@@ -134,21 +135,21 @@ const PushRulesPage: FC = () => {
     nav('/rules_management/push_rules/NEW');
   }, [nav]);
 
-  // 导出选中病历模板
-  // const onExportRecords = useCallback(
-  //   async (uids: string[]) => {
-  //     if (uids.length === 0) {
-  //       message.info('没有选中任何推送规则');
-  //       return;
-  //     }
-  //     message.loading('正在导出推送规则...');
-  //     console.log('导出推送规则:', uids);
-  //     const res = await pushRuleApi.exportRules({ uids });
-  //     downloadFile(res);
-  //     message.success('导出成功!');
-  //   },
-  //   [message, pushRuleApi],
-  // );
+  // 导出选中推送规则
+  const onExportRecords = useCallback(
+    async (uids: string[]) => {
+      if (uids.length === 0) {
+        message.info('没有选中任何推送规则');
+        return;
+      }
+      message.loading('正在导出推送规则...');
+      console.log('导出推送规则:', uids);
+      const res = await pushRuleApi.exportRule({ uids });
+      downloadFile(res);
+      message.success('导出成功!');
+    },
+    [message, pushRuleApi],
+  );
 
   // 编辑项目
   const onEdit = useCallback(
@@ -215,12 +216,12 @@ const PushRulesPage: FC = () => {
 
             <div>
               <Form.Item noStyle>
-                {/*<Button*/}
-                {/*  htmlType="button"*/}
-                {/*  onClick={() => onExportRecords(selectedUids)}*/}
-                {/*>*/}
-                {/*  导出*/}
-                {/*</Button>*/}
+                <Button
+                  htmlType="button"
+                  onClick={() => onExportRecords(selectedUids)}
+                >
+                  导出
+                </Button>
                 <Button type="primary" className="ml-[8px]" htmlType="submit">
                   查询
                 </Button>
