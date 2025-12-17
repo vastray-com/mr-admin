@@ -138,15 +138,16 @@ const PushRulesPage: FC = () => {
   // 导出选中推送规则
   const onExportRecords = useCallback(
     async (uids: string[]) => {
+      const msgKey = 'export-message';
       if (uids.length === 0) {
-        message.info('没有选中任何推送规则');
+        message.info({ key: msgKey, content: '没有选中任何推送规则' });
         return;
       }
       message.loading('正在导出推送规则...');
-      console.log('导出推送规则:', uids);
+      console.log({ key: msgKey, content: '导出推送规则:', uids });
       const res = await pushRuleApi.exportRule({ uids });
       downloadFile(res);
-      message.success('导出成功!');
+      message.success({ key: msgKey, content: '导出成功!' });
     },
     [message, pushRuleApi],
   );

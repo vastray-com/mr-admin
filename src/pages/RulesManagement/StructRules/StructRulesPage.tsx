@@ -139,15 +139,16 @@ const StructRulesPage: FC = () => {
   // 导出选中病历模板
   const onExportRecords = useCallback(
     async (uids: string[]) => {
+      const msgKey = 'export-message';
       if (uids.length === 0) {
-        message.info('没有选中任何结构化规则');
+        message.info({ key: msgKey, content: '没有选中任何结构化规则' });
         return;
       }
-      message.loading('正在导出结构化规则...');
+      message.loading({ key: msgKey, content: '正在导出结构化规则...' });
       console.log('导出结构化规则:', uids);
       const res = await ruleApi.exportRules({ uids });
       downloadFile(res);
-      message.success('导出成功!');
+      message.success({ key: msgKey, content: '导出成功!' });
     },
     [message, ruleApi],
   );
