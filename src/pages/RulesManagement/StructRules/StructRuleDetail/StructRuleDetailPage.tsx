@@ -3,6 +3,7 @@ import {
   Button,
   Card,
   Checkbox,
+  Divider,
   Form,
   Input,
   Modal,
@@ -395,24 +396,37 @@ const StructRuleDetailPage: FC = () => {
           searchValue={searchField}
           onSearch={setSearchField}
           value={selectedPresetFields}
-          onChange={setSelectedPresetFields}
+          onChange={(v) => {
+            console.log('选择预设字段:', v);
+            const isInvalid = v.some((i) => !i && i !== 0);
+            if (isInvalid) return;
+            setSelectedPresetFields(v);
+          }}
           optionRender={(option) =>
             `${option.data.label} - ${option.data.value_type} - ${option.data.parsing_rule}`
           }
           filterOption={(input, option) =>
             (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
           }
-          notFoundContent={
-            <Button
-              block
-              onClick={() => {
-                setSelectedPresetFields((prev) => [...prev, searchField]);
-                setSearchField('');
-              }}
-            >
-              添加自定义字段
-            </Button>
-          }
+          popupRender={(menu) => (
+            <>
+              {menu}
+              <Divider style={{ margin: '8px 0' }} />
+              <div className="p-[8px]">
+                <Button
+                  size="large"
+                  block
+                  onClick={() => {
+                    if (!searchField.trim()) return;
+                    setSelectedPresetFields((prev) => [...prev, searchField]);
+                    setSearchField('');
+                  }}
+                >
+                  添加为自定义字段
+                </Button>
+              </div>
+            </>
+          )}
         />
       </Modal>
 
