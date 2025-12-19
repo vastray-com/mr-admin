@@ -138,7 +138,7 @@ export const routes = createBrowserRouter([
       },
       {
         element: <PageLayout />,
-        children: privateRoutes,
+        children: privateRoutes(),
         loader: authLoader,
         hydrateFallbackElement: <FullLoading />,
       },

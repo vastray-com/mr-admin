@@ -1,5 +1,7 @@
 import { lazy, type ReactNode } from 'react';
 import { Outlet, type RouteObject, redirect } from 'react-router';
+import { useUserStore } from '@/store/useUserStore';
+import { UserRole } from '@/typing/enum';
 import type { MenuProps } from 'antd';
 import type { LoaderFunction } from 'react-router-dom';
 
@@ -46,12 +48,14 @@ type BaseRoute = {
   label: string;
   icon?: ReactNode;
   addToMenu?: boolean; // 是否隐藏菜单
+  roles: UserRole[]; // 可访问角色
   children?: {
     key: string;
     element: ReactNode;
     label: string;
     addToMenu?: boolean; // 是否隐藏菜单
     selectedKeys?: string[]; // 选中时的 key
+    roles: UserRole[];
   }[];
   loader?: LoaderFunction;
 }[];
@@ -66,6 +70,7 @@ const privateBaseRoutes: BaseRoute = [
     element: <Outlet />,
     label: '任务管理',
     addToMenu: true,
+    roles: [UserRole.Admin],
     loader: ({ request }) => {
       const url = new URL(request.url);
       if (url.pathname === '/tasks_management') {
@@ -80,6 +85,7 @@ const privateBaseRoutes: BaseRoute = [
         element: <TaskListLazy />,
         label: '任务列表',
         addToMenu: true,
+        roles: [UserRole.Admin],
       },
       {
         key: '/tasks_management/tasks/detail/:taskUid',
@@ -87,6 +93,7 @@ const privateBaseRoutes: BaseRoute = [
         label: '任务详情',
         addToMenu: false,
         selectedKeys: ['/tasks_management/tasks'],
+        roles: [UserRole.Admin],
       },
       {
         key: '/tasks_management/tasks/detail/:taskUid/:instanceUid',
@@ -94,6 +101,7 @@ const privateBaseRoutes: BaseRoute = [
         label: '执行结果',
         addToMenu: false,
         selectedKeys: ['/tasks_management/tasks'],
+        roles: [UserRole.Admin],
       },
     ],
   },
@@ -102,6 +110,7 @@ const privateBaseRoutes: BaseRoute = [
     element: <Outlet />,
     label: '规则配置',
     addToMenu: true,
+    roles: [UserRole.Admin, UserRole.User],
     loader: ({ request }) => {
       const url = new URL(request.url);
       if (url.pathname === '/rules_management') {
@@ -116,6 +125,7 @@ const privateBaseRoutes: BaseRoute = [
         element: <StructRulesLazy />,
         label: '结构化规则',
         addToMenu: true,
+        roles: [UserRole.Admin, UserRole.User],
       },
       {
         key: '/rules_management/struct_rules/:uid',
@@ -123,12 +133,14 @@ const privateBaseRoutes: BaseRoute = [
         element: <StructRuleDetailLazy />,
         label: '结构化规则详情',
         addToMenu: false,
+        roles: [UserRole.Admin, UserRole.User],
       },
       {
         key: '/rules_management/push_rules',
         element: <PushRulesLazy />,
         label: '推送规则',
         addToMenu: true,
+        roles: [UserRole.Admin],
       },
       {
         key: '/rules_management/push_rules/:uid',
@@ -136,12 +148,14 @@ const privateBaseRoutes: BaseRoute = [
         element: <PushRuleDetailLazy />,
         label: '推送规则详情',
         addToMenu: false,
+        roles: [UserRole.Admin],
       },
       {
         key: '/rules_management/encode',
         element: <EncodeLazy />,
         label: '码表管理',
         addToMenu: true,
+        roles: [UserRole.Admin, UserRole.User],
       },
       {
         key: '/rules_management/encode/:uid',
@@ -149,6 +163,7 @@ const privateBaseRoutes: BaseRoute = [
         element: <EncodeDetailLazy />,
         label: '码表详情',
         addToMenu: false,
+        roles: [UserRole.Admin, UserRole.User],
       },
     ],
   },
@@ -173,8 +188,11 @@ export const privateRouteKeys = privateBaseRoutes.reduce<string[]>(
 );
 
 // 私有路由
-export const privateRoutes = privateBaseRoutes.reduce<RouteObject[]>(
-  (pre, cur) => {
+export const privateRoutes = () => {
+  const role = useUserStore.getState().user?.role;
+  return privateBaseRoutes.reduce<RouteObject[]>((pre, cur) => {
+    if (role && !cur.roles?.includes(role)) return pre;
+
     const route: RouteObject = {
       path: cur.key,
       element: cur.element,
@@ -183,22 +201,26 @@ export const privateRoutes = privateBaseRoutes.reduce<RouteObject[]>(
       route.loader = cur.loader;
     }
     if (cur.children) {
-      route.children = cur.children.map((child) => ({
-        path: child.key,
-        element: child.element,
-      }));
+      route.children = cur.children
+        .filter((r) => role && r.roles.includes(role))
+        .map((child) => ({
+          path: child.key,
+          element: child.element,
+        }));
     }
 
     pre.push(route);
     return pre;
-  },
-  [],
-);
+  }, []);
+};
 
 // menu 列表
-const allFirstLevelKeys = privateBaseRoutes
-  .filter((r) => r.addToMenu)
-  .map((r) => r.key);
+const allFirstLevelKeys = () => {
+  const role = useUserStore.getState().user?.role;
+  return privateBaseRoutes
+    .filter((r) => r.addToMenu && (role ? r.roles.includes(role) : true))
+    .map((r) => r.key);
+};
 const menuPathMap: Record<
   string,
   { openKeys: string[]; selectedKeys: string[] }
@@ -206,20 +228,29 @@ const menuPathMap: Record<
 export const menuItems = privateBaseRoutes.reduce<
   Required<MenuProps>['items'][number][]
 >((pre, cur) => {
+  const role = useUserStore.getState().user?.role;
+
   // console.log('cur', cur);
   if (!cur.addToMenu) return pre;
+  // console.log('role', role);
+  if (role && !cur.roles?.includes(role)) return pre;
+  // console.log('passed');
+
   const item = {
     key: cur.key,
     label: cur.label,
     icon: cur.icon,
-    ...(cur.children && cur.children.length > 0 && { children: cur.children }),
+    ...(cur.children &&
+      cur.children.length > 0 && {
+        children: cur.children.filter((c) => role && c.roles.includes(role)),
+      }),
   };
 
   if (item.children) {
     item.children.forEach((child) => {
       menuPathMap[child.key] = {
         // 二级菜单展开对应一级菜单
-        openKeys: allFirstLevelKeys,
+        openKeys: allFirstLevelKeys(),
         selectedKeys: !child.addToMenu
           ? child.selectedKeys
             ? child.selectedKeys
@@ -230,7 +261,7 @@ export const menuItems = privateBaseRoutes.reduce<
   } else {
     menuPathMap[cur.key] = {
       // 一级菜单
-      openKeys: allFirstLevelKeys,
+      openKeys: allFirstLevelKeys(),
       selectedKeys: [cur.key],
     };
   }
