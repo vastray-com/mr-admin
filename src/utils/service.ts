@@ -1,3 +1,4 @@
+import { message } from 'antd';
 import axios from 'axios';
 import { ls } from '@/utils/ls';
 
@@ -47,6 +48,8 @@ service.interceptors.response.use(
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }
+    } else if (error.response.status === 403) {
+      message.error('没有权限访问该资源');
     }
     return Promise.reject(error);
   },

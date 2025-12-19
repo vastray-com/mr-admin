@@ -61,7 +61,7 @@ type BaseRoute = {
 }[];
 
 // 默认私有路由
-export const DEFAULT_PRIVATE_PATH = '/tasks_management/tasks';
+export const DEFAULT_PRIVATE_PATH = '/rules_management/struct_rules';
 
 // 需要鉴权的路由
 const privateBaseRoutes: BaseRoute = [
