@@ -139,3 +139,9 @@ export enum TaskPushStatus {
   // 3: 失败
   Failed = 3,
 }
+
+// 用户角色
+export enum UserRole {
+  Admin = 'admin',
+  User = 'user',
+}

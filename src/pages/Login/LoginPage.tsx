@@ -1,21 +1,35 @@
-import { Button } from 'antd';
+import { App, Button } from 'antd';
 import { useNavigate } from 'react-router';
+import { useApi } from '@/hooks/useApi';
 import { DEFAULT_PRIVATE_PATH } from '@/router/privateRoutes';
 import { useUserStore } from '@/store/useUserStore';
 import { ls } from '@/utils/ls';
 
 const LoginPage = () => {
+  const { userApi } = useApi();
+  const { message } = App.useApp();
   const setUser = useUserStore((s) => s.setUser);
   const nav = useNavigate();
-  const onLogin = () => {
-    ls.token.set({
-      at: 'aaa',
-      rt: 'bbb',
-    });
-    const user = { name: 'Admin', id: 1 };
-    ls.user.set(user);
-    setUser(user);
-    nav(DEFAULT_PRIVATE_PATH);
+  const onLogin = async () => {
+    try {
+      const res = await userApi.login({
+        username: 'admin',
+        password: 'admin',
+      });
+      if (res.code === 200) {
+        ls.token.set(res.data.token);
+        setUser(res.data.user);
+        message.success('登录成功');
+        nav(DEFAULT_PRIVATE_PATH);
+        return;
+      } else {
+        console.log(res);
+        // message.error(res || '登录失败');
+      }
+    } catch (error) {
+      console.error('Login failed:', error);
+      message.error('登录失败');
+    }
   };
 
   return (

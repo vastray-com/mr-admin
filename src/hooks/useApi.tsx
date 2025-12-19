@@ -4,6 +4,7 @@ import type { AxiosResponse } from 'axios';
 import type { PushRule } from '@/typing/pushRules';
 import type { StructRule } from '@/typing/structRules';
 import type { Task } from '@/typing/task';
+import type { User } from '@/typing/user';
 
 export const useApi = () => {
   const task = useMemo(
@@ -141,10 +142,21 @@ export const useApi = () => {
     [],
   );
 
+  const user = useMemo(
+    () => ({
+      login: (params: User.LoginParams) =>
+        service.post('/user/login', params) as Promise<APIRes<User.LoginRes>>,
+      create: (params: User.CreateParams) =>
+        service.post('/user/create', params) as Promise<APIRes<string>>,
+    }),
+    [],
+  );
+
   return {
     taskApi: task,
     encodeApi: encode,
     ruleApi: rule,
     pushRuleApi: pushRule,
+    userApi: user,
   };
 };

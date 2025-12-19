@@ -13,9 +13,9 @@ export const service = axios.create({
 service.interceptors.request.use(
   (config) => {
     const token = ls.token.get();
-    if (token.at) {
+    if (token) {
       config.headers = config.headers ?? {};
-      config.headers.Authorization = `Bearer ${token.at}`;
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
@@ -41,6 +41,10 @@ service.interceptors.response.use(
     } else {
       // Something else happened in setting up the request
       console.error('Error:', error.message);
+    }
+    if (error.response.status === 401) {
+      ls.clearAll();
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   },
