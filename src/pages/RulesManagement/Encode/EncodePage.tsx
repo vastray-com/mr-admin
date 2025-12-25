@@ -104,7 +104,7 @@ const EncodePage: FC = () => {
         // 刷新列表
         refresh();
       } else {
-        message.error(res.msg || '新建码表失败');
+        message.error(res.message || '新建码表失败');
       }
     } catch (error) {
       console.error('新建码表失败:', error);

@@ -62,7 +62,7 @@ const TaskDetailPage = () => {
             refresh();
             message.success('停止任务执行成功');
           } else {
-            message.error(`停止任务执行失败：${res.msg}`);
+            message.error(`停止任务执行失败：${res.message}`);
           }
         })
         .catch((e) => {
@@ -81,7 +81,7 @@ const TaskDetailPage = () => {
         const res = await taskApi.taskInstanceRePush(params);
         console.log('重新执行推送结果：', res);
         if (res.code !== 200) {
-          message.error(`重新执行推送失败：${res.msg}`);
+          message.error(`重新执行推送失败：${res.message}`);
           return;
         }
         message.success('重新执行推送成功，请稍后查看结果');

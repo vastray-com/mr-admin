@@ -90,7 +90,7 @@ const PushRuleDetailPage: FC = () => {
           }));
           return res.data.fields;
         }
-        console.error('获取结构化规则字段失败:', res.msg);
+        console.error('获取结构化规则字段失败:', res.message);
         return [];
       } catch (e) {
         console.error('获取结构化规则字段失败:', e);
@@ -145,7 +145,7 @@ const PushRuleDetailPage: FC = () => {
           message.success('新建推送规则成功!');
           nav(`/rules_management/push_rules/${res.data}`);
         } else {
-          message.error(res.msg || '新建推送规则失败');
+          message.error(res.message || '新建推送规则失败');
         }
       } else {
         const res = await pushRuleApi.updateRule(values);
@@ -153,7 +153,7 @@ const PushRuleDetailPage: FC = () => {
         if (res.code === 200) {
           message.success('更新推送规则成功');
         } else {
-          message.error(res.msg || '更新推送规则失败');
+          message.error(res.message || '更新推送规则失败');
         }
       }
     },

@@ -34,7 +34,7 @@ export const usePaginationData: Hook = (opt) => {
           setTotal(result.data.total);
           setPagination(params);
         } else {
-          console.error('获取分页数据失败：', result.msg);
+          console.error('获取分页数据失败：', result.message);
         }
       } catch (e) {
         console.error('获取分页数据失败：', e);

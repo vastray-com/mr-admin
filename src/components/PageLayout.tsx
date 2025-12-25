@@ -45,7 +45,9 @@ export const PageLayout: FC = () => {
               <i className="i-icon-park-outline:user text-white text-[16px]" />
             }
           />
-          <span className="text-primary ml-[8px]">{user?.name}</span>
+          <span className="text-primary ml-[8px]">
+            {user?.nickname || user?.username || ''}
+          </span>
         </div>
       </Layout.Header>
 

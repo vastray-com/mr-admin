@@ -104,7 +104,7 @@ const StructRulesPage: FC = () => {
         // 刷新列表
         refresh();
       } else {
-        message.error(res.msg || '新建病历模板失败');
+        message.error(res.message || '新建病历模板失败');
       }
     } catch (error) {
       console.error('新建病历模板失败:', error);
@@ -185,7 +185,7 @@ const StructRulesPage: FC = () => {
         message.success(`操作成功`);
         refresh();
       } else {
-        message.error(`操作失败: ${res.msg}`);
+        message.error(`操作失败: ${res.message}`);
       }
     },
     [refresh, message, ruleApi],

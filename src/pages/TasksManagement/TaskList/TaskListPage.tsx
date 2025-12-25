@@ -101,7 +101,7 @@ const TaskListPage = () => {
             // 刷新任务列表
             refresh();
           } else {
-            message.error(`操作失败：${res.msg}`);
+            message.error(`操作失败：${res.message}`);
           }
         })
         .catch((err) => {
@@ -145,7 +145,7 @@ const TaskListPage = () => {
           // 刷新任务列表
           refresh();
         } else {
-          message.error(`创建任务失败：${res.msg}`);
+          message.error(`创建任务失败：${res.message}`);
         }
       } catch (error) {
         console.error('创建任务失败：', error);

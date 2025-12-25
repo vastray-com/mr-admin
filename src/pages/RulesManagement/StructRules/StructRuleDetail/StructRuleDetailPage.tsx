@@ -266,7 +266,7 @@ const StructRuleDetailPage: FC = () => {
           message.success('新建病历模板成功!');
           nav(`/rules_management/struct_rules/${res.data}`);
         } else {
-          message.error(res.msg || '新建病历模板失败');
+          message.error(res.message || '新建病历模板失败');
         }
       } else {
         const res = await ruleApi.updateRule(values);
@@ -274,7 +274,7 @@ const StructRuleDetailPage: FC = () => {
         if (res.code === 200) {
           message.success('更新病历模板成功');
         } else {
-          message.error(res.msg || '更新病历模板失败');
+          message.error(res.message || '更新病历模板失败');
         }
       }
     },
@@ -307,7 +307,7 @@ const StructRuleDetailPage: FC = () => {
           message.success('测试结构化规则成功');
           setOpenTestRuleModal(true);
         } else {
-          message.error(res.msg || '测试结构化规则失败，请重新测试');
+          message.error(res.message || '测试结构化规则失败，请重新测试');
         }
       } catch (_) {
         message.error('测试结构化规则失败，请重新测试');
