@@ -1,4 +1,4 @@
-import { UserRole } from '@/typing/enum';
+import type { UserRole } from '@/typing/enum';
 
 declare namespace User {
   // 用户模型
@@ -9,6 +9,7 @@ declare namespace User {
     role: UserRole;
     role_name: string;
   };
+  type List = User[];
 
   // 登录参数
   type LoginParams = {

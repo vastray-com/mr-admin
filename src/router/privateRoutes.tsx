@@ -42,6 +42,10 @@ const InstanceDetailLazy = lazy(
     ),
 );
 
+const UserListLazy = lazy(
+  () => import('@/pages/UsersManagement/UserList/UserListPage'),
+);
+
 type BaseRoute = {
   key: string;
   element: ReactNode;
@@ -164,6 +168,30 @@ const privateBaseRoutes: BaseRoute = [
         label: '码表详情',
         addToMenu: false,
         roles: [UserRole.Admin, UserRole.User],
+      },
+    ],
+  },
+  {
+    key: '/users_management',
+    element: <Outlet />,
+    label: '用户管理',
+    addToMenu: true,
+    roles: [UserRole.Admin],
+    loader: ({ request }) => {
+      const url = new URL(request.url);
+      if (url.pathname === '/users_management') {
+        return redirect('/users_management/user_list');
+      }
+      return null;
+    },
+    icon: <i className="i-icon-park-outline:file-editing-one" />,
+    children: [
+      {
+        key: '/users_management/user_list',
+        element: <UserListLazy />,
+        label: '用户列表',
+        addToMenu: true,
+        roles: [UserRole.Admin],
       },
     ],
   },

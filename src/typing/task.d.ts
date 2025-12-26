@@ -1,9 +1,9 @@
 import type { Dayjs } from 'dayjs';
-import {
-  type OneTimeTaskType,
-  type TaskStatus,
-  type TaskType,
+import type {
+  OneTimeTaskType,
   TaskPushStatus,
+  TaskStatus,
+  TaskType,
 } from '@/typing/enum';
 
 declare namespace Task {
