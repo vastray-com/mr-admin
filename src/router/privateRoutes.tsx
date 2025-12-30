@@ -45,6 +45,9 @@ const InstanceDetailLazy = lazy(
 const UserListLazy = lazy(
   () => import('@/pages/UsersManagement/UserList/UserListPage'),
 );
+const TokensLazy = lazy(
+  () => import('@/pages/SysManagement/Tokens/TokensPage'),
+);
 
 type BaseRoute = {
   key: string;
@@ -190,6 +193,30 @@ const privateBaseRoutes: BaseRoute = [
         key: '/users_management/user_list',
         element: <UserListLazy />,
         label: '用户列表',
+        addToMenu: true,
+        roles: [UserRole.Admin],
+      },
+    ],
+  },
+  {
+    key: '/sys_management',
+    element: <Outlet />,
+    label: '系统管理',
+    addToMenu: true,
+    roles: [UserRole.Admin],
+    loader: ({ request }) => {
+      const url = new URL(request.url);
+      if (url.pathname === '/sys_management') {
+        return redirect('/sys_management/tokens');
+      }
+      return null;
+    },
+    icon: <i className="i-icon-park-outline:file-editing-one" />,
+    children: [
+      {
+        key: '/sys_management/tokens',
+        element: <TokensLazy />,
+        label: 'API 令牌',
         addToMenu: true,
         roles: [UserRole.Admin],
       },

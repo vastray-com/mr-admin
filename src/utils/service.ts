@@ -59,3 +59,18 @@ export const noInterceptorsService = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   timeout: 60000,
 });
+
+service.interceptors.request.use(
+  (config) => {
+    const token = ls.token.get();
+    if (token) {
+      config.headers = config.headers ?? {};
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    // Handle request error
+    return Promise.reject(error);
+  },
+);

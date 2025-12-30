@@ -156,11 +156,28 @@ export const useApi = () => {
     [],
   );
 
+  const sys = useMemo(
+    () => ({
+      getTokenList: (params: PaginationParams) =>
+        service.get('/admin/token/list', { params }) as Promise<
+          APIRes<PaginationData<Tokens.Token>>
+        >,
+      createToken: (params: Tokens.CreateParams) =>
+        service.get('/admin/token/create', { params }) as Promise<
+          APIRes<string>
+        >,
+      deleteToken: (params: Tokens.DeleteParams) =>
+        service.get('/admin/token/delete', { params }) as Promise<APIRes<null>>,
+    }),
+    [],
+  );
+
   return {
     taskApi: task,
     encodeApi: encode,
     ruleApi: rule,
     pushRuleApi: pushRule,
     userApi: user,
+    sysApi: sys,
   };
 };
