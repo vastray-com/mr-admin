@@ -4,7 +4,7 @@ declare namespace Tokens {
     uid: string;
     name: string;
     description?: string;
-    token: string;
+    value: string;
     create_time: string;
     update_time: string;
   };

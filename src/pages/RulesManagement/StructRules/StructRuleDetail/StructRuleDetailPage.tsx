@@ -32,6 +32,7 @@ import {
 import { generateCurlExample } from '@/utils/helper';
 import { getCode } from '@/utils/highlighter';
 import { ls } from '@/utils/ls';
+import type { AxiosError } from 'axios';
 import type { StructRule } from '@/typing/structRules';
 
 const initialDetail: StructRule.Detail = {
@@ -314,8 +315,11 @@ const StructRuleDetailPage: FC = () => {
       } else {
         message.error(res.message || '测试结构化规则失败，请重新测试');
       }
-    } catch (_) {
-      message.error('测试结构化规则失败，请重新测试');
+    } catch (err) {
+      const e = err as AxiosError<APIRes<any>>;
+      message.error(
+        e.response?.data.message ?? '测试结构化规则失败，请重新测试',
+      );
     } finally {
       setTestRuleLoading(false);
     }

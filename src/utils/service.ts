@@ -2,6 +2,8 @@ import { message } from 'antd';
 import axios from 'axios';
 import { ls } from '@/utils/ls';
 
+const dontRedirect401Paths = ['/admin/structured_rule/test'];
+
 export const service = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   timeout: 600000,
@@ -45,7 +47,10 @@ service.interceptors.response.use(
       // Something else happened in setting up the request
       console.error('Error:', error.message);
     }
-    if (error.response.status === 401) {
+    if (
+      error.response.status === 401 &&
+      !dontRedirect401Paths.includes(error.config.url)
+    ) {
       ls.clearAll();
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';

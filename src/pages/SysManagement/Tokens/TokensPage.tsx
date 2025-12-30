@@ -91,7 +91,7 @@ const TokensPage = () => {
           >
             <Table.Column title="token 名称" dataIndex="name" />
             <Table.Column title="token 描述" dataIndex="description" />
-            <Table.Column title="token 值" dataIndex="token" />
+            <Table.Column title="token 值" dataIndex="value" />
             <Table.Column
               title="操作"
               key="action"
