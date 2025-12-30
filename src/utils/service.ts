@@ -13,10 +13,12 @@ export const service = axios.create({
 
 service.interceptors.request.use(
   (config) => {
-    const token = ls.token.get();
-    if (token) {
-      config.headers = config.headers ?? {};
-      config.headers.Authorization = `Bearer ${token}`;
+    if (!config.headers || !config.headers.Authorization) {
+      const token = ls.token.get();
+      if (token) {
+        config.headers = config.headers ?? {};
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
@@ -60,7 +62,7 @@ export const noInterceptorsService = axios.create({
   timeout: 60000,
 });
 
-service.interceptors.request.use(
+noInterceptorsService.interceptors.request.use(
   (config) => {
     const token = ls.token.get();
     if (token) {

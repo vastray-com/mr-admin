@@ -31,6 +31,7 @@ import {
 } from '@/typing/enum';
 import { generateCurlExample } from '@/utils/helper';
 import { getCode } from '@/utils/highlighter';
+import { ls } from '@/utils/ls';
 import type { StructRule } from '@/typing/structRules';
 
 const initialDetail: StructRule.Detail = {
@@ -42,6 +43,12 @@ const initialDetail: StructRule.Detail = {
   category: [],
   fields: [],
   code_snippets: [],
+};
+const initialTestParams: Omit<StructRule.TestRuleParams, 'uid'> = {
+  output_filter: [],
+  content: '',
+  api_key: ls.apiKey.get(),
+  is_thinking: false,
 };
 
 const StructRuleDetailPage: FC = () => {
@@ -282,49 +289,59 @@ const StructRuleDetailPage: FC = () => {
   );
 
   // 测试结构化规则
+  const [testModelForm] =
+    Form.useForm<Omit<StructRule.TestRuleParams, 'uid'>>();
   const [openTestRuleModal, setOpenTestRuleModal] = useState(false);
-  const [testBody, setTestBody] = useState<StructRule.TestRuleParams>({
-    uid: uid || '',
-    output_filter: [],
-    content: '',
-    is_thinking: false,
-  });
   const [testShowContent, setTestShowContent] = useState<'result' | 'curl'>(
     'result',
   );
   const [testResult, setTestResult] = useState('');
   const [testRuleLoading, setTestRuleLoading] = useState(false);
-  const confirmTestRule = useCallback(
-    async (body: StructRule.TestRuleParams) => {
-      if (!body.uid || !body.content) return;
-      console.log('确认测试结构化规则，病历内容为:', body);
-      setTestRuleLoading(true);
-      // 调用测试接口
-      try {
-        const res = await ruleApi.testRule(body);
-        if (res.code === 200) {
-          setTestResult(JSON.stringify(res.data, null, 2));
-          message.success('测试结构化规则成功');
-          setOpenTestRuleModal(true);
-        } else {
-          message.error(res.message || '测试结构化规则失败，请重新测试');
-        }
-      } catch (_) {
-        message.error('测试结构化规则失败，请重新测试');
-      } finally {
-        setTestRuleLoading(false);
+  const confirmTestRule = useCallback(async () => {
+    const body = testModelForm.getFieldsValue();
+    console.log('测试结构化规则，参数为:', body);
+    if (!uid || !body.content || !body.api_key) return;
+    console.log('确认测试结构化规则，病历内容为:', body);
+    setTestRuleLoading(true);
+    // 调用测试接口
+    try {
+      const res = await ruleApi.testRule({ uid, ...body });
+      if (res.code === 200) {
+        setTestResult(JSON.stringify(res.data, null, 2));
+        message.success('测试结构化规则成功');
+        setOpenTestRuleModal(true);
+        ls.apiKey.set(body.api_key);
+      } else {
+        message.error(res.message || '测试结构化规则失败，请重新测试');
       }
-    },
-    [ruleApi, message],
-  );
-  const testCode = useMemo(() => {
-    return {
+    } catch (_) {
+      message.error('测试结构化规则失败，请重新测试');
+    } finally {
+      setTestRuleLoading(false);
+    }
+  }, [uid, ruleApi, message, testModelForm]);
+  const [testCode, setTestCode] = useState<Record<string, string>>({
+    curl: getCode(
+      generateCurlExample('POST', '/admin/structured_rule/test', {
+        uid,
+        ...initialTestParams,
+      }),
+      'sh',
+    ),
+  });
+  const updateTestCode = useCallback(() => {
+    const body = testModelForm.getFieldsValue();
+    setTestCode((prev) => ({
+      ...prev,
       curl: getCode(
-        generateCurlExample('POST', '/admin/structured_rule/test', testBody),
+        generateCurlExample('POST', '/admin/structured_rule/test', {
+          uid,
+          ...body,
+        }),
         'sh',
       ),
-    };
-  }, [testBody]);
+    }));
+  }, [testModelForm, uid]);
 
   if (!isInit.current && !isNewRule.current && uid) {
     fetchDetail(uid);
@@ -434,103 +451,112 @@ const StructRuleDetailPage: FC = () => {
         width="64vw"
         styles={{ body: { marginTop: '16px' } }}
         open={openTestRuleModal}
-        onOk={() => confirmTestRule(testBody)}
+        onOk={() => confirmTestRule()}
         okText="提取"
         cancelText="取消"
         centered
         confirmLoading={testRuleLoading}
         onCancel={() => setOpenTestRuleModal(false)}
       >
-        <div className="flex items-start gap-x-[24px]">
-          <div className="w-[24vw] shrink-0 grow-0">
-            <h2 className="text-[16px] leading-[56px] font-medium">模型提取</h2>
-            <Input.TextArea
-              autoSize={{ minRows: 20, maxRows: 20 }}
-              style={{ width: '100%' }}
-              allowClear
-              placeholder="请输入病历内容"
-              onChange={(v) =>
-                setTestBody((prev) => ({ ...prev, content: v.target.value }))
-              }
-            />
-
-            <div className="w-full flex items-center mt-[16px]">
-              <span className="shrink-0">输出过滤：</span>
-              <Select
-                mode="multiple"
-                value={testBody.output_filter}
-                onChange={(v) =>
-                  setTestBody((prev) => ({ ...prev, output_filter: v }))
-                }
-                options={detail.fields
-                  .filter((f) => f.name_en)
-                  .map((f) => ({
-                    label: f.name_cn,
-                    value: f.name_en,
-                  }))}
-                filterOption={(input, option) =>
-                  (option?.label ?? '')
-                    .toLowerCase()
-                    .includes(input.toLowerCase())
-                }
-                showSearch
-                className="w-full"
-                placeholder="选择输出字段，留空则不过滤"
-              />
-            </div>
-
-            <div className="mt-[16px]">
-              <Checkbox
-                onChange={(v) =>
-                  setTestBody((prev) => ({
-                    ...prev,
-                    is_thinking: v.target.checked,
-                  }))
-                }
-              >
-                开启模型思考
-              </Checkbox>
-            </div>
-          </div>
-
-          <div className="w-full flex-1 overflow-y-auto">
-            <div className="flex justify-between items-center">
+        <Form
+          name="test-model-form"
+          form={testModelForm}
+          initialValues={initialTestParams}
+          onValuesChange={() => updateTestCode()}
+        >
+          <div className="flex items-start gap-x-[24px]">
+            <div className="w-[24vw] shrink-0 grow-0">
               <h2 className="text-[16px] leading-[56px] font-medium">
-                {testShowContent === 'result'
-                  ? '提取结果'
-                  : testShowContent === 'curl'
-                    ? 'CURL 示例'
-                    : ''}
+                模型提取
               </h2>
-              <div>
-                <span>显示内容：</span>
-                <Select
-                  style={{ width: '200px' }}
-                  value={testShowContent}
-                  onChange={setTestShowContent}
-                  options={[
-                    { label: '提取结果', value: 'result' },
-                    { label: 'CURL 示例', value: 'curl' },
-                  ]}
+
+              <Form.Item<StructRule.TestRuleParams> name="content" noStyle>
+                <Input.TextArea
+                  autoSize={{ minRows: 20, maxRows: 20 }}
+                  allowClear
+                  placeholder="请输入病历内容"
                 />
-              </div>
+              </Form.Item>
+
+              <Form.Item<StructRule.TestRuleParams>
+                name="is_thinking"
+                valuePropName="checked"
+              >
+                <Checkbox>开启模型思考</Checkbox>
+              </Form.Item>
+
+              <Form.Item<StructRule.TestRuleParams>
+                name="output_filter"
+                label="输出过滤"
+              >
+                <Select
+                  mode="multiple"
+                  options={detail.fields
+                    .filter((f) => f.name_en)
+                    .map((f) => ({
+                      label: f.name_cn,
+                      value: f.name_en,
+                    }))}
+                  filterOption={(input, option) =>
+                    (option?.label ?? '')
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
+                  showSearch
+                  className="w-full"
+                  placeholder="选择输出字段，留空则不过滤"
+                />
+              </Form.Item>
+
+              <Form.Item<StructRule.TestRuleParams>
+                name="api_key"
+                label="API 令牌"
+              >
+                <Input className="w-full" placeholder="输入 API 令牌" />
+              </Form.Item>
             </div>
 
-            {testShowContent === 'result' ? (
-              <Input.TextArea
-                autoSize={{ minRows: 24, maxRows: 24 }}
-                style={{ width: '100%', fontFamily: 'Monaco, monospace' }}
-                readOnly
-                value={testResult}
-              />
-            ) : (
-              <code
-                className="block bg-[#FAFAFA] b-1 b-[#d9d9d9] h-[532px] p-[16px] rounded-[6px] overflow-auto text-[14px] leading-[1.5]" // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
-                dangerouslySetInnerHTML={{ __html: testCode[testShowContent] }}
-              />
-            )}
+            <div className="w-full flex-1 overflow-y-auto">
+              <div className="flex justify-between items-center">
+                <h2 className="text-[16px] leading-[56px] font-medium">
+                  {testShowContent === 'result'
+                    ? '提取结果'
+                    : testShowContent === 'curl'
+                      ? 'CURL 示例'
+                      : ''}
+                </h2>
+                <div>
+                  <span>显示内容：</span>
+                  <Select
+                    style={{ width: '200px' }}
+                    value={testShowContent}
+                    onChange={setTestShowContent}
+                    options={[
+                      { label: '提取结果', value: 'result' },
+                      { label: 'CURL 示例', value: 'curl' },
+                    ]}
+                  />
+                </div>
+              </div>
+
+              {testShowContent === 'result' ? (
+                <Input.TextArea
+                  autoSize={{ minRows: 27, maxRows: 27 }}
+                  style={{ width: '100%', fontFamily: 'Monaco, monospace' }}
+                  readOnly
+                  value={testResult}
+                />
+              ) : (
+                <code
+                  className="block bg-[#FAFAFA] b-1 b-[#d9d9d9] h-[594px] p-[16px] rounded-[6px] overflow-auto text-[14px] leading-[1.5]" // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
+                  dangerouslySetInnerHTML={{
+                    __html: testCode[testShowContent],
+                  }}
+                />
+              )}
+            </div>
           </div>
-        </div>
+        </Form>
       </Modal>
 
       <div className="flex h-full">

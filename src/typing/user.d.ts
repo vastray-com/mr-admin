@@ -42,6 +42,11 @@ declare namespace User {
       set: (value: User) => void;
       clear: () => void;
     };
+    apiKey: {
+      get: () => string;
+      set: (value: string) => void;
+      clear: () => void;
+    };
     clearAll: () => void;
   };
 }

@@ -56,17 +56,28 @@ export const generateCurlExample = (
   params?: Record<string, any>,
 ): string => {
   const url = service.defaults.baseURL + path;
-  let curl = `curl -X ${method} '${url}' \\\n  -H 'Content-Type: application/json'`;
+  const { api_key, ...rest } = params ?? {};
 
-  if (method === 'POST' && params) {
-    const dataString = JSON.stringify(params, null, 2)
-      .split('\n')
-      .map((line) => `  ${line}`)
-      .join('\n');
-    curl += ` \\\n  -d '${dataString}'`;
-  } else if (method === 'GET' && params) {
-    const queryParams = new URLSearchParams(params).toString();
-    curl = `curl -X ${method} '${url}?${queryParams}' \\\n  -H 'Content-Type: application/json'`;
+  let curl = '';
+  if (method === 'POST') {
+    curl += `curl -X ${method} '${url}' \\\n`;
+  } else if (method === 'GET') {
+    const queryParams = new URLSearchParams(rest).toString();
+    curl += `curl -X ${method} '${url}?${queryParams}' \\\n`;
   }
+  curl += `  -H 'Content-Type: application/json' \\\n`;
+
+  if (api_key) {
+    curl += `  -H 'Authorization: ${api_key}' \\\n`;
+  }
+
+  if (method === 'POST' && rest && Object.keys(rest).length > 0) {
+    const dataString = JSON.stringify(rest, null, 2)
+      .split('\n')
+      .map((line, idx) => (idx === 0 ? `${line}` : `  ${line}`))
+      .join('\n');
+    curl += `  -d '${dataString}'`;
+  }
+
   return curl;
 };

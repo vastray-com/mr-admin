@@ -143,6 +143,7 @@ export declare namespace StructRule {
     uid: string;
     output_filter: string[];
     content: string;
+    api_key: string;
     is_thinking: boolean;
   };
 }

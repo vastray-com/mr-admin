@@ -4,6 +4,7 @@ const KEYS = {
   ACCESS_TOKEN: 'aat',
   // REFRESH_TOKEN: 'rto',
   USER: 'user',
+  API_TOKEN: 'apit',
 };
 
 export const ls: User.LSUtil = {
@@ -28,6 +29,11 @@ export const ls: User.LSUtil = {
     get: () => JSON.parse(localStorage.getItem(KEYS.USER) || 'null'),
     set: (value) => localStorage.setItem(KEYS.USER, JSON.stringify(value)),
     clear: () => localStorage.removeItem(KEYS.USER),
+  },
+  apiKey: {
+    get: () => localStorage.getItem(KEYS.API_TOKEN) || '',
+    set: (value) => localStorage.setItem(KEYS.API_TOKEN, value),
+    clear: () => localStorage.removeItem(KEYS.API_TOKEN),
   },
   clearAll: () => {
     ls.token.clear();
