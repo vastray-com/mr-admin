@@ -1,5 +1,6 @@
 import { App, Modal, Upload } from 'antd';
 import { type FC, useCallback, useState } from 'react';
+import { ls } from '@/utils/ls';
 import { service } from '@/utils/service';
 import type { UploadChangeParam } from 'antd/es/upload';
 
@@ -56,8 +57,10 @@ export const useFileImport = ({ title, path, onFailed, onSucceed }: Opt) => {
         <Upload.Dragger
           accept=".zip"
           action={`${service.defaults.baseURL}${path}`}
+          headers={{ Authorization: `Bearer ${ls.token.get()}` }}
           showUploadList={false}
           onChange={onFileImportChange}
+          pastable
         >
           <i className="i-icon-park-outline:folder-upload text-[48px] text-[#3875F6]" />
           <p className="pt-[24px] pb-[8px] text-fg-primary text-[16px]">
