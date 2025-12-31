@@ -282,6 +282,17 @@ const StructRuleDetailPage: FC = () => {
         values.code_snippets = [];
       }
 
+      // 把所有字段名默认大写
+      values.category = values.category.map((c) => ({
+        ...c,
+        name_en: c.name_en.toUpperCase(),
+      }));
+      values.fields = values.fields.map((f) => ({
+        ...f,
+        name_en: f.name_en.toUpperCase(),
+      }));
+
+      // 新建或更新
       if (isNewRule.current) {
         const res = await ruleApi.createRule(values);
         if (res.code === 200) {
