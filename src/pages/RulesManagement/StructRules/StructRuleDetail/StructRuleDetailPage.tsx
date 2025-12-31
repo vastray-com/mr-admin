@@ -51,6 +51,7 @@ const initialTestParams: Omit<StructRule.TestRuleParams, 'uid'> = {
   content: '',
   api_key: ls.apiKey.get(),
   is_thinking: false,
+  is_check: false,
 };
 
 const StructRuleDetailPage: FC = () => {
@@ -506,12 +507,23 @@ const StructRuleDetailPage: FC = () => {
                 />
               </Form.Item>
 
-              <Form.Item<StructRule.TestRuleParams>
-                name="is_thinking"
-                valuePropName="checked"
-              >
-                <Checkbox>开启模型思考</Checkbox>
-              </Form.Item>
+              <Space className="my-[22px]">
+                <Form.Item<StructRule.TestRuleParams>
+                  noStyle
+                  name="is_thinking"
+                  valuePropName="checked"
+                >
+                  <Checkbox>开启模型思考</Checkbox>
+                </Form.Item>
+
+                <Form.Item<StructRule.TestRuleParams>
+                  noStyle
+                  name="is_check"
+                  valuePropName="checked"
+                >
+                  <Checkbox>开启数据校验</Checkbox>
+                </Form.Item>
+              </Space>
 
               <Form.Item<StructRule.TestRuleParams>
                 name="output_filter"
@@ -576,7 +588,7 @@ const StructRuleDetailPage: FC = () => {
                 />
               ) : (
                 <code
-                  className="block bg-[#FAFAFA] b-1 b-[#d9d9d9] h-[594px] p-[16px] rounded-[6px] overflow-auto text-[14px] leading-[1.5]" // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
+                  className="block bg-[#FAFAFA] b-1 b-[#d9d9d9] h-[604px] p-[16px] rounded-[6px] overflow-auto text-[14px] leading-[1.5]" // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
                   dangerouslySetInnerHTML={{
                     __html: testCode[testShowContent],
                   }}

@@ -145,5 +145,6 @@ export declare namespace StructRule {
     content: string;
     api_key: string;
     is_thinking: boolean;
+    is_check: boolean;
   };
 }
