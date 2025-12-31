@@ -6,6 +6,7 @@ import {
   Divider,
   Form,
   Input,
+  InputNumber,
   Modal,
   Select,
   Space,
@@ -94,49 +95,61 @@ const StructRuleDetailPage: FC = () => {
   }, [presetFields]);
 
   const [openPresetModal, setOpenPresetModal] = useState(false);
+  const [insertPosition, setInsertPosition] = useState<number | null>(null);
   const [selectedPresetFields, setSelectedPresetFields] = useState<
     (number | string)[]
   >([]);
   const [searchField, setSearchField] = useState('');
-  const onAddPresetField = useCallback(async () => {
-    console.log('添加字段:', selectedPresetFields);
-    const fieldsToAdd = selectedPresetFields.map((item) => {
-      // 如果是预设字段
-      if (typeof item === 'number') {
-        const presetField = presetFields.find((f) => f.id === item);
-        if (presetField) {
-          const { id, ...rest } = presetField;
-          return {
-            ...rest,
-            uid: `${Math.random() * 1000000}`,
-            need_store: 1,
-          } as const;
+  const onAddPresetField = useCallback(
+    async (
+      detail: StructRule.Detail,
+      selectedPresetFields: (number | string)[],
+      insertPosition: number | null,
+    ) => {
+      console.log(
+        '添加字段:',
+        selectedPresetFields,
+        '插入位置:',
+        insertPosition,
+      );
+      const newData = [...detail.fields];
+      const fieldsToAdd = selectedPresetFields.map((item) => {
+        // 如果是预设字段
+        if (typeof item === 'number') {
+          const presetField = presetFields.find((f) => f.id === item);
+          if (presetField) {
+            const { id, ...rest } = presetField;
+            return {
+              ...rest,
+              uid: `${Math.random() * 1000000}`,
+              need_store: 1,
+            } as const;
+          }
         }
-      }
 
-      // 如果是自定义字段
-      return {
-        uid: `${Math.random() * 1000000}`,
-        name_cn: `${item}`,
-        name_en: '',
-        data_source: '',
-        parsing_type: StructRuleFieldParsingType.LLM,
-        parsing_rule: '',
-        value_type: StructRuleFieldValueType.Text,
-        is_array: false,
-        mapping_type: StructRuleFieldMappingType.None,
-        mapping_content: '',
-        need_store: 1,
-      } as const;
-    });
+        // 如果是自定义字段
+        return {
+          uid: `${Math.random() * 1000000}`,
+          name_cn: `${item}`,
+          name_en: '',
+          data_source: '',
+          parsing_type: StructRuleFieldParsingType.LLM,
+          parsing_rule: '',
+          value_type: StructRuleFieldValueType.Text,
+          is_array: false,
+          mapping_type: StructRuleFieldMappingType.None,
+          mapping_content: '',
+          need_store: 1,
+        } as const;
+      });
 
-    setDetail((prev) => ({
-      ...prev,
-      fields: [...prev.fields, ...fieldsToAdd],
-    }));
-    setOpenPresetModal(false);
-    setSelectedPresetFields([]);
-  }, [presetFields, selectedPresetFields]);
+      newData.splice(insertPosition ?? newData.length, 0, ...fieldsToAdd);
+      setDetail((prev) => ({ ...prev, fields: newData }));
+      setOpenPresetModal(false);
+      setSelectedPresetFields([]);
+    },
+    [presetFields],
+  );
 
   // 保存
   const encodeOptions = useCacheStore((s) => s.encodeOptions);
@@ -400,16 +413,27 @@ const StructRuleDetailPage: FC = () => {
         title="添加字段"
         width="48vw"
         open={openPresetModal}
-        onOk={onAddPresetField}
+        onOk={() =>
+          onAddPresetField(detail, selectedPresetFields, insertPosition)
+        }
         okText="确认添加"
         cancelText="取消"
         centered
         onCancel={() => setOpenPresetModal(false)}
       >
+        <InputNumber
+          size="large"
+          min={1}
+          max={detail.fields.length}
+          style={{ width: '300px', margin: '24px 0' }}
+          placeholder="输入插入位置"
+          value={insertPosition}
+          onChange={setInsertPosition}
+        />
         <Select
           options={presetFieldOptions}
           size="large"
-          style={{ width: '100%', margin: '24px 0' }}
+          style={{ width: '100%' }}
           mode="multiple"
           allowClear
           autoClearSearchValue
