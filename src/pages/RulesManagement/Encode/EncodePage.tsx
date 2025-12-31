@@ -16,7 +16,6 @@ import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { useFileImport } from '@/hooks/useFileImport';
 import { usePaginationData } from '@/hooks/usePaginationData';
-import { useCacheStore } from '@/store/useCacheStore';
 import { downloadFile } from '@/utils/helper';
 import type { FormProps } from 'antd';
 
@@ -30,7 +29,7 @@ const EncodePage: FC = () => {
   const { message, modal } = App.useApp();
   const nav = useNavigate();
 
-  const setEncodeListCache = useCacheStore((s) => s.setEncodeList);
+  // const setEncodeListCache = useCacheStore((s) => s.setEncodeList);
   const [selectedUids, setSelectedUids] = useState<string[]>([]);
 
   // 禁止选择超过今天的日期和 6 个月前的日期
@@ -60,7 +59,7 @@ const EncodePage: FC = () => {
     fetchData,
     setData: (v) => {
       setList(v);
-      setEncodeListCache(v); // 缓存列表数据
+      // setEncodeListCache(v); // 缓存列表数据
     },
   });
 
