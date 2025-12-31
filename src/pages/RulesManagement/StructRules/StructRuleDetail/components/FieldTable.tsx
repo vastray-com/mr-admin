@@ -67,6 +67,17 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
     newData.splice(idx + position, 0, item);
     onChange(newData);
   };
+  const copy = (key: string) => {
+    const newData = [...detail.fields];
+    const idx = newData.findIndex((item) => item.uid === key);
+    const item = newData[idx];
+    const itemCopied = {
+      ...item,
+      uid: `${Math.random() * 1000000}`,
+    };
+    newData.splice(idx + 1, 0, itemCopied);
+    onChange(newData);
+  };
   // 快速移动
   const [fastMoveTarget, setFastMoveTarget] = useState<string | number | null>(
     null,
@@ -382,6 +393,14 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
                 快移
               </Typography.Link>
             </Popover>
+
+            <Typography.Link
+              disabled={editingKey !== ''}
+              onClick={() => copy(record.uid)}
+            >
+              复制
+            </Typography.Link>
+
             <Typography.Link
               type="danger"
               disabled={editingKey !== ''}
