@@ -127,5 +127,7 @@ export declare namespace StructRule {
     api_key: string;
     is_thinking: boolean;
     is_check: boolean;
+    // 并行数量
+    parallel: number;
   };
 }

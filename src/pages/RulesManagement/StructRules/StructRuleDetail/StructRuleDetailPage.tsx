@@ -54,6 +54,7 @@ const initialTestParams: Omit<StructRule.TestRuleParams, 'uid'> = {
   api_key: ls.apiKey.get(),
   is_thinking: false,
   is_check: false,
+  parallel: 10,
 };
 
 const StructRuleDetailPage: FC = () => {
@@ -555,6 +556,14 @@ const StructRuleDetailPage: FC = () => {
                   valuePropName="checked"
                 >
                   <Checkbox>开启数据校验</Checkbox>
+                </Form.Item>
+
+                <Form.Item<StructRule.TestRuleParams>
+                  style={{ margin: '0' }}
+                  name="parallel"
+                  label="并发数"
+                >
+                  <InputNumber className="w-full" />
                 </Form.Item>
               </Space>
 
