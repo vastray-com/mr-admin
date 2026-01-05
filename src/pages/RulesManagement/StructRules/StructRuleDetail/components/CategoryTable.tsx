@@ -13,7 +13,7 @@ import type { StructRule } from '@/typing/structRules';
 
 type Props = {
   form: FormInstance;
-  detail: StructRule.Detail;
+  detail: StructRule.Item;
   onChange: (data: StructRule.Categories) => void;
 };
 const CategoryTable: FC<Props> = ({ form, detail, onChange }) => {

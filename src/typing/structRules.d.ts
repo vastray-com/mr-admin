@@ -22,6 +22,16 @@ export declare namespace StructRule {
     comment?: string;
     /// 状态（1: 启用，0: 停用）
     status: StructRuleStatus;
+    // 创建人 ID
+    creator: string;
+    // 分享列表
+    shared_users: string[];
+    /// 规则分类
+    category: Categories;
+    /// 规则字段树
+    fields: Fields;
+    /// 规则代码片段
+    code_snippets: CodeSnippets;
     /// 创建时间
     create_time?: string;
     /// 更新时间
@@ -34,55 +44,30 @@ export declare namespace StructRule {
     // UUID
     uid: string;
   };
-  // 规则详情
-  type Detail = Item & {
-    /// 规则分类
-    category: Categories;
-    /// 规则字段树
-    fields: Fields;
-    /// 规则代码片段
-    code_snippets: CodeSnippets;
-  };
 
   type Category = {
-    // UUID
+    /// uid
     uid: string;
-    /// 所属规则 ID
-    rule_uid?: string;
+    /// 分类排序（数字越小越靠前）
+    sort?: number;
     /// 分类名称
     name_cn: string;
     /// 分类字段名（英文名）
     name_en: string;
     /// 分类提取规则
     content: string;
-    /// 分类排序（数字越小越靠前）
-    sort?: number;
-    /// 创建时间
-    create_time?: string;
-    /// 更新时间
-    update_time?: string;
   };
   type Categories = Category[];
 
   type CodeSnippet = {
-    // UUID
-    uid?: string;
-    /// 所属规则 ID
-    rule_uid?: string;
     /// 代码片段内容
     content: string;
-    /// 创建时间
-    create_time?: string;
-    /// 更新时间
-    update_time?: string;
   };
   type CodeSnippets = CodeSnippet[];
 
   type Field = {
-    // UUID
+    /// uid
     uid: string;
-    /// 所属规则 ID
-    rule_uid?: string;
     /// 提取字段名称
     name_cn: string;
     /// 字段键名称
@@ -103,10 +88,6 @@ export declare namespace StructRule {
     mapping_content: string;
     /// 字段是否需要最终入库 1: 需要 0: 不需要
     need_store: 0 | 1;
-    /// 创建时间
-    create_time?: string;
-    /// 更新时间
-    update_time?: string;
   };
   type Fields = Field[];
 

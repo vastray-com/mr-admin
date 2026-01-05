@@ -36,12 +36,14 @@ import { ls } from '@/utils/ls';
 import type { AxiosError } from 'axios';
 import type { StructRule } from '@/typing/structRules';
 
-const initialDetail: StructRule.Detail = {
+const initialDetail: StructRule.Item = {
   uid: '',
   name_cn: '',
   name_en: '',
   comment: '',
   status: StructRuleStatus.Enabled,
+  creator: '',
+  shared_users: [],
   category: [],
   fields: [],
   code_snippets: [],
@@ -62,7 +64,7 @@ const StructRuleDetailPage: FC = () => {
   const isNewRule = useRef(uid === 'NEW');
   const isInit = useRef(isNewRule.current);
 
-  const [detail, setDetail] = useState<StructRule.Detail>(initialDetail);
+  const [detail, setDetail] = useState<StructRule.Item>(initialDetail);
   const fetchDetail = useCallback(
     async (uid: string) => {
       const res = await ruleApi.getRuleDetail({ uid });
@@ -74,7 +76,7 @@ const StructRuleDetailPage: FC = () => {
   );
 
   const [baseForm] =
-    Form.useForm<Pick<StructRule.Detail, 'name_cn' | 'name_en' | 'comment'>>();
+    Form.useForm<Pick<StructRule.Item, 'name_cn' | 'name_en' | 'comment'>>();
   const [categoryForm] = Form.useForm<StructRule.Category>();
   const [fieldForm] = Form.useForm<StructRule.Field>();
   const [codeSnippetForm] = Form.useForm<{ content: '' }>();
@@ -103,7 +105,7 @@ const StructRuleDetailPage: FC = () => {
   const [searchField, setSearchField] = useState('');
   const onAddPresetField = useCallback(
     async (
-      detail: StructRule.Detail,
+      detail: StructRule.Item,
       selectedPresetFields: (number | string)[],
       insertPosition: number | null,
     ) => {
@@ -155,11 +157,31 @@ const StructRuleDetailPage: FC = () => {
   // 保存
   const encodeOptions = useCacheStore((s) => s.encodeOptions);
   const onFinish = useCallback(
-    async (values: StructRule.Detail) => {
+    async (values: StructRule.Item) => {
       console.log('保存病历模板:', values);
 
-      // 校验大字段
-      const errCategoryIdx = values.category.findIndex((c, idx) => {
+      // 校验字段
+      const categoryNameCnList = values.category.map((c) => c.name_cn);
+      const categoryNameEnList = values.category.map((c) => c.name_en);
+      const duplicateCategoryNameCn = categoryNameCnList.findIndex(
+        (item, index) => categoryNameCnList.indexOf(item) !== index && item,
+      );
+      if (duplicateCategoryNameCn !== -1) {
+        message.error(
+          `提交失败！大字段序号 ${duplicateCategoryNameCn + 1}【${categoryNameCnList[duplicateCategoryNameCn]}】中文名称重复`,
+        );
+        return;
+      }
+      const duplicateCategoryNameEn = categoryNameEnList.findIndex(
+        (item, index) => categoryNameEnList.indexOf(item) !== index && item,
+      );
+      if (duplicateCategoryNameEn !== -1) {
+        message.error(
+          `提交失败！大字段 ${duplicateCategoryNameEn + 1}【${categoryNameEnList[duplicateCategoryNameEn]}】英文名称重复`,
+        );
+        return;
+      }
+      const errCategoryIdx = (values.category ?? []).findIndex((c, idx) => {
         let err = '';
         if (!c.name_cn) {
           err = `提交失败！大字段序号 ${idx + 1} 提取字段名称不能为空`;
@@ -619,11 +641,11 @@ const StructRuleDetailPage: FC = () => {
               initialValues={detail}
             >
               <div className="flex items-center gap-x-[24px] mb-[8px]">
-                <Form.Item<StructRule.Detail> name="uid" hidden>
+                <Form.Item<StructRule.Item> name="uid" hidden>
                   <Input />
                 </Form.Item>
 
-                <Form.Item<StructRule.Detail>
+                <Form.Item<StructRule.Item>
                   label="规则名称"
                   name="name_cn"
                   className="w-[36%]"
@@ -635,7 +657,7 @@ const StructRuleDetailPage: FC = () => {
                   <Input />
                 </Form.Item>
 
-                <Form.Item<StructRule.Detail>
+                <Form.Item<StructRule.Item>
                   label="英文名称"
                   name="name_en"
                   className="w-[36%]"
@@ -649,7 +671,7 @@ const StructRuleDetailPage: FC = () => {
               </div>
 
               <div className="flex items-center gap-x-[24px]">
-                <Form.Item<StructRule.Detail>
+                <Form.Item<StructRule.Item>
                   label="模版备注"
                   name="comment"
                   className="w-[38%]"

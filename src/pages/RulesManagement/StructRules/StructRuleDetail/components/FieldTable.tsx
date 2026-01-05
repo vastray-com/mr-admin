@@ -24,7 +24,7 @@ import type { StructRule } from '@/typing/structRules';
 
 type Props = {
   form: FormInstance;
-  detail: StructRule.Detail;
+  detail: StructRule.Item;
   onChange: (data: StructRule.Fields) => void;
 };
 const FieldTable: FC<Props> = ({ form, detail, onChange }) => {

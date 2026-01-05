@@ -82,13 +82,13 @@ export const useApi = () => {
         >,
       getRuleDetail: (params: StructRule.DetailParams) =>
         service.get('/admin/structured_rule/detail', { params }) as Promise<
-          APIRes<StructRule.Detail>
+          APIRes<StructRule.Item>
         >,
-      createRule: (params: StructRule.Detail) =>
+      createRule: (params: StructRule.Item) =>
         service.post('/admin/structured_rule/create', params) as Promise<
           APIRes<string>
         >,
-      updateRule: (params: StructRule.Detail) =>
+      updateRule: (params: StructRule.Item) =>
         service.post('/admin/structured_rule/update', params) as Promise<
           APIRes<string>
         >,
