@@ -78,10 +78,13 @@ const TaskListPage = () => {
     setShowCreateModal(true);
   };
   const onCopy = (record: Task.Item) => {
+    console.log('xxx', record);
     form.resetFields();
     newTaskData.current = {
       ...record,
-      schedule_time: dayjs(record.schedule_time),
+      schedule_time: record.schedule_time
+        ? dayjs(record.schedule_time)
+        : undefined,
       env_vars: Object.entries(record.env_vars || {}),
     };
     console.log('复制的任务数据：', newTaskData.current);

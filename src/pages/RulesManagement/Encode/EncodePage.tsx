@@ -274,6 +274,7 @@ const EncodePage: FC = () => {
               type: 'checkbox',
               onChange: (uids) => setSelectedUids(uids as string[]),
             }}
+            pagination={false}
           >
             <Table.Column title="码表名称" dataIndex="name_cn" />
             <Table.Column title="简述/备注" dataIndex="comment" />
