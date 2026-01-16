@@ -482,8 +482,8 @@ const StructRuleDetailPage: FC = () => {
             if (isInvalid) return;
             setSelectedPresetFields(v);
           }}
-          optionRender={(option) =>
-            `${option.data.label} - ${option.data.value_type} - ${option.data.parsing_rule}`
+          optionRender={(option, opt) =>
+            `(${opt.index + 1}) ${option.data.label} - ${option.data.value_type} - ${option.data.parsing_rule}`
           }
           filterOption={(input, option) =>
             (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
@@ -508,6 +508,9 @@ const StructRuleDetailPage: FC = () => {
             </>
           )}
         />
+        <p className="text-[14px] fg-tertiary mt-[8px]">
+          当前预置字段数：{presetFields.length}
+        </p>
       </Modal>
 
       <Modal
@@ -604,7 +607,7 @@ const StructRuleDetailPage: FC = () => {
                   {testShowContent === 'result'
                     ? '提取结果'
                     : testShowContent === 'curl'
-                      ? 'CURL 示例'
+                      ? 'API 调用示例'
                       : ''}
                 </h2>
                 <div>
@@ -615,7 +618,7 @@ const StructRuleDetailPage: FC = () => {
                     onChange={setTestShowContent}
                     options={[
                       { label: '提取结果', value: 'result' },
-                      { label: 'CURL 示例', value: 'curl' },
+                      { label: 'API 调用示例', value: 'curl' },
                     ]}
                   />
                 </div>

@@ -17,7 +17,6 @@ import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { useFileImport } from '@/hooks/useFileImport';
 import { usePaginationData } from '@/hooks/usePaginationData';
-import { useCacheStore } from '@/store/useCacheStore';
 import { StructRuleStatus } from '@/typing/enum';
 import { downloadFile } from '@/utils/helper';
 import type { FormProps } from 'antd';
@@ -33,7 +32,6 @@ const StructRulesPage: FC = () => {
   const { message, modal } = App.useApp();
   const nav = useNavigate();
 
-  const setRuleListCache = useCacheStore((state) => state.setStructRuleList);
   const [selectedUids, setSelectedUids] = useState<string[]>([]);
 
   // 禁止选择超过今天的日期和 6 个月前的日期
@@ -58,10 +56,7 @@ const StructRulesPage: FC = () => {
   );
   const { PaginationComponent, refresh } = usePaginationData({
     fetchData,
-    setData: (v) => {
-      setList(v);
-      setRuleListCache(v);
-    },
+    setData: setList,
   });
 
   // 查询表单提交处理函数
