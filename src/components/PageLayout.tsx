@@ -62,7 +62,7 @@ export const PageLayout: FC = () => {
               nav(e.key);
             }}
             style={{ height: '100%', borderRight: 0 }}
-            items={menuItems}
+            items={menuItems()}
           />
         </Layout.Sider>
 

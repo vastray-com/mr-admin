@@ -21,7 +21,7 @@ const LoginPageLazy = lazy(() => import('@/pages/Login/LoginPage'));
 export const DEFAULT_PUBLIC_PATH = '/login';
 
 // 公开的路由
-const publicRoutes: RouteObject[] = [
+const publicRoutes = (): RouteObject[] => [
   {
     path: DEFAULT_PUBLIC_PATH,
     element: <LoginPageLazy />,
@@ -118,34 +118,37 @@ const publicLoader: LoaderFunction = async ({ request }) => {
   if (isLogged && url.pathname === DEFAULT_PUBLIC_PATH) {
     return redirect(DEFAULT_PRIVATE_PATH);
   }
+
+  console.log(isLogged, url.pathname);
   return null;
 };
 
 // 创建路由
-export const routes = createBrowserRouter([
-  {
-    path: '/',
-    element: <Outlet />,
-    children: [
-      {
-        index: true,
-        loader: () => redirect(DEFAULT_PUBLIC_PATH),
-      },
-      {
-        element: <Outlet />,
-        children: publicRoutes,
-        loader: publicLoader,
-      },
-      {
-        element: <PageLayout />,
-        children: privateRoutes(),
-        loader: authLoader,
-        hydrateFallbackElement: <FullLoading />,
-      },
-    ],
-  },
-  {
-    path: '*',
-    element: <div>404 Not Found</div>,
-  },
-]);
+export const routes = () =>
+  createBrowserRouter([
+    {
+      path: '/',
+      element: <Outlet />,
+      children: [
+        {
+          index: true,
+          loader: () => redirect(DEFAULT_PUBLIC_PATH),
+        },
+        {
+          element: <Outlet />,
+          children: publicRoutes(),
+          loader: publicLoader,
+        },
+        {
+          element: <PageLayout />,
+          children: privateRoutes(),
+          loader: authLoader,
+          hydrateFallbackElement: <FullLoading />,
+        },
+      ],
+    },
+    {
+      path: '*',
+      element: <div>404 Not Found</div>,
+    },
+  ]);

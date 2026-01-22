@@ -280,62 +280,66 @@ const menuPathMap: Record<
   string,
   { openKeys: string[]; selectedKeys: string[] }
 > = {};
-export const menuItems = privateBaseRoutes.reduce<
-  Required<MenuProps>['items'][number][]
->((pre, cur) => {
-  const role = useUserStore.getState().user?.role;
+export const menuItems = () =>
+  privateBaseRoutes.reduce<Required<MenuProps>['items'][number][]>(
+    (pre, cur) => {
+      const role = useUserStore.getState().user?.role;
 
-  // console.log('cur', cur);
-  if (!cur.addToMenu) return pre;
-  // console.log('role', role);
-  if (role && !cur.roles?.includes(role)) return pre;
-  // console.log('passed');
+      // console.log('cur', cur);
+      if (!cur.addToMenu) return pre;
+      // console.log('role', role);
+      if (role && !cur.roles?.includes(role)) return pre;
+      // console.log('passed');
 
-  const item = {
-    key: cur.key,
-    label: cur.label,
-    icon: cur.icon,
-    ...(cur.children &&
-      cur.children.length > 0 && {
-        children: cur.children.filter((c) => role && c.roles.includes(role)),
-      }),
-  };
-
-  if (item.children) {
-    item.children.forEach((child) => {
-      menuPathMap[child.key] = {
-        // 二级菜单展开对应一级菜单
-        openKeys: allFirstLevelKeys(),
-        selectedKeys: !child.addToMenu
-          ? child.selectedKeys
-            ? child.selectedKeys
-            : []
-          : [child.key],
+      const item = {
+        key: cur.key,
+        label: cur.label,
+        icon: cur.icon,
+        ...(cur.children &&
+          cur.children.length > 0 && {
+            children: cur.children.filter(
+              (c) => role && c.roles.includes(role),
+            ),
+          }),
       };
-    });
-  } else {
-    menuPathMap[cur.key] = {
-      // 一级菜单
-      openKeys: allFirstLevelKeys(),
-      selectedKeys: [cur.key],
-    };
-  }
 
-  // 移除 addToMenu 属性
-  const pushedItem = { ...item };
-  if (pushedItem.children && pushedItem.children.length > 0) {
-    pushedItem.children = pushedItem.children
-      .map((child) => {
-        if (!child.addToMenu) return null; // 如果不添加到菜单，则直接返回原对象
-        // biome-ignore lint/correctness/noUnusedVariables: false
-        const { addToMenu, selectedKeys, ...rest } = child;
-        return rest;
-      })
-      .filter((child) => !!child); // 过滤掉 null 值
-  }
-  pre.push(pushedItem);
-  return pre;
-}, []);
+      if (item.children) {
+        item.children.forEach((child) => {
+          menuPathMap[child.key] = {
+            // 二级菜单展开对应一级菜单
+            openKeys: allFirstLevelKeys(),
+            selectedKeys: !child.addToMenu
+              ? child.selectedKeys
+                ? child.selectedKeys
+                : []
+              : [child.key],
+          };
+        });
+      } else {
+        menuPathMap[cur.key] = {
+          // 一级菜单
+          openKeys: allFirstLevelKeys(),
+          selectedKeys: [cur.key],
+        };
+      }
+
+      // 移除 addToMenu 属性
+      const pushedItem = { ...item };
+      if (pushedItem.children && pushedItem.children.length > 0) {
+        pushedItem.children = pushedItem.children
+          .map((child) => {
+            if (!child.addToMenu) return null; // 如果不添加到菜单，则直接返回原对象
+            // biome-ignore lint/correctness/noUnusedVariables: false
+            const { addToMenu, selectedKeys, ...rest } = child;
+            return rest;
+          })
+          .filter((child) => !!child); // 过滤掉 null 值
+      }
+      pre.push(pushedItem);
+      return pre;
+    },
+    [],
+  );
 
 export const getMenuStatus = (path: string) => {
   const target = menuPathMap[path];
