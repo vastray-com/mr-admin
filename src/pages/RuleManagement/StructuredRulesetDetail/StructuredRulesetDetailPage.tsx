@@ -17,8 +17,8 @@ import { type FC, useCallback, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
-import CategoryTable from '@/pages/RulesManagement/StructRules/StructRuleDetail/components/CategoryTable';
-import FieldTable from '@/pages/RulesManagement/StructRules/StructRuleDetail/components/FieldTable';
+import CategoryTable from '@/pages/RuleManagement/StructuredRulesetList/StructuredRulesetDetail/components/CategoryTable';
+import FieldTable from '@/pages/RuleManagement/StructuredRulesetList/StructuredRulesetDetail/components/FieldTable';
 import { useCacheStore } from '@/store/useCacheStore';
 import {
   StructRuleStatus,
@@ -56,7 +56,7 @@ const initialTestParams: Omit<StructuredRuleset.TestRuleParams, 'uid'> = {
   parallel: 10,
 };
 
-const StructRuleDetailPage: FC = () => {
+const StructuredRulesetDetailPage: FC = () => {
   const { uid } = useParams<{ uid: string }>();
   const { ruleApi } = useApi();
   const { message } = App.useApp();
@@ -157,7 +157,7 @@ const StructRuleDetailPage: FC = () => {
   );
 
   // 保存
-  const encodeOptions = useCacheStore((s) => s.encodeOptions);
+  const encodeOptions = useCacheStore((s) => s.encodeTableOptions);
   const onFinish = useCallback(
     async (values: StructuredRuleset.Item) => {
       console.log('保存病历模板:', values);
@@ -323,7 +323,7 @@ const StructRuleDetailPage: FC = () => {
         const res = await ruleApi.createRule(values);
         if (res.code === 200) {
           message.success('新建病历模板成功!');
-          nav(`/rules_management/struct_rules/${res.data}`);
+          nav(`/rule_management/ruleset/${res.data}`);
         } else {
           message.error(res.message || '新建病历模板失败');
         }
@@ -414,7 +414,7 @@ const StructRuleDetailPage: FC = () => {
     <ContentLayout
       breadcrumb={[
         {
-          title: <Link to="/rules_management/struct_rules">病历模版</Link>,
+          title: <Link to="/rule_management/ruleset">病历模版</Link>,
         },
         { title: '编辑模版' },
       ]}
@@ -842,4 +842,4 @@ const Preview: FC<PreviewProps> = ({ categories, fields }) => {
   return <Tree showLine treeData={treeData} />;
 };
 
-export default StructRuleDetailPage;
+export default StructuredRulesetDetailPage;

@@ -9,12 +9,6 @@ import type { User } from '@/typing/user';
 export const useApi = () => {
   const task = useMemo(
     () => ({
-      createTask: (params: Task.Item) =>
-        service.post('/admin/task/create', params) as Promise<APIRes<number>>,
-      stopTaskInstance: (params: Task.InstanceActionParams) =>
-        service.post('/admin/task/stop', params) as Promise<APIRes<null>>,
-      actionTask: (params: Task.ActionParams) =>
-        service.post('/admin/task/action', params) as Promise<APIRes<null>>,
       getTaskList: (params: Task.ListParams) =>
         service.get('/admin/task/list', { params }) as Promise<
           APIRes<PaginationData<Task.Item>>
@@ -23,29 +17,37 @@ export const useApi = () => {
         service.get('/admin/task/detail', { params }) as Promise<
           APIRes<Task.Item>
         >,
+      createTask: (params: Task.Item) =>
+        service.post('/admin/task/create', params) as Promise<APIRes<number>>,
+      actionTask: (params: Task.ActionParams) =>
+        service.post('/admin/task/action', params) as Promise<APIRes<null>>,
       getTaskInstanceList: (params: Task.InstanceListParams) =>
-        service.get('/admin/task/instance_list', { params }) as Promise<
+        service.get('/admin/task/instance/list', { params }) as Promise<
           APIRes<PaginationData<Task.Instance>>
         >,
       getTaskInstanceDetail: (taskInstanceUid: string) =>
-        service.get('/admin/task/instance_detail', {
+        service.get('/admin/task/instance/detail', {
           params: { task_instance_uid: taskInstanceUid },
         }) as Promise<APIRes<Task.Instance>>,
+      taskInstanceRePush: (params: Task.RePushParams) =>
+        service.post('/admin/task/instance/re_push', params) as Promise<
+          APIRes<null>
+        >,
+      stopTaskInstance: (params: Task.InstanceActionParams) =>
+        service.post('/admin/task/instance/stop', params) as Promise<
+          APIRes<null>
+        >,
       getTaskInstanceResultList: (taskInstanceUid: string) =>
-        service.get('/admin/task/instance_detail/result_list', {
+        service.get('/admin/task/instance/result_list', {
           params: { task_instance_uid: taskInstanceUid },
         }) as Promise<APIRes<Task.ResultList>>,
       getTaskInstanceResultDetail: (taskInstanceUid: string, opEmNo: string) =>
-        service.get('/admin/task/instance_detail/result_detail', {
+        service.get('/admin/task/instance/result_detail', {
           params: {
             task_instance_uid: taskInstanceUid,
             op_em_no: opEmNo,
           },
         }) as Promise<APIRes<Task.ResultDetail>>,
-      taskInstanceRePush: (params: Task.RePushParams) =>
-        service.post('/admin/task/instance/re_push', params) as Promise<
-          APIRes<null>
-        >,
     }),
     [],
   );
@@ -53,21 +55,27 @@ export const useApi = () => {
   const encode = useMemo(
     () => ({
       getEncodeList: (params: EncodeTable.ListParams) =>
-        service.get('/admin/encode/list', { params }) as Promise<
+        service.get('/admin/encode_table/list', { params }) as Promise<
           APIRes<PaginationData<EncodeTable.Item>>
         >,
       getEncodeDetail: (params: EncodeTable.DetailParams) =>
-        service.get('/admin/encode/detail', { params }) as Promise<
+        service.get('/admin/encode_table/detail', { params }) as Promise<
           APIRes<EncodeTable.Detail>
         >,
       createEncode: (params: EncodeTable.Detail) =>
-        service.post('/admin/encode/create', params) as Promise<APIRes<number>>,
+        service.post('/admin/encode_table/create', params) as Promise<
+          APIRes<number>
+        >,
       updateEncode: (params: EncodeTable.Detail) =>
-        service.post('/admin/encode/update', params) as Promise<APIRes<number>>,
+        service.post('/admin/encode_table/update', params) as Promise<
+          APIRes<number>
+        >,
       actionEncode: (params: EncodeTable.ActionParams) =>
-        service.post('/admin/encode/update', params) as Promise<APIRes<null>>,
+        service.post('/admin/encode_table/update', params) as Promise<
+          APIRes<null>
+        >,
       exportEncode: (params: { uids: string[] }) =>
-        noInterceptorsService.post('/admin/encode/export', params, {
+        noInterceptorsService.post('/admin/encode_table/export', params, {
           responseType: 'blob', // 设置响应类型为 Blob
         }) as Promise<AxiosResponse<Blob>>,
     }),
@@ -77,36 +85,36 @@ export const useApi = () => {
   const rule = useMemo(
     () => ({
       getRuleList: (params: StructuredRuleset.ListParams) =>
-        service.get('/admin/structured_rule/list', { params }) as Promise<
+        service.get('/structured_ruleset/list', { params }) as Promise<
           APIRes<PaginationData<StructuredRuleset.Item>>
         >,
       getRuleDetail: (params: StructuredRuleset.DetailParams) =>
-        service.get('/admin/structured_rule/detail', { params }) as Promise<
+        service.get('/structured_ruleset/detail', { params }) as Promise<
           APIRes<StructuredRuleset.Item>
         >,
       createRule: (params: StructuredRuleset.Item) =>
-        service.post('/admin/structured_rule/create', params) as Promise<
+        service.post('/structured_ruleset/create', params) as Promise<
           APIRes<string>
         >,
       updateRule: (params: StructuredRuleset.Item) =>
-        service.post('/admin/structured_rule/update', params) as Promise<
+        service.post('/structured_ruleset/update', params) as Promise<
           APIRes<string>
         >,
       actionRule: (params: StructuredRuleset.ActionParams) =>
-        service.post('/admin/structured_rule/action', params) as Promise<
+        service.post('/structured_ruleset/action', params) as Promise<
           APIRes<string>
         >,
       exportRules: (params: { uids: string[] }) =>
-        noInterceptorsService.post('/admin/structured_rule/export', params, {
+        noInterceptorsService.post('/structured_ruleset/export', params, {
           responseType: 'blob', // 设置响应类型为 Blob
         }) as Promise<AxiosResponse<Blob>>,
       getPresetFieldsList: () =>
-        service.get('/admin/structured_rule/get_preset_fields') as Promise<
+        service.get('/structured_ruleset/get_preset_fields') as Promise<
           APIRes<StructuredRuleset.PresetFields>
         >,
       testRule: (params: StructuredRuleset.TestRuleParams) => {
         const { api_key, ...rest } = params;
-        return service.post('/admin/structured_rule/test', rest, {
+        return service.post('/structured_rule/test', rest, {
           headers: { Authorization: api_key },
         }) as Promise<APIRes<Record<string, string>>>;
       },

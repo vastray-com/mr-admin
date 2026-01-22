@@ -13,7 +13,7 @@ const initialDetail: EncodeTable.FormDetail = {
   value: '',
 };
 
-const EncodeDetailPage: FC = () => {
+const EncodeTableDetailPage: FC = () => {
   const { uid } = useParams<{ uid: string }>();
   const { message } = App.useApp();
   const nav = useNavigate();
@@ -80,7 +80,7 @@ const EncodeDetailPage: FC = () => {
       <ContentLayout
         breadcrumb={[
           {
-            title: <Link to="/rules_management/encode">码表管理</Link>,
+            title: <Link to="/rule_management/encode_table">码表管理</Link>,
           },
           { title: '编辑码表' },
         ]}
@@ -162,4 +162,4 @@ const EncodeDetailPage: FC = () => {
   );
 };
 
-export default EncodeDetailPage;
+export default EncodeTableDetailPage;

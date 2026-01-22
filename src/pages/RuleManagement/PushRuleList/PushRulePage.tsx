@@ -8,7 +8,6 @@ import {
   Input,
   Table,
 } from 'antd';
-import clsx from 'clsx';
 import dayjs, { type Dayjs } from 'dayjs';
 import { type FC, useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -16,20 +15,26 @@ import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { useFileImport } from '@/hooks/useFileImport';
 import { usePaginationData } from '@/hooks/usePaginationData';
+import { useCacheStore } from '@/store/useCacheStore';
+import { type PushTargetDB, pushTargetDBOptions } from '@/typing/enum';
 import { downloadFile } from '@/utils/helper';
 import type { FormProps } from 'antd';
+import type { PushRule } from '@/typing/pushRule';
 
 type FormValues = {
   name?: string;
   range?: [Dayjs, Dayjs] | null;
 };
 
-const EncodePage: FC = () => {
-  const { encodeApi } = useApi();
+const PushRulesPage: FC = () => {
+  const { pushRuleApi } = useApi();
   const { message, modal } = App.useApp();
   const nav = useNavigate();
 
-  // const setEncodeListCache = useCacheStore((s) => s.setEncodeList);
+  const structuredRuleList = useCacheStore(
+    (state) => state.structuredRulesetList,
+  );
+  const setRuleListCache = useCacheStore((state) => state.setPushRuleList);
   const [selectedUids, setSelectedUids] = useState<string[]>([]);
 
   // 禁止选择超过今天的日期和 6 个月前的日期
@@ -41,25 +46,22 @@ const EncodePage: FC = () => {
     };
 
   // 拉取列表分页数据
-  const [list, setList] = useState<EncodeTable.List>([]);
-  const searchParams = useRef<EncodeTable.ListParams>({
+  const [list, setList] = useState<PushRule.List>([]);
+  const searchParams = useRef<PushRule.ListParams>({
     name: undefined,
     update_start: undefined,
     update_end: undefined,
   });
   const fetchData = useCallback(
     async (params: PaginationParams) =>
-      encodeApi.getEncodeList({
-        ...params,
-        ...searchParams.current,
-      }),
-    [encodeApi.getEncodeList],
+      pushRuleApi.getRuleList({ ...params, ...searchParams.current }),
+    [pushRuleApi.getRuleList],
   );
   const { PaginationComponent, refresh } = usePaginationData({
     fetchData,
     setData: (v) => {
       setList(v);
-      // setEncodeListCache(v); // 缓存列表数据
+      setRuleListCache(v);
     },
   });
 
@@ -80,7 +82,7 @@ const EncodePage: FC = () => {
   // 导入病历模版
   const importText = useRef<string>('');
   const onImport = useCallback(async () => {
-    console.log('导入码表', importText.current);
+    console.log('导入推送规则', importText.current);
     // 检查导入文本是否为有效的 JSON 格式
     let data = null;
     try {
@@ -95,25 +97,25 @@ const EncodePage: FC = () => {
       return;
     }
     try {
-      const res = await encodeApi.createEncode(data);
+      const res = await pushRuleApi.createRule(data);
       if (res.code === 200) {
-        message.success('新建码表成功!');
+        message.success('新建推送规则成功!');
         // 成功后清空导入文本
         importText.current = '';
         // 刷新列表
         refresh();
       } else {
-        message.error(res.message || '新建码表失败');
+        message.error(res.message || '新建推送规则失败');
       }
     } catch (error) {
-      console.error('新建码表失败:', error);
-      message.error('新建码表失败，请检查导入文本格式是否正确。');
+      console.error('新建推送规则失败:', error);
+      message.error('新建推送规则失败，请检查导入文本格式是否正确。');
     }
-  }, [encodeApi.createEncode, message.error, message.success, refresh]);
+  }, [refresh, message, pushRuleApi]);
 
   const onOpenImportModal = useCallback(() => {
     modal.confirm({
-      title: '快速导入码表',
+      title: '快速导入推送规则',
       width: '64vw',
       centered: true,
       icon: null,
@@ -133,85 +135,64 @@ const EncodePage: FC = () => {
 
   // 导入文件
   const { FileImportModal, openFileImportModal } = useFileImport({
-    title: '通过文件导入码表',
-    path: '/admin/encode/import',
+    title: '通过文件导入推送规则',
+    path: '/admin/push_rule/import',
     onSucceed: refresh,
   });
 
-  // 新建码表
+  // 新建病历模板
   const onCreate = useCallback(() => {
-    console.log('新建码表');
-    // 这里可以添加新建逻辑
-    nav('/rules_management/encode/NEW');
+    nav('/rule_management/push_rule/NEW');
   }, [nav]);
 
-  // 导出选中病历模板
+  // 导出选中推送规则
   const onExportRecords = useCallback(
     async (uids: string[]) => {
       const msgKey = 'export-message';
       if (uids.length === 0) {
-        message.info({ key: msgKey, content: '没有选中任何码表' });
+        message.info({ key: msgKey, content: '没有选中任何推送规则' });
         return;
       }
-      message.loading({ key: msgKey, content: '正在导出码表...', duration: 0 });
-      console.log('导出码表:', uids);
-      const res = await encodeApi.exportEncode({ uids });
+      message.loading({
+        key: msgKey,
+        content: '正在导出推送规则...',
+        duration: 0,
+      });
+      console.log('导出推送规则:', uids);
+      const res = await pushRuleApi.exportRule({ uids });
       downloadFile(res);
       message.success({ key: msgKey, content: '导出成功!' });
     },
-    [encodeApi, message],
+    [message, pushRuleApi],
   );
 
   // 编辑项目
   const onEdit = useCallback(
-    (record: EncodeTable.Item) => {
+    (record: PushRule.Item) => {
       console.log('编辑项目:', record);
-      nav(`/rules_management/encode/${record.uid}`);
+      nav(`/rule_management/push_rule/${record.uid}`);
     },
     [nav],
   );
   // 停用/启用/删除项目
   const onAction = useCallback(
-    async (
-      record: EncodeTable.Item,
-      action: 'enable' | 'disable' | 'delete',
-    ) => {
+    async (record: PushRule.Item, action: PushRule.ActionParams['action']) => {
       console.log(`执行 ${action} 操作:`, record);
-      if (action === 'delete') {
-        modal.confirm({
-          title: '确认删除',
-          content: `是否确认删除码表 ${record.name_cn}？`,
-          onOk: async () => {
-            await encodeApi.actionEncode({ uid: record.uid, is_deleted: 1 });
-            message.success(`删除码表 ${record.name_cn} 成功`);
-            refresh();
-          },
-        });
-        return;
+      const res = await pushRuleApi.actionRule({ uid: record.uid, action });
+      if (res.code === 200) {
+        message.success(`操作成功`);
+        refresh();
+      } else {
+        message.error(`操作失败: ${res.message}`);
       }
-
-      // 启用或停用操作
-      const params: EncodeTable.ActionParams = { uid: record.uid };
-      switch (action) {
-        case 'enable':
-          params.status = 1;
-          break;
-        case 'disable':
-          params.status = 0;
-          break;
-      }
-      await encodeApi.actionEncode(params);
-      message.success(`操作码表 ${record.name_cn} 成功`);
-      // 刷新列表
-      refresh();
     },
-    [encodeApi.actionEncode, message.success, modal.confirm, refresh],
+    [refresh, message, pushRuleApi],
   );
 
   // 页面渲染
   return (
     <ContentLayout
-      title="码表列表"
+      title="推送规则列表"
       action={
         <>
           <Button onClick={onOpenImportModal}>快速导入</Button>
@@ -219,7 +200,7 @@ const EncodePage: FC = () => {
             文件导入
           </Button>
           <Button type="primary" className="ml-[8px]" onClick={onCreate}>
-            新建码表
+            新建推送规则
           </Button>
         </>
       }
@@ -230,14 +211,14 @@ const EncodePage: FC = () => {
         <Card className="h-[80px]">
           <Form
             layout="inline"
-            name="encode-search"
+            name="push-rules-search"
             onFinish={onFinish}
             autoComplete="off"
             className="flex items-center justify-between"
           >
             <div className="flex items-center gap-[16px]">
               <Form.Item<FormValues>
-                label="码表名称"
+                label="规则名称"
                 name="name"
                 className="w-[256px]"
               >
@@ -257,7 +238,7 @@ const EncodePage: FC = () => {
               <Form.Item noStyle>
                 <Button
                   htmlType="button"
-                  onClick={() => onExportRecords(selectedUids as string[])}
+                  onClick={() => onExportRecords(selectedUids)}
                 >
                   导出
                 </Button>
@@ -270,7 +251,7 @@ const EncodePage: FC = () => {
         </Card>
 
         <Card className="h-[calc(100%_-_80px_-_16px)] mt-[16px]">
-          <Table<EncodeTable.Item>
+          <Table<PushRule.Item>
             dataSource={list}
             rowKey="uid"
             rowSelection={{
@@ -279,18 +260,25 @@ const EncodePage: FC = () => {
             }}
             pagination={false}
           >
-            <Table.Column title="码表名称" dataIndex="name_cn" />
-            <Table.Column title="简述/备注" dataIndex="comment" />
+            <Table.Column title="规则名称" dataIndex="name_cn" />
+            <Table.Column title="规则英文名" dataIndex="name_en" />
+            <Table.Column title="规则 ID" dataIndex="uid" />
             <Table.Column
-              title="类型"
-              dataIndex="encode_type"
-              render={(type: EncodeTable.Item['encode_type']) => (
-                <p className="flex items-center">
-                  {type === 0 ? '内置码表' : '自定义码表'}
-                </p>
-              )}
+              title="关联结构化规则"
+              dataIndex="structured_rule_uid"
+              render={(structured_rule_uid: string) => {
+                return structured_rule_uid ? (
+                  <span>
+                    {structuredRuleList.find(
+                      (rule) => rule.uid === structured_rule_uid,
+                    )?.name_cn ?? structured_rule_uid}
+                  </span>
+                ) : (
+                  <span className="text-gray-400">未关联</span>
+                );
+              }}
             />
-            <Table.Column title="码表 ID" dataIndex="uid" />
+
             <Table.Column
               title="更新时间"
               dataIndex="update_time"
@@ -301,58 +289,36 @@ const EncodePage: FC = () => {
                 dayjs(time).format('YYYY-MM-DD HH:mm:ss')
               }
             />
+            <Table.Column title="备注" dataIndex="comment" />
             <Table.Column
-              title="状态"
-              dataIndex="status"
-              render={(status: EncodeTable.Item['status']) => (
-                <p className="flex items-center">
-                  <span
-                    className={clsx(
-                      'w-[6px] h-[6px] rounded-full inline-block mr-[4px]',
-                      status === 1 ? 'bg-[#52C41A]' : 'bg-[#FF4D4F]',
-                    )}
-                  />
-                  <span>{status === 1 ? '启用中' : '已停用'}</span>
-                </p>
-              )}
+              title="推送目标"
+              dataIndex="target_db"
+              render={(target: PushTargetDB) =>
+                pushTargetDBOptions.find((db) => db.value === target)?.label ||
+                target
+              }
             />
             <Table.Column
               title="操作"
               key="action"
               width={180}
-              render={(_, record: EncodeTable.Item) => (
+              render={(_, record: PushRule.Item) => (
                 <div className="flex">
-                  {record.encode_type === 1 ? (
-                    <Button
-                      size="small"
-                      type="link"
-                      onClick={() => onEdit(record)}
-                    >
-                      编辑
-                    </Button>
-                  ) : null}
                   <Button
                     size="small"
                     type="link"
-                    onClick={() =>
-                      onAction(
-                        record,
-                        record.status === 1 ? 'disable' : 'enable',
-                      )
-                    }
+                    onClick={() => onEdit(record)}
                   >
-                    {record.status === 1 ? '停用' : '启用'}
+                    编辑
                   </Button>
-                  {record.encode_type === 1 ? (
-                    <Button
-                      size="small"
-                      type="link"
-                      danger
-                      onClick={() => onAction(record, 'delete')}
-                    >
-                      删除
-                    </Button>
-                  ) : null}
+                  <Button
+                    size="small"
+                    type="link"
+                    danger
+                    onClick={() => onAction(record, 'delete')}
+                  >
+                    删除
+                  </Button>
                 </div>
               )}
             />
@@ -367,4 +333,4 @@ const EncodePage: FC = () => {
   );
 };
 
-export default EncodePage;
+export default PushRulesPage;

@@ -6,7 +6,6 @@ import {
   Form,
   type GetProps,
   Input,
-  Popconfirm,
   Table,
 } from 'antd';
 import clsx from 'clsx';
@@ -17,21 +16,20 @@ import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { useFileImport } from '@/hooks/useFileImport';
 import { usePaginationData } from '@/hooks/usePaginationData';
-import { StructRuleStatus } from '@/typing/enum';
 import { downloadFile } from '@/utils/helper';
 import type { FormProps } from 'antd';
-import type { StructuredRuleset } from '@/typing/structuredRuleset';
 
 type FormValues = {
   name?: string;
   range?: [Dayjs, Dayjs] | null;
 };
 
-const StructRulesPage: FC = () => {
-  const { ruleApi } = useApi();
+const EncodeTablePage: FC = () => {
+  const { encodeApi } = useApi();
   const { message, modal } = App.useApp();
   const nav = useNavigate();
 
+  // const setEncodeListCache = useCacheStore((s) => s.setEncodeTableList);
   const [selectedUids, setSelectedUids] = useState<string[]>([]);
 
   // 禁止选择超过今天的日期和 6 个月前的日期
@@ -43,20 +41,26 @@ const StructRulesPage: FC = () => {
     };
 
   // 拉取列表分页数据
-  const [list, setList] = useState<StructuredRuleset.List>([]);
-  const searchParams = useRef<StructuredRuleset.ListParams>({
+  const [list, setList] = useState<EncodeTable.List>([]);
+  const searchParams = useRef<EncodeTable.ListParams>({
     name: undefined,
     update_start: undefined,
     update_end: undefined,
   });
   const fetchData = useCallback(
     async (params: PaginationParams) =>
-      ruleApi.getRuleList({ ...params, ...searchParams.current }),
-    [ruleApi.getRuleList],
+      encodeApi.getEncodeList({
+        ...params,
+        ...searchParams.current,
+      }),
+    [encodeApi.getEncodeList],
   );
   const { PaginationComponent, refresh } = usePaginationData({
     fetchData,
-    setData: setList,
+    setData: (v) => {
+      setList(v);
+      // setEncodeListCache(v); // 缓存列表数据
+    },
   });
 
   // 查询表单提交处理函数
@@ -76,7 +80,7 @@ const StructRulesPage: FC = () => {
   // 导入病历模版
   const importText = useRef<string>('');
   const onImport = useCallback(async () => {
-    console.log('导入结构化规则', importText.current);
+    console.log('导入码表', importText.current);
     // 检查导入文本是否为有效的 JSON 格式
     let data = null;
     try {
@@ -91,25 +95,25 @@ const StructRulesPage: FC = () => {
       return;
     }
     try {
-      const res = await ruleApi.createRule(data);
+      const res = await encodeApi.createEncode(data);
       if (res.code === 200) {
-        message.success('新建病历模板成功!');
+        message.success('新建码表成功!');
         // 成功后清空导入文本
         importText.current = '';
         // 刷新列表
         refresh();
       } else {
-        message.error(res.message || '新建病历模板失败');
+        message.error(res.message || '新建码表失败');
       }
     } catch (error) {
-      console.error('新建病历模板失败:', error);
-      message.error('新建病历模板失败，请检查导入文本格式是否正确。');
+      console.error('新建码表失败:', error);
+      message.error('新建码表失败，请检查导入文本格式是否正确。');
     }
-  }, [refresh, message, ruleApi]);
+  }, [encodeApi.createEncode, message.error, message.success, refresh]);
 
   const onOpenImportModal = useCallback(() => {
     modal.confirm({
-      title: '快速导入结构化规则',
+      title: '快速导入码表',
       width: '64vw',
       centered: true,
       icon: null,
@@ -129,14 +133,16 @@ const StructRulesPage: FC = () => {
 
   // 导入文件
   const { FileImportModal, openFileImportModal } = useFileImport({
-    title: '通过文件导入结构化规则',
-    path: '/admin/structured_rule/import',
+    title: '通过文件导入码表',
+    path: '/admin/encode/import',
     onSucceed: refresh,
   });
 
-  // 新建病历模板
+  // 新建码表
   const onCreate = useCallback(() => {
-    nav('/rules_management/struct_rules/NEW');
+    console.log('新建码表');
+    // 这里可以添加新建逻辑
+    nav('/rule_management/encode_table/NEW');
   }, [nav]);
 
   // 导出选中病历模板
@@ -144,52 +150,68 @@ const StructRulesPage: FC = () => {
     async (uids: string[]) => {
       const msgKey = 'export-message';
       if (uids.length === 0) {
-        message.info({ key: msgKey, content: '没有选中任何结构化规则' });
+        message.info({ key: msgKey, content: '没有选中任何码表' });
         return;
       }
-      message.loading({
-        key: msgKey,
-        content: '正在导出结构化规则...',
-        duration: 0,
-      });
-      console.log('导出结构化规则:', uids);
-      const res = await ruleApi.exportRules({ uids });
+      message.loading({ key: msgKey, content: '正在导出码表...', duration: 0 });
+      console.log('导出码表:', uids);
+      const res = await encodeApi.exportEncode({ uids });
       downloadFile(res);
       message.success({ key: msgKey, content: '导出成功!' });
     },
-    [message, ruleApi],
+    [encodeApi, message],
   );
 
   // 编辑项目
   const onEdit = useCallback(
-    (record: StructuredRuleset.Item) => {
+    (record: EncodeTable.Item) => {
       console.log('编辑项目:', record);
-      nav(`/rules_management/struct_rules/${record.uid}`);
+      nav(`/rule_management/encode_table/${record.uid}`);
     },
     [nav],
   );
   // 停用/启用/删除项目
   const onAction = useCallback(
     async (
-      record: StructuredRuleset.Item,
-      action: StructuredRuleset.ActionParams['action'],
+      record: EncodeTable.Item,
+      action: 'enable' | 'disable' | 'delete',
     ) => {
       console.log(`执行 ${action} 操作:`, record);
-      const res = await ruleApi.actionRule({ uid: record.uid, action });
-      if (res.code === 200) {
-        message.success(`操作成功`);
-        refresh();
-      } else {
-        message.error(`操作失败: ${res.message}`);
+      if (action === 'delete') {
+        modal.confirm({
+          title: '确认删除',
+          content: `是否确认删除码表 ${record.name_cn}？`,
+          onOk: async () => {
+            await encodeApi.actionEncode({ uid: record.uid, is_deleted: 1 });
+            message.success(`删除码表 ${record.name_cn} 成功`);
+            refresh();
+          },
+        });
+        return;
       }
+
+      // 启用或停用操作
+      const params: EncodeTable.ActionParams = { uid: record.uid };
+      switch (action) {
+        case 'enable':
+          params.status = 1;
+          break;
+        case 'disable':
+          params.status = 0;
+          break;
+      }
+      await encodeApi.actionEncode(params);
+      message.success(`操作码表 ${record.name_cn} 成功`);
+      // 刷新列表
+      refresh();
     },
-    [refresh, message, ruleApi],
+    [encodeApi.actionEncode, message.success, modal.confirm, refresh],
   );
 
   // 页面渲染
   return (
     <ContentLayout
-      title="结构化规则列表"
+      title="码表列表"
       action={
         <>
           <Button onClick={onOpenImportModal}>快速导入</Button>
@@ -197,7 +219,7 @@ const StructRulesPage: FC = () => {
             文件导入
           </Button>
           <Button type="primary" className="ml-[8px]" onClick={onCreate}>
-            新建结构化规则
+            新建码表
           </Button>
         </>
       }
@@ -208,14 +230,14 @@ const StructRulesPage: FC = () => {
         <Card className="h-[80px]">
           <Form
             layout="inline"
-            name="struct-rules-search"
+            name="encode-search"
             onFinish={onFinish}
             autoComplete="off"
             className="flex items-center justify-between"
           >
             <div className="flex items-center gap-[16px]">
               <Form.Item<FormValues>
-                label="病历名称"
+                label="码表名称"
                 name="name"
                 className="w-[256px]"
               >
@@ -235,7 +257,7 @@ const StructRulesPage: FC = () => {
               <Form.Item noStyle>
                 <Button
                   htmlType="button"
-                  onClick={() => onExportRecords(selectedUids)}
+                  onClick={() => onExportRecords(selectedUids as string[])}
                 >
                   导出
                 </Button>
@@ -248,7 +270,7 @@ const StructRulesPage: FC = () => {
         </Card>
 
         <Card className="h-[calc(100%_-_80px_-_16px)] mt-[16px]">
-          <Table<StructuredRuleset.Item>
+          <Table<EncodeTable.Item>
             dataSource={list}
             rowKey="uid"
             rowSelection={{
@@ -257,9 +279,18 @@ const StructRulesPage: FC = () => {
             }}
             pagination={false}
           >
-            <Table.Column title="规则名称" dataIndex="name_cn" />
-            <Table.Column title="规则英文名" dataIndex="name_en" />
-            <Table.Column title="规则 ID" dataIndex="uid" />
+            <Table.Column title="码表名称" dataIndex="name_cn" />
+            <Table.Column title="简述/备注" dataIndex="comment" />
+            <Table.Column
+              title="类型"
+              dataIndex="encode_type"
+              render={(type: EncodeTable.Item['encode_type']) => (
+                <p className="flex items-center">
+                  {type === 0 ? '内置码表' : '自定义码表'}
+                </p>
+              )}
+            />
+            <Table.Column title="码表 ID" dataIndex="uid" />
             <Table.Column
               title="更新时间"
               dataIndex="update_time"
@@ -270,23 +301,18 @@ const StructRulesPage: FC = () => {
                 dayjs(time).format('YYYY-MM-DD HH:mm:ss')
               }
             />
-            <Table.Column title="备注" dataIndex="comment" />
             <Table.Column
               title="状态"
               dataIndex="status"
-              render={(status: StructRuleStatus) => (
+              render={(status: EncodeTable.Item['status']) => (
                 <p className="flex items-center">
                   <span
                     className={clsx(
                       'w-[6px] h-[6px] rounded-full inline-block mr-[4px]',
-                      status === StructRuleStatus.Enabled
-                        ? 'bg-[#52C41A]'
-                        : 'bg-[#FF4D4F]',
+                      status === 1 ? 'bg-[#52C41A]' : 'bg-[#FF4D4F]',
                     )}
                   />
-                  <span>
-                    {status === StructRuleStatus.Enabled ? '启用中' : '已停用'}
-                  </span>
+                  <span>{status === 1 ? '启用中' : '已停用'}</span>
                 </p>
               )}
             />
@@ -294,42 +320,39 @@ const StructRulesPage: FC = () => {
               title="操作"
               key="action"
               width={180}
-              render={(_, record: StructuredRuleset.Item) => (
+              render={(_, record: EncodeTable.Item) => (
                 <div className="flex">
-                  <Button
-                    size="small"
-                    type="link"
-                    onClick={() => onEdit(record)}
-                  >
-                    编辑
-                  </Button>
+                  {record.encode_type === 1 ? (
+                    <Button
+                      size="small"
+                      type="link"
+                      onClick={() => onEdit(record)}
+                    >
+                      编辑
+                    </Button>
+                  ) : null}
                   <Button
                     size="small"
                     type="link"
                     onClick={() =>
                       onAction(
                         record,
-                        record.status === StructRuleStatus.Enabled
-                          ? 'disable'
-                          : 'enable',
+                        record.status === 1 ? 'disable' : 'enable',
                       )
                     }
                   >
-                    {record.status === StructRuleStatus.Enabled
-                      ? '停用'
-                      : '启用'}
+                    {record.status === 1 ? '停用' : '启用'}
                   </Button>
-                  <Popconfirm
-                    title="删除结构化规则"
-                    description="确定要删除该结构化规则吗？此操作不可恢复。"
-                    onConfirm={() => onAction(record, 'delete')}
-                    okText="确认"
-                    cancelText="取消"
-                  >
-                    <Button size="small" type="link" danger>
+                  {record.encode_type === 1 ? (
+                    <Button
+                      size="small"
+                      type="link"
+                      danger
+                      onClick={() => onAction(record, 'delete')}
+                    >
                       删除
                     </Button>
-                  </Popconfirm>
+                  ) : null}
                 </div>
               )}
             />
@@ -344,4 +367,4 @@ const StructRulesPage: FC = () => {
   );
 };
 
-export default StructRulesPage;
+export default EncodeTablePage;

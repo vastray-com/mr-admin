@@ -129,7 +129,7 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
   };
 
   // 编码选项
-  const encodeOptions = useCacheStore((s) => s.encodeOptions);
+  const encodeOptions = useCacheStore((s) => s.encodeTableOptions);
   // 分类选择列表
   const categoryOptions = useMemo(
     () =>

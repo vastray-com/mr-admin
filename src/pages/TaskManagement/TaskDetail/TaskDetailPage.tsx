@@ -29,7 +29,7 @@ const TaskDetailPage = () => {
   const { message } = App.useApp();
 
   const isInitial = useRef(false);
-  const ruleOptions = useCacheStore((s) => s.ruleOptions);
+  const ruleOptions = useCacheStore((s) => s.structuredRulesetOptions);
   const pushRuleList = useCacheStore((s) => s.pushRuleList);
 
   const [data, setData] = useState<Task.Item | null>(null);
@@ -112,7 +112,7 @@ const TaskDetailPage = () => {
     <ContentLayout
       title="任务详情"
       breadcrumb={[
-        { title: <Link to="/tasks_management/tasks">任务列表</Link> },
+        { title: <Link to="/task_management/list">任务列表</Link> },
         { title: '任务详情' },
       ]}
     >
@@ -265,15 +265,11 @@ const TaskDetailPage = () => {
             key="action"
             render={(_, record: Task.Instance) => (
               <>
-                <Link
-                  to={`/tasks_management/tasks/detail/${taskUid}/${record.uid}`}
-                >
+                <Link to={`/task_management/detail/${taskUid}/${record.uid}`}>
                   <Button type="link">下载</Button>
                 </Link>
                 <Divider type="vertical" />
-                <Link
-                  to={`/tasks_management/tasks/detail/${taskUid}/${record.uid}`}
-                >
+                <Link to={`/task_management/detail/${taskUid}/${record.uid}`}>
                   <Button type="link">查看结果</Button>
                 </Link>
                 {record.status === 1 && (

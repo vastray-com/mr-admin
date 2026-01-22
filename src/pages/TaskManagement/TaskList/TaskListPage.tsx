@@ -69,7 +69,7 @@ const TaskListPage = () => {
   });
 
   // 新建任务
-  const ruleOptions = useCacheStore((s) => s.ruleOptions);
+  const ruleOptions = useCacheStore((s) => s.structuredRulesetOptions);
   const [form] = Form.useForm<Task.CreateItem>();
   const newTaskData = useRef<Task.CreateItem | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -233,7 +233,7 @@ const TaskListPage = () => {
                   <Button type="link" onClick={() => onCopy(record)}>
                     复制
                   </Button>
-                  <Link to={`/tasks_management/tasks/detail/${record.uid}`}>
+                  <Link to={`/task_management/detail/${record.uid}`}>
                     <Button type="link">详情</Button>
                   </Link>{' '}
                   {record.one_time_task_type !== OneTimeTaskType.Immediate &&

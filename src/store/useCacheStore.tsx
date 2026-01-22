@@ -8,60 +8,60 @@ type SelectOptions = {
 }[];
 
 type State = {
-  encodeList: EncodeTable.List;
-  encodeOptions: SelectOptions;
-  structRuleList: StructuredRuleset.List;
   presetFields: StructuredRuleset.PresetFields;
-  ruleOptions: SelectOptions;
+  encodeTableList: EncodeTable.List;
+  encodeTableOptions: SelectOptions;
+  structuredRulesetList: StructuredRuleset.List;
+  structuredRulesetOptions: SelectOptions;
   pushRuleList: PushRule.List;
   pushRuleOptions: Record<string, SelectOptions>;
 };
 type Actions = {
-  setEncodeList: (list: EncodeTable.List) => void;
-  setStructRuleList: (list: StructuredRuleset.List) => void;
   setPresetFields: (fields: StructuredRuleset.PresetFields) => void;
+  setEncodeTableList: (list: EncodeTable.List) => void;
+  setStructuredRulesetList: (list: StructuredRuleset.List) => void;
   setPushRuleList: (list: PushRule.List) => void;
   reset: () => void;
 };
 type Store = State & Actions;
 
 const initialState: State = {
-  encodeList: [],
-  encodeOptions: [],
-  structRuleList: [],
+  encodeTableList: [],
+  encodeTableOptions: [],
+  structuredRulesetList: [],
   presetFields: [],
-  ruleOptions: [],
+  structuredRulesetOptions: [],
   pushRuleList: [],
   pushRuleOptions: {},
 };
 
 export const useCacheStore = createWithEqualityFn<Store>((set) => ({
   ...initialState,
-  setEncodeList: (list: EncodeTable.List) => {
-    const encodeOptions = list.map((encode) => ({
+  setEncodeTableList: (list: EncodeTable.List) => {
+    const encodeTableOptions = list.map((encode) => ({
       value: `${encode.uid}`,
-      label: encode.name_cn,
+      label: encode.name,
     }));
-    set({ encodeList: list, encodeOptions });
+    set({ encodeTableList: list, encodeTableOptions });
   },
-  setStructRuleList: (list: StructuredRuleset.List) => {
-    const ruleOptions = list.map((rule) => ({
-      value: rule.uid,
-      label: rule.name_cn,
+  setStructuredRulesetList: (list: StructuredRuleset.List) => {
+    const structuredRulesetOptions = list.map((ruleset) => ({
+      value: ruleset.uid,
+      label: ruleset.name_cn,
     }));
-    set({ structRuleList: list, ruleOptions });
+    set({ structuredRulesetList: list, structuredRulesetOptions });
   },
   setPresetFields: (fields: StructuredRuleset.PresetFields) =>
     set({ presetFields: fields }),
   setPushRuleList: (list: PushRule.List) => {
     const pushRuleOptions: Record<string, SelectOptions> = {};
     list.forEach((item) => {
-      if (!pushRuleOptions[item.structured_rule_uid]) {
-        pushRuleOptions[item.structured_rule_uid] = [];
+      if (!pushRuleOptions[item.structured_ruleset_uid]) {
+        pushRuleOptions[item.structured_ruleset_uid] = [];
       }
-      pushRuleOptions[item.structured_rule_uid].push({
+      pushRuleOptions[item.structured_ruleset_uid].push({
         value: item.uid,
-        label: item.name_cn,
+        label: item.name,
       });
     });
     set({ pushRuleList: list, pushRuleOptions });

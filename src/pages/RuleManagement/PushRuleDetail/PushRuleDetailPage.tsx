@@ -3,8 +3,8 @@ import { type FC, useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
-import FilterTable from '@/pages/RulesManagement/PushRules/PushRuleDetail/components/FilterTable';
-import PushTable from '@/pages/RulesManagement/PushRules/PushRuleDetail/components/PushTable';
+import FilterTable from '@/pages/RuleManagement/PushRuleList/PushRuleDetail/components/FilterTable';
+import PushTable from '@/pages/RuleManagement/PushRuleList/PushRuleDetail/components/PushTable';
 import { useCacheStore } from '@/store/useCacheStore';
 import { PushDataType, PushTargetDB, pushTargetDBOptions } from '@/typing/enum';
 import type { PushRule } from '@/typing/pushRule';
@@ -34,7 +34,9 @@ const PushRuleDetailPage: FC = () => {
   const isNewRule = useRef(uid === 'NEW');
   const isInit = useRef(isNewRule.current);
 
-  const structuredRuleOptions = useCacheStore((s) => s.ruleOptions);
+  const structuredRuleOptions = useCacheStore(
+    (s) => s.structuredRulesetOptions,
+  );
   const [detail, setDetail] = useState<PushRule.Detail>(initialDetail);
   const fetchDetail = useCallback(
     async (uid: string) => {
@@ -143,7 +145,7 @@ const PushRuleDetailPage: FC = () => {
         const res = await pushRuleApi.createRule(values);
         if (res.code === 200) {
           message.success('新建推送规则成功!');
-          nav(`/rules_management/push_rules/${res.data}`);
+          nav(`/rule_management/push_rule/${res.data}`);
         } else {
           message.error(res.message || '新建推送规则失败');
         }
@@ -176,7 +178,7 @@ const PushRuleDetailPage: FC = () => {
     <ContentLayout
       breadcrumb={[
         {
-          title: <Link to="/rules_management/push_rules">推送规则</Link>,
+          title: <Link to="/rule_management/push_rule">推送规则</Link>,
         },
         { title: '编辑推送规则' },
       ]}

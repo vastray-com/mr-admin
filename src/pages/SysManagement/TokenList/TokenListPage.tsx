@@ -5,7 +5,7 @@ import { useApi } from '@/hooks/useApi';
 import { usePaginationData } from '@/hooks/usePaginationData';
 import type { AxiosError } from 'axios';
 
-const TokensPage = () => {
+const TokenListPage = () => {
   const { sysApi } = useApi();
   const { message } = App.useApp();
 
@@ -166,4 +166,4 @@ const TokensPage = () => {
   );
 };
 
-export default TokensPage;
+export default TokenListPage;

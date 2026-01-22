@@ -1,53 +1,10 @@
-import { lazy, type ReactNode } from 'react';
 import { Outlet, type RouteObject, redirect } from 'react-router';
+import LazyComponents from '@/router/lazyComponents';
 import { useUserStore } from '@/store/useUserStore';
 import { UserRole } from '@/typing/enum';
 import type { MenuProps } from 'antd';
+import type { ReactNode } from 'react';
 import type { LoaderFunction } from 'react-router-dom';
-
-const StructRulesLazy = lazy(
-  () => import('@/pages/RulesManagement/StructRules/StructRulesPage'),
-);
-const StructRuleDetailLazy = lazy(
-  () =>
-    import(
-      '@/pages/RulesManagement/StructRules/StructRuleDetail/StructRuleDetailPage'
-    ),
-);
-const PushRulesLazy = lazy(
-  () => import('@/pages/RulesManagement/PushRules/PushRulesPage'),
-);
-const PushRuleDetailLazy = lazy(
-  () =>
-    import(
-      '@/pages/RulesManagement/PushRules/PushRuleDetail/PushRuleDetailPage'
-    ),
-);
-const EncodeLazy = lazy(
-  () => import('@/pages/RulesManagement/Encode/EncodePage'),
-);
-const EncodeDetailLazy = lazy(
-  () => import('@/pages/RulesManagement/Encode/EncodeDetail/EncodeDetailPage'),
-);
-const TaskListLazy = lazy(
-  () => import('@/pages/TasksManagement/TaskList/TaskListPage'),
-);
-const TaskDetailLazy = lazy(
-  () => import('@/pages/TasksManagement/TaskList/TaskDetail/TaskDetailPage'),
-);
-const InstanceDetailLazy = lazy(
-  () =>
-    import(
-      '@/pages/TasksManagement/TaskList/InstanceDetail/InstanceDetailPage'
-    ),
-);
-
-const UserListLazy = lazy(
-  () => import('@/pages/UsersManagement/UserList/UserListPage'),
-);
-const TokensLazy = lazy(
-  () => import('@/pages/SysManagement/Tokens/TokensPage'),
-);
 
 type BaseRoute = {
   key: string;
@@ -68,106 +25,106 @@ type BaseRoute = {
 }[];
 
 // 默认私有路由
-export const DEFAULT_PRIVATE_PATH = '/rules_management/struct_rules';
+export const DEFAULT_PRIVATE_PATH = '/rule_management/ruleset';
 
 // 需要鉴权的路由
 const privateBaseRoutes: BaseRoute = [
   {
-    key: '/tasks_management',
+    key: '/task_management',
     element: <Outlet />,
     label: '任务管理',
     addToMenu: true,
     roles: [UserRole.Admin],
     loader: ({ request }) => {
       const url = new URL(request.url);
-      if (url.pathname === '/tasks_management') {
-        return redirect('/tasks_management/tasks');
+      if (url.pathname === '/task_management') {
+        return redirect('/task_management/list');
       }
       return null;
     },
     icon: <i className="i-icon-park-outline:command" />,
     children: [
       {
-        key: '/tasks_management/tasks',
-        element: <TaskListLazy />,
+        key: '/task_management/list',
+        element: <LazyComponents.TaskList />,
         label: '任务列表',
         addToMenu: true,
         roles: [UserRole.Admin],
       },
       {
-        key: '/tasks_management/tasks/detail/:taskUid',
-        element: <TaskDetailLazy />,
+        key: '/task_management/detail/:taskUid',
+        element: <LazyComponents.TaskDetail />,
         label: '任务详情',
         addToMenu: false,
-        selectedKeys: ['/tasks_management/tasks'],
+        selectedKeys: ['/task_management/list'],
         roles: [UserRole.Admin],
       },
       {
-        key: '/tasks_management/tasks/detail/:taskUid/:instanceUid',
-        element: <InstanceDetailLazy />,
+        key: '/task_management/detail/:taskUid/:instanceUid',
+        element: <LazyComponents.TaskInstanceDetail />,
         label: '执行结果',
         addToMenu: false,
-        selectedKeys: ['/tasks_management/tasks'],
+        selectedKeys: ['/task_management/list'],
         roles: [UserRole.Admin],
       },
     ],
   },
   {
-    key: '/rules_management',
+    key: '/rule_management',
     element: <Outlet />,
     label: '规则配置',
     addToMenu: true,
     roles: [UserRole.Admin, UserRole.User],
     loader: ({ request }) => {
       const url = new URL(request.url);
-      if (url.pathname === '/rules_management') {
-        return redirect('/rules_management/struct_rules');
+      if (url.pathname === '/rule_management') {
+        return redirect('/rule_management/ruleset');
       }
       return null;
     },
-    icon: <i className="i-icon-park-outline:file-editing-one" />,
+    icon: <i className="i-icon-park-outline:sort-amount-down" />,
     children: [
       {
-        key: '/rules_management/struct_rules',
-        element: <StructRulesLazy />,
+        key: '/rule_management/ruleset',
+        element: <LazyComponents.StructuredRulesetList />,
         label: '结构化规则',
         addToMenu: true,
         roles: [UserRole.Admin, UserRole.User],
       },
       {
-        key: '/rules_management/struct_rules/:uid',
-        selectedKeys: ['/rules_management/struct_rules'],
-        element: <StructRuleDetailLazy />,
+        key: '/rule_management/ruleset/:uid',
+        selectedKeys: ['/rule_management/ruleset'],
+        element: <LazyComponents.StructuredRulesetDetail />,
         label: '结构化规则详情',
         addToMenu: false,
         roles: [UserRole.Admin, UserRole.User],
       },
       {
-        key: '/rules_management/push_rules',
-        element: <PushRulesLazy />,
+        key: '/rule_management/push_rule',
+        element: <LazyComponents.PushRuleList />,
         label: '推送规则',
         addToMenu: true,
         roles: [UserRole.Admin],
       },
       {
-        key: '/rules_management/push_rules/:uid',
-        selectedKeys: ['/rules_management/push_rules'],
-        element: <PushRuleDetailLazy />,
+        key: '/rule_management/push_rule/:uid',
+        selectedKeys: ['/rule_management/push_rule'],
+        element: <LazyComponents.PushRuleDetail />,
         label: '推送规则详情',
         addToMenu: false,
         roles: [UserRole.Admin],
       },
       {
-        key: '/rules_management/encode',
-        element: <EncodeLazy />,
+        key: '/rule_management/encode_table',
+        element: <LazyComponents.EncodeTableList />,
         label: '码表管理',
         addToMenu: true,
         roles: [UserRole.Admin, UserRole.User],
       },
       {
-        key: '/rules_management/encode/:uid',
-        selectedKeys: ['/rules_management/encode'],
-        element: <EncodeDetailLazy />,
+        key: '/rule_management/encode_table/:uid',
+        selectedKeys: ['/rule_management/encode_table'],
+        element: <LazyComponents.EncodeTableDetail />,
         label: '码表详情',
         addToMenu: false,
         roles: [UserRole.Admin, UserRole.User],
@@ -175,23 +132,47 @@ const privateBaseRoutes: BaseRoute = [
     ],
   },
   {
-    key: '/users_management',
+    key: '/dataset_management',
+    element: <Outlet />,
+    label: '数据集管理',
+    addToMenu: true,
+    roles: [UserRole.Admin, UserRole.User],
+    loader: ({ request }) => {
+      const url = new URL(request.url);
+      if (url.pathname === '/dataset_management') {
+        return redirect('/dataset_management/list');
+      }
+      return null;
+    },
+    icon: <i className="i-icon-park-outline:data" />,
+    children: [
+      {
+        key: '/dataset_management/list',
+        element: <LazyComponents.DatasetList />,
+        label: '数据集列表',
+        addToMenu: true,
+        roles: [UserRole.Admin, UserRole.User],
+      },
+    ],
+  },
+  {
+    key: '/user_management',
     element: <Outlet />,
     label: '用户管理',
     addToMenu: true,
     roles: [UserRole.Admin],
     loader: ({ request }) => {
       const url = new URL(request.url);
-      if (url.pathname === '/users_management') {
-        return redirect('/users_management/user_list');
+      if (url.pathname === '/user_management') {
+        return redirect('/user_management/list');
       }
       return null;
     },
-    icon: <i className="i-icon-park-outline:file-editing-one" />,
+    icon: <i className="i-icon-park-outline:every-user" />,
     children: [
       {
-        key: '/users_management/user_list',
-        element: <UserListLazy />,
+        key: '/user_management/list',
+        element: <LazyComponents.UserList />,
         label: '用户列表',
         addToMenu: true,
         roles: [UserRole.Admin],
@@ -211,11 +192,11 @@ const privateBaseRoutes: BaseRoute = [
       }
       return null;
     },
-    icon: <i className="i-icon-park-outline:file-editing-one" />,
+    icon: <i className="i-icon-park-outline:setting-two" />,
     children: [
       {
         key: '/sys_management/tokens',
-        element: <TokensLazy />,
+        element: <LazyComponents.TokenList />,
         label: 'API 令牌',
         addToMenu: true,
         roles: [UserRole.Admin],

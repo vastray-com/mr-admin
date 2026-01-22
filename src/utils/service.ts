@@ -2,7 +2,7 @@ import { message } from 'antd';
 import axios from 'axios';
 import { ls } from '@/utils/ls';
 
-const dontRedirect401Paths = ['/admin/structured_rule/test'];
+const dontRedirect401Paths = ['/structured_ruleset/test'];
 
 export const service = axios.create({
   baseURL: import.meta.env.VITE_API_URL,

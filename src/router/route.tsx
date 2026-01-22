@@ -39,9 +39,9 @@ const initApp = async () => {
   // 数据接口初始化
   const paginationParams = { page_size: 1000, page_num: 1 };
   const res = await Promise.all([
-    service.get('/admin/encode/list', { params: paginationParams }),
-    service.get('/admin/structured_rule/list', { params: paginationParams }),
-    service.get('/admin/structured_rule/get_preset_fields'),
+    service.get('/admin/encode_table/list', { params: paginationParams }),
+    service.get('/structured_ruleset/list', { params: paginationParams }),
+    service.get('/structured_ruleset/get_preset_fields'),
     service.get('/admin/push_rule/list', { params: paginationParams }),
   ]);
   const [encodeRes, structRuleRes, presetFieldsRes, pushRuleRes] =
@@ -55,7 +55,7 @@ const initApp = async () => {
   // 初始化码表列表
   if (encodeRes.code === 200) {
     // console.log('码表列表初始化成功', res.data.data);
-    useCacheStore.getState().setEncodeList(encodeRes.data.data);
+    useCacheStore.getState().setEncodeTableList(encodeRes.data.data);
   } else {
     console.error('码表列表初始化失败', encodeRes);
     throw new Error('码表列表初始化失败');
@@ -64,7 +64,7 @@ const initApp = async () => {
   // 初始化结构化规则列表
   if (structRuleRes.code === 200) {
     // console.log('结构化规则列表初始化成功', res.data.data);
-    useCacheStore.getState().setStructRuleList(structRuleRes.data.data);
+    useCacheStore.getState().setStructuredRulesetList(structRuleRes.data.data);
   } else {
     console.error('结构化规则列表初始化失败', structRuleRes);
     throw new Error('结构化规则列表初始化失败');

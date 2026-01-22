@@ -6,8 +6,10 @@ import {
   Form,
   type GetProps,
   Input,
+  Popconfirm,
   Table,
 } from 'antd';
+import clsx from 'clsx';
 import dayjs, { type Dayjs } from 'dayjs';
 import { type FC, useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -15,24 +17,21 @@ import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { useFileImport } from '@/hooks/useFileImport';
 import { usePaginationData } from '@/hooks/usePaginationData';
-import { useCacheStore } from '@/store/useCacheStore';
-import { type PushTargetDB, pushTargetDBOptions } from '@/typing/enum';
+import { StructRuleStatus } from '@/typing/enum';
 import { downloadFile } from '@/utils/helper';
 import type { FormProps } from 'antd';
-import type { PushRule } from '@/typing/pushRule';
+import type { StructuredRuleset } from '@/typing/structuredRuleset';
 
 type FormValues = {
   name?: string;
   range?: [Dayjs, Dayjs] | null;
 };
 
-const PushRulesPage: FC = () => {
-  const { pushRuleApi } = useApi();
+const StructuredRulesetPage: FC = () => {
+  const { ruleApi } = useApi();
   const { message, modal } = App.useApp();
   const nav = useNavigate();
 
-  const structuredRuleList = useCacheStore((state) => state.structRuleList);
-  const setRuleListCache = useCacheStore((state) => state.setPushRuleList);
   const [selectedUids, setSelectedUids] = useState<string[]>([]);
 
   // 禁止选择超过今天的日期和 6 个月前的日期
@@ -44,23 +43,20 @@ const PushRulesPage: FC = () => {
     };
 
   // 拉取列表分页数据
-  const [list, setList] = useState<PushRule.List>([]);
-  const searchParams = useRef<PushRule.ListParams>({
+  const [list, setList] = useState<StructuredRuleset.List>([]);
+  const searchParams = useRef<StructuredRuleset.ListParams>({
     name: undefined,
     update_start: undefined,
     update_end: undefined,
   });
   const fetchData = useCallback(
     async (params: PaginationParams) =>
-      pushRuleApi.getRuleList({ ...params, ...searchParams.current }),
-    [pushRuleApi.getRuleList],
+      ruleApi.getRuleList({ ...params, ...searchParams.current }),
+    [ruleApi.getRuleList],
   );
   const { PaginationComponent, refresh } = usePaginationData({
     fetchData,
-    setData: (v) => {
-      setList(v);
-      setRuleListCache(v);
-    },
+    setData: setList,
   });
 
   // 查询表单提交处理函数
@@ -80,7 +76,7 @@ const PushRulesPage: FC = () => {
   // 导入病历模版
   const importText = useRef<string>('');
   const onImport = useCallback(async () => {
-    console.log('导入推送规则', importText.current);
+    console.log('导入结构化规则', importText.current);
     // 检查导入文本是否为有效的 JSON 格式
     let data = null;
     try {
@@ -95,25 +91,25 @@ const PushRulesPage: FC = () => {
       return;
     }
     try {
-      const res = await pushRuleApi.createRule(data);
+      const res = await ruleApi.createRule(data);
       if (res.code === 200) {
-        message.success('新建推送规则成功!');
+        message.success('新建病历模板成功!');
         // 成功后清空导入文本
         importText.current = '';
         // 刷新列表
         refresh();
       } else {
-        message.error(res.message || '新建推送规则失败');
+        message.error(res.message || '新建病历模板失败');
       }
     } catch (error) {
-      console.error('新建推送规则失败:', error);
-      message.error('新建推送规则失败，请检查导入文本格式是否正确。');
+      console.error('新建病历模板失败:', error);
+      message.error('新建病历模板失败，请检查导入文本格式是否正确。');
     }
-  }, [refresh, message, pushRuleApi]);
+  }, [refresh, message, ruleApi]);
 
   const onOpenImportModal = useCallback(() => {
     modal.confirm({
-      title: '快速导入推送规则',
+      title: '快速导入结构化规则',
       width: '64vw',
       centered: true,
       icon: null,
@@ -133,50 +129,53 @@ const PushRulesPage: FC = () => {
 
   // 导入文件
   const { FileImportModal, openFileImportModal } = useFileImport({
-    title: '通过文件导入推送规则',
-    path: '/admin/push_rule/import',
+    title: '通过文件导入结构化规则',
+    path: '/admin/structured_rule/import',
     onSucceed: refresh,
   });
 
   // 新建病历模板
   const onCreate = useCallback(() => {
-    nav('/rules_management/push_rules/NEW');
+    nav('/rule_management/ruleset/NEW');
   }, [nav]);
 
-  // 导出选中推送规则
+  // 导出选中病历模板
   const onExportRecords = useCallback(
     async (uids: string[]) => {
       const msgKey = 'export-message';
       if (uids.length === 0) {
-        message.info({ key: msgKey, content: '没有选中任何推送规则' });
+        message.info({ key: msgKey, content: '没有选中任何结构化规则' });
         return;
       }
       message.loading({
         key: msgKey,
-        content: '正在导出推送规则...',
+        content: '正在导出结构化规则...',
         duration: 0,
       });
-      console.log('导出推送规则:', uids);
-      const res = await pushRuleApi.exportRule({ uids });
+      console.log('导出结构化规则:', uids);
+      const res = await ruleApi.exportRules({ uids });
       downloadFile(res);
       message.success({ key: msgKey, content: '导出成功!' });
     },
-    [message, pushRuleApi],
+    [message, ruleApi],
   );
 
   // 编辑项目
   const onEdit = useCallback(
-    (record: PushRule.Item) => {
+    (record: StructuredRuleset.Item) => {
       console.log('编辑项目:', record);
-      nav(`/rules_management/push_rules/${record.uid}`);
+      nav(`/rule_management/ruleset/${record.uid}`);
     },
     [nav],
   );
   // 停用/启用/删除项目
   const onAction = useCallback(
-    async (record: PushRule.Item, action: PushRule.ActionParams['action']) => {
+    async (
+      record: StructuredRuleset.Item,
+      action: StructuredRuleset.ActionParams['action'],
+    ) => {
       console.log(`执行 ${action} 操作:`, record);
-      const res = await pushRuleApi.actionRule({ uid: record.uid, action });
+      const res = await ruleApi.actionRule({ uid: record.uid, action });
       if (res.code === 200) {
         message.success(`操作成功`);
         refresh();
@@ -184,13 +183,13 @@ const PushRulesPage: FC = () => {
         message.error(`操作失败: ${res.message}`);
       }
     },
-    [refresh, message, pushRuleApi],
+    [refresh, message, ruleApi],
   );
 
   // 页面渲染
   return (
     <ContentLayout
-      title="推送规则列表"
+      title="结构化规则列表"
       action={
         <>
           <Button onClick={onOpenImportModal}>快速导入</Button>
@@ -198,7 +197,7 @@ const PushRulesPage: FC = () => {
             文件导入
           </Button>
           <Button type="primary" className="ml-[8px]" onClick={onCreate}>
-            新建推送规则
+            新建结构化规则
           </Button>
         </>
       }
@@ -209,14 +208,14 @@ const PushRulesPage: FC = () => {
         <Card className="h-[80px]">
           <Form
             layout="inline"
-            name="push-rules-search"
+            name="struct-rules-search"
             onFinish={onFinish}
             autoComplete="off"
             className="flex items-center justify-between"
           >
             <div className="flex items-center gap-[16px]">
               <Form.Item<FormValues>
-                label="规则名称"
+                label="病历名称"
                 name="name"
                 className="w-[256px]"
               >
@@ -249,7 +248,7 @@ const PushRulesPage: FC = () => {
         </Card>
 
         <Card className="h-[calc(100%_-_80px_-_16px)] mt-[16px]">
-          <Table<PushRule.Item>
+          <Table<StructuredRuleset.Item>
             dataSource={list}
             rowKey="uid"
             rowSelection={{
@@ -262,22 +261,6 @@ const PushRulesPage: FC = () => {
             <Table.Column title="规则英文名" dataIndex="name_en" />
             <Table.Column title="规则 ID" dataIndex="uid" />
             <Table.Column
-              title="关联结构化规则"
-              dataIndex="structured_rule_uid"
-              render={(structured_rule_uid: string) => {
-                return structured_rule_uid ? (
-                  <span>
-                    {structuredRuleList.find(
-                      (rule) => rule.uid === structured_rule_uid,
-                    )?.name_cn ?? structured_rule_uid}
-                  </span>
-                ) : (
-                  <span className="text-gray-400">未关联</span>
-                );
-              }}
-            />
-
-            <Table.Column
               title="更新时间"
               dataIndex="update_time"
               sorter={(a, b) =>
@@ -289,18 +272,29 @@ const PushRulesPage: FC = () => {
             />
             <Table.Column title="备注" dataIndex="comment" />
             <Table.Column
-              title="推送目标"
-              dataIndex="target_db"
-              render={(target: PushTargetDB) =>
-                pushTargetDBOptions.find((db) => db.value === target)?.label ||
-                target
-              }
+              title="状态"
+              dataIndex="status"
+              render={(status: StructRuleStatus) => (
+                <p className="flex items-center">
+                  <span
+                    className={clsx(
+                      'w-[6px] h-[6px] rounded-full inline-block mr-[4px]',
+                      status === StructRuleStatus.Enabled
+                        ? 'bg-[#52C41A]'
+                        : 'bg-[#FF4D4F]',
+                    )}
+                  />
+                  <span>
+                    {status === StructRuleStatus.Enabled ? '启用中' : '已停用'}
+                  </span>
+                </p>
+              )}
             />
             <Table.Column
               title="操作"
               key="action"
               width={180}
-              render={(_, record: PushRule.Item) => (
+              render={(_, record: StructuredRuleset.Item) => (
                 <div className="flex">
                   <Button
                     size="small"
@@ -312,11 +306,30 @@ const PushRulesPage: FC = () => {
                   <Button
                     size="small"
                     type="link"
-                    danger
-                    onClick={() => onAction(record, 'delete')}
+                    onClick={() =>
+                      onAction(
+                        record,
+                        record.status === StructRuleStatus.Enabled
+                          ? 'disable'
+                          : 'enable',
+                      )
+                    }
                   >
-                    删除
+                    {record.status === StructRuleStatus.Enabled
+                      ? '停用'
+                      : '启用'}
                   </Button>
+                  <Popconfirm
+                    title="删除结构化规则"
+                    description="确定要删除该结构化规则吗？此操作不可恢复。"
+                    onConfirm={() => onAction(record, 'delete')}
+                    okText="确认"
+                    cancelText="取消"
+                  >
+                    <Button size="small" type="link" danger>
+                      删除
+                    </Button>
+                  </Popconfirm>
                 </div>
               )}
             />
@@ -331,4 +344,4 @@ const PushRulesPage: FC = () => {
   );
 };
 
-export default PushRulesPage;
+export default StructuredRulesetPage;

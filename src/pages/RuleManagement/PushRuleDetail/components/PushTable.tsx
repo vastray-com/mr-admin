@@ -137,7 +137,7 @@ const PushTable: FC<Props> = ({
   }, [source, form, structuredRuleFields]);
 
   // // 编码选项
-  // const encodeOptions = useCacheStore((s) => s.encodeOptions);
+  // const encodeTableOptions = useCacheStore((s) => s.encodeTableOptions);
   // // 分类选择列表
   // const categoryOptions = useMemo(
   //   () =>

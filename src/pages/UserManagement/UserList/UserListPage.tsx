@@ -109,7 +109,7 @@ const UserListPage = () => {
             {/*      <Button type="link" onClick={() => onCopy(record)}>*/}
             {/*        复制*/}
             {/*      </Button>*/}
-            {/*      <Link to={`/tasks_management/tasks/detail/${record.uid}`}>*/}
+            {/*      <Link to={`/task_management/detail/${record.uid}`}>*/}
             {/*        <Button type="link">详情</Button>*/}
             {/*      </Link>{' '}*/}
             {/*      {record.one_time_task_type !== OneTimeTaskType.Immediate &&*/}

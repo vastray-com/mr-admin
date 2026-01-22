@@ -5,11 +5,11 @@ import { Link, useParams } from 'react-router';
 import { ScrollableCard } from '@/components/Card';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
-import { taskInstanceStatusDisplay } from '@/pages/TasksManagement/TaskList/TaskDetail/TaskDetailPage';
+import { taskInstanceStatusDisplay } from '@/pages/TaskManagement/TaskList/TaskDetail/TaskDetailPage';
 import { formatCountToString } from '@/utils/helper';
 import type { Task } from '@/typing/task';
 
-const InstanceDetailPage = () => {
+const TaskInstanceDetailPage = () => {
   const { taskUid, instanceUid } = useParams();
 
   // 详情弹窗
@@ -74,12 +74,10 @@ const InstanceDetailPage = () => {
     <ContentLayout
       title="执行结果"
       breadcrumb={[
-        { title: <Link to="/tasks_management/tasks">任务列表</Link> },
+        { title: <Link to="/task_management/list">任务列表</Link> },
         {
           title: (
-            <Link to={`/tasks_management/tasks/detail/${taskUid}`}>
-              任务详情
-            </Link>
+            <Link to={`/task_management/detail/${taskUid}`}>任务详情</Link>
           ),
         },
         { title: '执行结果' },
@@ -221,4 +219,4 @@ const InstanceDetailPage = () => {
   );
 };
 
-export default InstanceDetailPage;
+export default TaskInstanceDetailPage;
