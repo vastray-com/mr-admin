@@ -1,5 +1,5 @@
 import { App as AntdApp, ConfigProvider } from 'antd';
-import zhCN from 'antd/locale/zh_CN';
+import zhCN from 'antd/es/locale/zh_CN';
 import { RouterProvider } from 'react-router/dom';
 import { routes } from '@/router/route';
 
@@ -9,7 +9,7 @@ function App() {
       <AntdApp
         message={{ maxCount: 2 }}
         notification={{ maxCount: 1 }}
-        component={false}
+        component="div"
       >
         <RouterProvider router={routes} />
       </AntdApp>

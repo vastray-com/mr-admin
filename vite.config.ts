@@ -1,5 +1,5 @@
 import path from 'node:path';
-import react from '@vitejs/plugin-react-oxc';
+import react from '@vitejs/plugin-react';
 import UnoCSS from 'unocss/vite';
 import { defineConfig, loadEnv } from 'vite';
 

@@ -16,7 +16,6 @@ import {
 import { type FC, useCallback, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
-import { MonacoEditor } from '@/components/MonacoEditor';
 import { useApi } from '@/hooks/useApi';
 import CategoryTable from '@/pages/RulesManagement/StructRules/StructRuleDetail/components/CategoryTable';
 import FieldTable from '@/pages/RulesManagement/StructRules/StructRuleDetail/components/FieldTable';
@@ -197,6 +196,7 @@ const StructRuleDetailPage: FC = () => {
           message.error(err);
           return true;
         }
+        return false;
       });
       if (errCategoryIdx !== -1) return;
 
@@ -295,6 +295,7 @@ const StructRuleDetailPage: FC = () => {
           message.error(err);
           return true;
         }
+        return false;
       });
       if (errFieldIdx !== -1) return;
 
@@ -471,10 +472,14 @@ const StructRuleDetailPage: FC = () => {
           style={{ width: '100%' }}
           mode="multiple"
           allowClear
-          autoClearSearchValue
+          showSearch={{
+            autoClearSearchValue: true,
+            searchValue: searchField,
+            onSearch: setSearchField,
+            filterOption: (input, option) =>
+              (option?.label ?? '').toLowerCase().includes(input.toLowerCase()),
+          }}
           placeholder="请选择或搜索预设字段"
-          searchValue={searchField}
-          onSearch={setSearchField}
           value={selectedPresetFields}
           onChange={(v) => {
             console.log('选择预设字段:', v);
@@ -484,9 +489,6 @@ const StructRuleDetailPage: FC = () => {
           }}
           optionRender={(option, opt) =>
             `(${opt.index + 1}) ${option.data.label} - ${option.data.value_type} - ${option.data.parsing_rule}`
-          }
-          filterOption={(input, option) =>
-            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
           }
           popupRender={(menu) => (
             <>
@@ -582,12 +584,12 @@ const StructRuleDetailPage: FC = () => {
                       label: f.name_cn,
                       value: f.name_en,
                     }))}
-                  filterOption={(input, option) =>
-                    (option?.label ?? '')
-                      .toLowerCase()
-                      .includes(input.toLowerCase())
-                  }
-                  showSearch
+                  showSearch={{
+                    filterOption: (input, option) =>
+                      (option?.label ?? '')
+                        .toLowerCase()
+                        .includes(input.toLowerCase()),
+                  }}
                   className="w-full"
                   placeholder="选择输出字段，留空则不过滤"
                 />
@@ -633,7 +635,7 @@ const StructRuleDetailPage: FC = () => {
                 />
               ) : (
                 <code
-                  className="block bg-[#FAFAFA] b-1 b-[#d9d9d9] h-[604px] p-[16px] rounded-[6px] overflow-auto text-[14px] leading-[1.5]" // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
+                  className="block bg-[#FAFAFA] b-1 b-[#d9d9d9] h-[604px] p-[16px] rounded-[6px] overflow-auto text-[14px] leading-[1.5]"
                   dangerouslySetInnerHTML={{
                     __html: testCode[testShowContent],
                   }}
@@ -742,21 +744,6 @@ const StructRuleDetailPage: FC = () => {
               detail={detail}
               onChange={(fields) => setDetail((prev) => ({ ...prev, fields }))}
             />
-          </Card>
-
-          <Card title="后处理代码片段" className="mt-[12px]">
-            <Form
-              form={codeSnippetForm}
-              className="w-full h-full"
-              initialValues={detail.code_snippets[0] || { content: '' }}
-            >
-              <Form.Item<{ content: string }>
-                name="content"
-                className="h-[500px]"
-              >
-                <MonacoEditor />
-              </Form.Item>
-            </Form>
           </Card>
         </div>
 
