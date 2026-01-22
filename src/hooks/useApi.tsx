@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { noInterceptorsService, service } from '@/utils/service';
 import type { AxiosResponse } from 'axios';
-import type { PushRule } from '@/typing/pushRules';
-import type { StructRule } from '@/typing/structRules';
+import type { PushRule } from '@/typing/pushRule';
+import type { StructuredRuleset } from '@/typing/structuredRuleset';
 import type { Task } from '@/typing/task';
 import type { User } from '@/typing/user';
 
@@ -52,19 +52,19 @@ export const useApi = () => {
 
   const encode = useMemo(
     () => ({
-      getEncodeList: (params: Encode.ListParams) =>
+      getEncodeList: (params: EncodeTable.ListParams) =>
         service.get('/admin/encode/list', { params }) as Promise<
-          APIRes<PaginationData<Encode.Item>>
+          APIRes<PaginationData<EncodeTable.Item>>
         >,
-      getEncodeDetail: (params: Encode.DetailParams) =>
+      getEncodeDetail: (params: EncodeTable.DetailParams) =>
         service.get('/admin/encode/detail', { params }) as Promise<
-          APIRes<Encode.Detail>
+          APIRes<EncodeTable.Detail>
         >,
-      createEncode: (params: Encode.Detail) =>
+      createEncode: (params: EncodeTable.Detail) =>
         service.post('/admin/encode/create', params) as Promise<APIRes<number>>,
-      updateEncode: (params: Encode.Detail) =>
+      updateEncode: (params: EncodeTable.Detail) =>
         service.post('/admin/encode/update', params) as Promise<APIRes<number>>,
-      actionEncode: (params: Encode.ActionParams) =>
+      actionEncode: (params: EncodeTable.ActionParams) =>
         service.post('/admin/encode/update', params) as Promise<APIRes<null>>,
       exportEncode: (params: { uids: string[] }) =>
         noInterceptorsService.post('/admin/encode/export', params, {
@@ -76,23 +76,23 @@ export const useApi = () => {
 
   const rule = useMemo(
     () => ({
-      getRuleList: (params: StructRule.ListParams) =>
+      getRuleList: (params: StructuredRuleset.ListParams) =>
         service.get('/admin/structured_rule/list', { params }) as Promise<
-          APIRes<PaginationData<StructRule.Item>>
+          APIRes<PaginationData<StructuredRuleset.Item>>
         >,
-      getRuleDetail: (params: StructRule.DetailParams) =>
+      getRuleDetail: (params: StructuredRuleset.DetailParams) =>
         service.get('/admin/structured_rule/detail', { params }) as Promise<
-          APIRes<StructRule.Item>
+          APIRes<StructuredRuleset.Item>
         >,
-      createRule: (params: StructRule.Item) =>
+      createRule: (params: StructuredRuleset.Item) =>
         service.post('/admin/structured_rule/create', params) as Promise<
           APIRes<string>
         >,
-      updateRule: (params: StructRule.Item) =>
+      updateRule: (params: StructuredRuleset.Item) =>
         service.post('/admin/structured_rule/update', params) as Promise<
           APIRes<string>
         >,
-      actionRule: (params: StructRule.ActionParams) =>
+      actionRule: (params: StructuredRuleset.ActionParams) =>
         service.post('/admin/structured_rule/action', params) as Promise<
           APIRes<string>
         >,
@@ -102,9 +102,9 @@ export const useApi = () => {
         }) as Promise<AxiosResponse<Blob>>,
       getPresetFieldsList: () =>
         service.get('/admin/structured_rule/get_preset_fields') as Promise<
-          APIRes<StructRule.PresetFields>
+          APIRes<StructuredRuleset.PresetFields>
         >,
-      testRule: (params: StructRule.TestRuleParams) => {
+      testRule: (params: StructuredRuleset.TestRuleParams) => {
         const { api_key, ...rest } = params;
         return service.post('/admin/structured_rule/test', rest, {
           headers: { Authorization: api_key },

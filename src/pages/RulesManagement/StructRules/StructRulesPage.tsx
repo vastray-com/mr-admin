@@ -20,7 +20,7 @@ import { usePaginationData } from '@/hooks/usePaginationData';
 import { StructRuleStatus } from '@/typing/enum';
 import { downloadFile } from '@/utils/helper';
 import type { FormProps } from 'antd';
-import type { StructRule } from '@/typing/structRules';
+import type { StructuredRuleset } from '@/typing/structuredRuleset';
 
 type FormValues = {
   name?: string;
@@ -43,8 +43,8 @@ const StructRulesPage: FC = () => {
     };
 
   // 拉取列表分页数据
-  const [list, setList] = useState<StructRule.List>([]);
-  const searchParams = useRef<StructRule.ListParams>({
+  const [list, setList] = useState<StructuredRuleset.List>([]);
+  const searchParams = useRef<StructuredRuleset.ListParams>({
     name: undefined,
     update_start: undefined,
     update_end: undefined,
@@ -162,7 +162,7 @@ const StructRulesPage: FC = () => {
 
   // 编辑项目
   const onEdit = useCallback(
-    (record: StructRule.Item) => {
+    (record: StructuredRuleset.Item) => {
       console.log('编辑项目:', record);
       nav(`/rules_management/struct_rules/${record.uid}`);
     },
@@ -171,8 +171,8 @@ const StructRulesPage: FC = () => {
   // 停用/启用/删除项目
   const onAction = useCallback(
     async (
-      record: StructRule.Item,
-      action: StructRule.ActionParams['action'],
+      record: StructuredRuleset.Item,
+      action: StructuredRuleset.ActionParams['action'],
     ) => {
       console.log(`执行 ${action} 操作:`, record);
       const res = await ruleApi.actionRule({ uid: record.uid, action });
@@ -248,7 +248,7 @@ const StructRulesPage: FC = () => {
         </Card>
 
         <Card className="h-[calc(100%_-_80px_-_16px)] mt-[16px]">
-          <Table<StructRule.Item>
+          <Table<StructuredRuleset.Item>
             dataSource={list}
             rowKey="uid"
             rowSelection={{
@@ -294,7 +294,7 @@ const StructRulesPage: FC = () => {
               title="操作"
               key="action"
               width={180}
-              render={(_, record: StructRule.Item) => (
+              render={(_, record: StructuredRuleset.Item) => (
                 <div className="flex">
                   <Button
                     size="small"

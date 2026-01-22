@@ -14,10 +14,10 @@ import EditableTable from '@/components/EditableTable';
 import {
   PushDataType,
   pushDataTypeOptions,
-  StructRuleFieldMappingType,
+  StructuredFieldMappingType,
 } from '@/typing/enum';
-import type { PushRule } from '@/typing/pushRules';
-import type { StructRule } from '@/typing/structRules';
+import type { PushRule } from '@/typing/pushRule';
+import type { StructuredRuleset } from '@/typing/structuredRuleset';
 
 const uniqueKey = (record: PushRule.ContentItem) => {
   return record.source + record.target + record.data_type;
@@ -38,7 +38,7 @@ type Props = {
   form: FormInstance;
   detail: PushRule.Detail;
   sourceOptions: { label: string; value: string }[];
-  structuredRuleFields: StructRule.Fields;
+  structuredRuleFields: StructuredRuleset.Fields;
   onChange: (data: PushRule.Content) => void;
 };
 const PushTable: FC<Props> = ({
@@ -99,7 +99,7 @@ const PushTable: FC<Props> = ({
   };
   const save = async (record: PushRule.ContentItem) => {
     try {
-      const row = (await form.validateFields()) as StructRule.Field;
+      const row = (await form.validateFields()) as StructuredRuleset.Field;
       const newData = [...detail.content];
       const idx = findRecordIndex(newData, record);
       if (idx > -1) {
@@ -128,7 +128,7 @@ const PushTable: FC<Props> = ({
         data_type: PushDataType.String,
         // 枚举映射内容
         mapping_content:
-          field.mapping_type === StructRuleFieldMappingType.Enum &&
+          field.mapping_type === StructuredFieldMappingType.Enum &&
           field.mapping_content
             ? field.mapping_content
             : null,

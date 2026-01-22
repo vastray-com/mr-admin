@@ -21,10 +21,10 @@ import CategoryTable from '@/pages/RulesManagement/StructRules/StructRuleDetail/
 import FieldTable from '@/pages/RulesManagement/StructRules/StructRuleDetail/components/FieldTable';
 import { useCacheStore } from '@/store/useCacheStore';
 import {
-  StructRuleFieldMappingType,
-  StructRuleFieldParsingType,
-  StructRuleFieldValueType,
   StructRuleStatus,
+  StructuredFieldMappingType,
+  StructuredFieldParsingType,
+  StructuredFieldValueType,
   structRuleFieldMappingTypeOptions,
   structRuleFieldParsingTypeOptions,
   structRuleFieldValueTypeOptions,
@@ -33,9 +33,9 @@ import { generateCurlExample } from '@/utils/helper';
 import { getCode } from '@/utils/highlighter';
 import { ls } from '@/utils/ls';
 import type { AxiosError } from 'axios';
-import type { StructRule } from '@/typing/structRules';
+import type { StructuredRuleset } from '@/typing/structuredRuleset';
 
-const initialDetail: StructRule.Item = {
+const initialDetail: StructuredRuleset.Item = {
   uid: '',
   name_cn: '',
   name_en: '',
@@ -47,7 +47,7 @@ const initialDetail: StructRule.Item = {
   fields: [],
   code_snippets: [],
 };
-const initialTestParams: Omit<StructRule.TestRuleParams, 'uid'> = {
+const initialTestParams: Omit<StructuredRuleset.TestRuleParams, 'uid'> = {
   output_filter: [],
   content: '',
   api_key: ls.apiKey.get(),
@@ -64,7 +64,7 @@ const StructRuleDetailPage: FC = () => {
   const isNewRule = useRef(uid === 'NEW');
   const isInit = useRef(isNewRule.current);
 
-  const [detail, setDetail] = useState<StructRule.Item>(initialDetail);
+  const [detail, setDetail] = useState<StructuredRuleset.Item>(initialDetail);
   const fetchDetail = useCallback(
     async (uid: string) => {
       const res = await ruleApi.getRuleDetail({ uid });
@@ -76,9 +76,11 @@ const StructRuleDetailPage: FC = () => {
   );
 
   const [baseForm] =
-    Form.useForm<Pick<StructRule.Item, 'name_cn' | 'name_en' | 'comment'>>();
-  const [categoryForm] = Form.useForm<StructRule.Category>();
-  const [fieldForm] = Form.useForm<StructRule.Field>();
+    Form.useForm<
+      Pick<StructuredRuleset.Item, 'name_cn' | 'name_en' | 'comment'>
+    >();
+  const [categoryForm] = Form.useForm<StructuredRuleset.Category>();
+  const [fieldForm] = Form.useForm<StructuredRuleset.Field>();
   const [codeSnippetForm] = Form.useForm<{ content: '' }>();
 
   // 添加预设字段
@@ -105,7 +107,7 @@ const StructRuleDetailPage: FC = () => {
   const [searchField, setSearchField] = useState('');
   const onAddPresetField = useCallback(
     async (
-      detail: StructRule.Item,
+      detail: StructuredRuleset.Item,
       selectedPresetFields: (number | string)[],
       insertPosition: number | null,
     ) => {
@@ -136,11 +138,11 @@ const StructRuleDetailPage: FC = () => {
           name_cn: `${item}`,
           name_en: '',
           data_source: '',
-          parsing_type: StructRuleFieldParsingType.LLM,
+          parsing_type: StructuredFieldParsingType.LLM,
           parsing_rule: '',
-          value_type: StructRuleFieldValueType.Text,
+          value_type: StructuredFieldValueType.Text,
           is_array: false,
-          mapping_type: StructRuleFieldMappingType.None,
+          mapping_type: StructuredFieldMappingType.None,
           mapping_content: '',
           need_store: 1,
         } as const;
@@ -157,7 +159,7 @@ const StructRuleDetailPage: FC = () => {
   // 保存
   const encodeOptions = useCacheStore((s) => s.encodeOptions);
   const onFinish = useCallback(
-    async (values: StructRule.Item) => {
+    async (values: StructuredRuleset.Item) => {
       console.log('保存病历模板:', values);
 
       // 校验字段
@@ -252,7 +254,7 @@ const StructRuleDetailPage: FC = () => {
           err = `提交失败！明细字段序号 ${idx + 1} 字段来源类型不合法`;
         }
 
-        // if (f.parsing_type === StructRuleFieldParsingType.QuoteResult) {
+        // if (f.parsing_type === StructuredFieldParsingType.QuoteResult) {
         //   const isExist = values.fields.find(
         //     (field) => field.name_en === f.parsing_rule,
         //   );
@@ -263,7 +265,7 @@ const StructRuleDetailPage: FC = () => {
 
         // if (
         //   !f.parsing_rule &&
-        //   f.parsing_type !== StructRuleFieldParsingType.Static
+        //   f.parsing_type !== StructuredFieldParsingType.Static
         // ) {
         //   err = `提交失败！明细字段序号 ${idx + 1} 提取规则不能为空`;
         // }
@@ -285,7 +287,7 @@ const StructRuleDetailPage: FC = () => {
         }
 
         if (
-          f.mapping_type === StructRuleFieldMappingType.Encode &&
+          f.mapping_type === StructuredFieldMappingType.Encode &&
           !encodeOptions.find((o) => o.value === f.mapping_content)
         ) {
           err = `提交失败！明细字段序号 ${idx + 1} 字段映射码表不存在`;
@@ -340,7 +342,7 @@ const StructRuleDetailPage: FC = () => {
 
   // 测试结构化规则
   const [testModelForm] =
-    Form.useForm<Omit<StructRule.TestRuleParams, 'uid'>>();
+    Form.useForm<Omit<StructuredRuleset.TestRuleParams, 'uid'>>();
   const [openTestRuleModal, setOpenTestRuleModal] = useState(false);
   const [testShowContent, setTestShowContent] = useState<'result' | 'curl'>(
     'result',
@@ -538,7 +540,10 @@ const StructRuleDetailPage: FC = () => {
                 模型提取
               </h2>
 
-              <Form.Item<StructRule.TestRuleParams> name="content" noStyle>
+              <Form.Item<StructuredRuleset.TestRuleParams>
+                name="content"
+                noStyle
+              >
                 <Input.TextArea
                   autoSize={{ minRows: 20, maxRows: 20 }}
                   allowClear
@@ -547,7 +552,7 @@ const StructRuleDetailPage: FC = () => {
               </Form.Item>
 
               <Space className="my-[22px]">
-                <Form.Item<StructRule.TestRuleParams>
+                <Form.Item<StructuredRuleset.TestRuleParams>
                   noStyle
                   name="is_thinking"
                   valuePropName="checked"
@@ -555,7 +560,7 @@ const StructRuleDetailPage: FC = () => {
                   <Checkbox>开启模型思考</Checkbox>
                 </Form.Item>
 
-                <Form.Item<StructRule.TestRuleParams>
+                <Form.Item<StructuredRuleset.TestRuleParams>
                   noStyle
                   name="is_check"
                   valuePropName="checked"
@@ -563,7 +568,7 @@ const StructRuleDetailPage: FC = () => {
                   <Checkbox>开启数据校验</Checkbox>
                 </Form.Item>
 
-                <Form.Item<StructRule.TestRuleParams>
+                <Form.Item<StructuredRuleset.TestRuleParams>
                   style={{ margin: '0' }}
                   name="parallel"
                   label="并发数"
@@ -572,7 +577,7 @@ const StructRuleDetailPage: FC = () => {
                 </Form.Item>
               </Space>
 
-              <Form.Item<StructRule.TestRuleParams>
+              <Form.Item<StructuredRuleset.TestRuleParams>
                 name="output_filter"
                 label="输出过滤"
               >
@@ -595,7 +600,7 @@ const StructRuleDetailPage: FC = () => {
                 />
               </Form.Item>
 
-              <Form.Item<StructRule.TestRuleParams>
+              <Form.Item<StructuredRuleset.TestRuleParams>
                 name="api_key"
                 label="API 令牌"
               >
@@ -655,11 +660,11 @@ const StructRuleDetailPage: FC = () => {
               initialValues={detail}
             >
               <div className="flex items-center gap-x-[24px] mb-[8px]">
-                <Form.Item<StructRule.Item> name="uid" hidden>
+                <Form.Item<StructuredRuleset.Item> name="uid" hidden>
                   <Input />
                 </Form.Item>
 
-                <Form.Item<StructRule.Item>
+                <Form.Item<StructuredRuleset.Item>
                   label="规则名称"
                   name="name_cn"
                   className="w-[36%]"
@@ -671,7 +676,7 @@ const StructRuleDetailPage: FC = () => {
                   <Input />
                 </Form.Item>
 
-                <Form.Item<StructRule.Item>
+                <Form.Item<StructuredRuleset.Item>
                   label="英文名称"
                   name="name_en"
                   className="w-[36%]"
@@ -685,7 +690,7 @@ const StructRuleDetailPage: FC = () => {
               </div>
 
               <div className="flex items-center gap-x-[24px]">
-                <Form.Item<StructRule.Item>
+                <Form.Item<StructuredRuleset.Item>
                   label="模版备注"
                   name="comment"
                   className="w-[38%]"
@@ -759,8 +764,8 @@ const StructRuleDetailPage: FC = () => {
 
 // 右侧预览组件
 type PreviewProps = {
-  categories: StructRule.Categories;
-  fields: StructRule.Fields;
+  categories: StructuredRuleset.Categories;
+  fields: StructuredRuleset.Fields;
 };
 type TreeNode = {
   title: string;

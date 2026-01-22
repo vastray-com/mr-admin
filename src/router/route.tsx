@@ -13,8 +13,8 @@ import { _initHighlighter } from '@/utils/highlighter';
 import { ls } from '@/utils/ls';
 import { service } from '@/utils/service';
 import type { LoaderFunction } from 'react-router-dom';
-import type { PushRule } from '@/typing/pushRules';
-import type { StructRule } from '@/typing/structRules';
+import type { PushRule } from '@/typing/pushRule';
+import type { StructuredRuleset } from '@/typing/structuredRuleset';
 
 const LoginPageLazy = lazy(() => import('@/pages/Login/LoginPage'));
 
@@ -46,9 +46,9 @@ const initApp = async () => {
   ]);
   const [encodeRes, structRuleRes, presetFieldsRes, pushRuleRes] =
     res as unknown as [
-      APIRes<PaginationData<Encode.Item>>,
-      APIRes<PaginationData<StructRule.Item>>,
-      APIRes<StructRule.PresetFields>,
+      APIRes<PaginationData<EncodeTable.Item>>,
+      APIRes<PaginationData<StructuredRuleset.Item>>,
+      APIRes<StructuredRuleset.PresetFields>,
       APIRes<PaginationData<PushRule.Item>>,
     ];
 

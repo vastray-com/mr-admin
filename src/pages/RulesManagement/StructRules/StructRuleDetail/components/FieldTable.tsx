@@ -13,19 +13,19 @@ import { type FC, useMemo, useState } from 'react';
 import EditableTable from '@/components/EditableTable';
 import { useCacheStore } from '@/store/useCacheStore';
 import {
-  StructRuleFieldMappingType,
-  StructRuleFieldParsingType,
-  StructRuleFieldValueType,
+  StructuredFieldMappingType,
+  StructuredFieldParsingType,
+  StructuredFieldValueType,
   structRuleFieldMappingTypeOptions,
   structRuleFieldParsingTypeOptions,
   structRuleFieldValueTypeOptions,
 } from '@/typing/enum';
-import type { StructRule } from '@/typing/structRules';
+import type { StructuredRuleset } from '@/typing/structuredRuleset';
 
 type Props = {
   form: FormInstance;
-  detail: StructRule.Item;
-  onChange: (data: StructRule.Fields) => void;
+  detail: StructuredRuleset.Item;
+  onChange: (data: StructuredRuleset.Fields) => void;
 };
 const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
   const [editingKey, setEditingKey] = useState('');
@@ -43,16 +43,16 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
   // const sourceType = Form.useWatch('source_type', form);
   const mappingType = Form.useWatch('mapping_type', form);
 
-  const edit = (record: Partial<StructRule.Field>) => {
+  const edit = (record: Partial<StructuredRuleset.Field>) => {
     form.setFieldsValue({
       category_name: '',
       name_cn: '',
       name_en: '',
-      source_type: StructRuleFieldParsingType.LLM,
+      source_type: StructuredFieldParsingType.LLM,
       parsing_rule: '',
-      value_type: StructRuleFieldValueType.Text,
+      value_type: StructuredFieldValueType.Text,
       is_array: false,
-      mapping_type: StructRuleFieldMappingType.None,
+      mapping_type: StructuredFieldMappingType.None,
       mapping_content: '',
       need_store: 1,
       ...record,
@@ -111,7 +111,7 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
   };
   const save = async (key: string) => {
     try {
-      const row = (await form.validateFields()) as StructRule.Field;
+      const row = (await form.validateFields()) as StructuredRuleset.Field;
       const newData = [...detail.fields];
       const idx = newData.findIndex((item) => item.uid === key);
       if (idx > -1) {
@@ -159,7 +159,7 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       dataIndex: 'no',
       width: '80px',
       // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      render: (_: any, record: StructRule.Field) =>
+      render: (_: any, record: StructuredRuleset.Field) =>
         detail.fields.findIndex((f) => f.uid === record.uid) + 1,
     },
     {
@@ -208,7 +208,7 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
             value: o.value,
           })),
         ),
-      onFilter: (value: any, record: StructRule.Field) =>
+      onFilter: (value: any, record: StructuredRuleset.Field) =>
         record.data_source?.indexOf(value as string) === 0,
       render: (v: string) => {
         if (!v) return '';
@@ -231,9 +231,9 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
         text: o.label,
         value: o.value,
       })),
-      onFilter: (value: any, record: StructRule.Field) =>
+      onFilter: (value: any, record: StructuredRuleset.Field) =>
         record.parsing_type === value,
-      render: (v: StructRuleFieldParsingType) =>
+      render: (v: StructuredFieldParsingType) =>
         structRuleFieldParsingTypeOptions.find((option) => option.value === v)
           ?.label,
     },
@@ -257,9 +257,9 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
         text: o.label,
         value: o.value,
       })),
-      onFilter: (value: any, record: StructRule.Field) =>
+      onFilter: (value: any, record: StructuredRuleset.Field) =>
         record.value_type === value,
-      render: (v: StructRuleFieldValueType) =>
+      render: (v: StructuredFieldValueType) =>
         structRuleFieldValueTypeOptions.find((option) => option.value === v)
           ?.label,
     },
@@ -277,7 +277,7 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
         { text: '是', value: true },
         { text: '否', value: false },
       ],
-      onFilter: (value: any, record: StructRule.Field) =>
+      onFilter: (value: any, record: StructuredRuleset.Field) =>
         record.is_array === value,
       render: (v: boolean) => (v ? '是' : '否'),
     },
@@ -292,9 +292,9 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
         text: o.label,
         value: o.value,
       })),
-      onFilter: (value: any, record: StructRule.Field) =>
+      onFilter: (value: any, record: StructuredRuleset.Field) =>
         record.mapping_type === value,
-      render: (v: StructRuleFieldMappingType) =>
+      render: (v: StructuredFieldMappingType) =>
         structRuleFieldMappingTypeOptions.find((option) => option.value === v)
           ?.label,
     },
@@ -305,10 +305,10 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       ellipsis: true,
       inputType: 'select',
       editable: true,
-      render: (v: string, record: StructRule.Field) => {
-        if (record.mapping_type === StructRuleFieldMappingType.Encode) {
+      render: (v: string, record: StructuredRuleset.Field) => {
+        if (record.mapping_type === StructuredFieldMappingType.Encode) {
           return encodeOptions.find((option) => option.value === v)?.label || v;
-        } else if (record.mapping_type === StructRuleFieldMappingType.Enum) {
+        } else if (record.mapping_type === StructuredFieldMappingType.Enum) {
           return v;
         } else {
           return '';
@@ -332,7 +332,7 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       dataIndex: 'operation',
       width: '240px',
       // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      render: (_: any, record: StructRule.Field) => {
+      render: (_: any, record: StructuredRuleset.Field) => {
         const editable = isEditing(record.uid);
         const idx = detail.fields.findIndex((item) => item.uid === record.uid);
         return editable ? (
@@ -414,8 +414,8 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
     },
   ];
 
-  const columnsMerged: TableProps<StructRule.Field>['columns'] = columns.map(
-    (col) => {
+  const columnsMerged: TableProps<StructuredRuleset.Field>['columns'] =
+    columns.map((col) => {
       if (!col.editable) return col;
       // 解析规则联动
       // if (col.dataIndex === 'parsing_rule') {
@@ -425,10 +425,10 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       //       return {
       //         record,
       //         inputType:
-      //           sourceType === StructRuleFieldParsingType.QuoteResult
+      //           sourceType === StructuredFieldParsingType.QuoteResult
       //             ? 'select'
       //             : 'text',
-      //         ...(sourceType === StructRuleFieldParsingType.QuoteResult
+      //         ...(sourceType === StructuredFieldParsingType.QuoteResult
       //           ? {
       //             options: resultFieldOptions.filter(
       //               (o) => o.value !== name_en,
@@ -451,12 +451,12 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
             return {
               record,
               inputType:
-                mappingType === StructRuleFieldMappingType.Encode
+                mappingType === StructuredFieldMappingType.Encode
                   ? 'select'
-                  : mappingType === StructRuleFieldMappingType.Enum
+                  : mappingType === StructuredFieldMappingType.Enum
                     ? 'text'
                     : 'none',
-              ...(mappingType === StructRuleFieldMappingType.Encode
+              ...(mappingType === StructuredFieldMappingType.Encode
                 ? { options: encodeOptions }
                 : {}),
               dataIndex: col.dataIndex,
@@ -480,12 +480,11 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
           };
         },
       };
-    },
-  );
+    });
 
   return (
     <Form form={form} component={false}>
-      <EditableTable<StructRule.Field>
+      <EditableTable<StructuredRuleset.Field>
         dataSource={detail.fields}
         columns={columnsMerged}
         scroll={{ x: '2200px' }}

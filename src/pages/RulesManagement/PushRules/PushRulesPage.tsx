@@ -19,7 +19,7 @@ import { useCacheStore } from '@/store/useCacheStore';
 import { type PushTargetDB, pushTargetDBOptions } from '@/typing/enum';
 import { downloadFile } from '@/utils/helper';
 import type { FormProps } from 'antd';
-import type { PushRule } from '@/typing/pushRules';
+import type { PushRule } from '@/typing/pushRule';
 
 type FormValues = {
   name?: string;

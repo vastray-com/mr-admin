@@ -1,6 +1,6 @@
 import { createWithEqualityFn } from 'zustand/traditional';
-import type { PushRule } from '@/typing/pushRules';
-import type { StructRule } from '@/typing/structRules';
+import type { PushRule } from '@/typing/pushRule';
+import type { StructuredRuleset } from '@/typing/structuredRuleset';
 
 type SelectOptions = {
   label: string;
@@ -8,18 +8,18 @@ type SelectOptions = {
 }[];
 
 type State = {
-  encodeList: Encode.List;
+  encodeList: EncodeTable.List;
   encodeOptions: SelectOptions;
-  structRuleList: StructRule.List;
-  presetFields: StructRule.PresetFields;
+  structRuleList: StructuredRuleset.List;
+  presetFields: StructuredRuleset.PresetFields;
   ruleOptions: SelectOptions;
   pushRuleList: PushRule.List;
   pushRuleOptions: Record<string, SelectOptions>;
 };
 type Actions = {
-  setEncodeList: (list: Encode.List) => void;
-  setStructRuleList: (list: StructRule.List) => void;
-  setPresetFields: (fields: StructRule.PresetFields) => void;
+  setEncodeList: (list: EncodeTable.List) => void;
+  setStructRuleList: (list: StructuredRuleset.List) => void;
+  setPresetFields: (fields: StructuredRuleset.PresetFields) => void;
   setPushRuleList: (list: PushRule.List) => void;
   reset: () => void;
 };
@@ -37,21 +37,21 @@ const initialState: State = {
 
 export const useCacheStore = createWithEqualityFn<Store>((set) => ({
   ...initialState,
-  setEncodeList: (list: Encode.List) => {
+  setEncodeList: (list: EncodeTable.List) => {
     const encodeOptions = list.map((encode) => ({
       value: `${encode.uid}`,
       label: encode.name_cn,
     }));
     set({ encodeList: list, encodeOptions });
   },
-  setStructRuleList: (list: StructRule.List) => {
+  setStructRuleList: (list: StructuredRuleset.List) => {
     const ruleOptions = list.map((rule) => ({
       value: rule.uid,
       label: rule.name_cn,
     }));
     set({ structRuleList: list, ruleOptions });
   },
-  setPresetFields: (fields: StructRule.PresetFields) =>
+  setPresetFields: (fields: StructuredRuleset.PresetFields) =>
     set({ presetFields: fields }),
   setPushRuleList: (list: PushRule.List) => {
     const pushRuleOptions: Record<string, SelectOptions> = {};

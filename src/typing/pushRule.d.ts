@@ -6,15 +6,14 @@ export declare namespace PushRule {
     update_end?: string;
     update_start?: string;
   };
+
   type Item = {
     // UUID
     uid: string;
     // 所属结构化规则 ID
-    structured_rule_uid: string;
+    structured_ruleset_uid: string;
     /// 规则名称
-    name_cn: string;
-    /// 规则英文名
-    name_en: string;
+    name: string;
     /// 规则备注
     comment?: string;
     /// 原文映射列名，为空不做映射
@@ -25,10 +24,12 @@ export declare namespace PushRule {
     target_uri: string;
     // 目标表名
     target_table: string;
+    // 删除时间
+    deleted_at: string | null;
     /// 创建时间
-    create_time: string;
+    created_at: string;
     /// 更新时间
-    update_time: string;
+    updated_at: string;
   };
   type List = Item[];
 

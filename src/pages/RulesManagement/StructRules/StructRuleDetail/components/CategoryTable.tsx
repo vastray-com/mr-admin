@@ -9,17 +9,17 @@ import {
 } from 'antd';
 import { type FC, useState } from 'react';
 import EditableTable from '@/components/EditableTable';
-import type { StructRule } from '@/typing/structRules';
+import type { StructuredRuleset } from '@/typing/structuredRuleset';
 
 type Props = {
   form: FormInstance;
-  detail: StructRule.Item;
-  onChange: (data: StructRule.Categories) => void;
+  detail: StructuredRuleset.Item;
+  onChange: (data: StructuredRuleset.Categories) => void;
 };
 const CategoryTable: FC<Props> = ({ form, detail, onChange }) => {
   const [editingKey, setEditingKey] = useState('');
   const isEditing = (key: string) => key === editingKey;
-  const edit = (record: Partial<StructRule.Category>) => {
+  const edit = (record: Partial<StructuredRuleset.Category>) => {
     form.setFieldsValue({
       name_cn: '',
       name_en: '',
@@ -48,7 +48,7 @@ const CategoryTable: FC<Props> = ({ form, detail, onChange }) => {
   const cancel = () => setEditingKey('');
   const save = async (key: string) => {
     try {
-      const row = (await form.validateFields()) as StructRule.Category;
+      const row = (await form.validateFields()) as StructuredRuleset.Category;
       const newData = [...detail.category];
       const idx = newData.findIndex((item) => item.uid === key);
       if (idx > -1) {
@@ -71,7 +71,7 @@ const CategoryTable: FC<Props> = ({ form, detail, onChange }) => {
       dataIndex: 'no',
       width: '80px',
       // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      render: (_: any, record: StructRule.Category) =>
+      render: (_: any, record: StructuredRuleset.Category) =>
         detail.category.findIndex((c) => c.uid === record.uid) + 1,
     },
     {
@@ -102,7 +102,7 @@ const CategoryTable: FC<Props> = ({ form, detail, onChange }) => {
       dataIndex: 'operation',
       width: '180px',
       // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      render: (_: any, record: StructRule.Category) => {
+      render: (_: any, record: StructuredRuleset.Category) => {
         const editable = isEditing(record.uid);
         const idx = detail.category.findIndex(
           (item) => item.uid === record.uid,
@@ -152,8 +152,8 @@ const CategoryTable: FC<Props> = ({ form, detail, onChange }) => {
     },
   ];
 
-  const columnsMerged: TableProps<StructRule.Category>['columns'] = columns.map(
-    (col) => {
+  const columnsMerged: TableProps<StructuredRuleset.Category>['columns'] =
+    columns.map((col) => {
       if (!col.editable) return col;
       return {
         ...col,
@@ -167,12 +167,11 @@ const CategoryTable: FC<Props> = ({ form, detail, onChange }) => {
           };
         },
       };
-    },
-  );
+    });
 
   return (
     <Form form={form} component={false}>
-      <EditableTable<StructRule.Category>
+      <EditableTable<StructuredRuleset.Category>
         dataSource={detail.category}
         columns={columnsMerged}
         onCancel={cancel}

@@ -9,7 +9,7 @@ import {
 } from 'antd';
 import { type FC, useState } from 'react';
 import EditableTable from '@/components/EditableTable';
-import type { PushRule } from '@/typing/pushRules';
+import type { PushRule } from '@/typing/pushRule';
 
 const uniqueKey = (record: PushRule.Filter) => {
   return record.source + record.operator + record.value;

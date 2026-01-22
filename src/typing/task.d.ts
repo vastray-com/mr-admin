@@ -1,6 +1,7 @@
 import type { Dayjs } from 'dayjs';
 import type {
   OneTimeTaskType,
+  TaskInstanceStatus,
   TaskPushStatus,
   TaskStatus,
   TaskType,
@@ -32,19 +33,22 @@ declare namespace Task {
   type BaseItem = {
     // UUID
     uid: string;
+    name: string;
+    status?: TaskStatus;
     task_type: TaskType;
-    rule_uid: string;
+    dataset_uid: string;
+    dataset_name: string;
     // 推送规则 UUID 列表
     push_uids: string[];
-    status?: TaskStatus;
     // 执行时间类型，定时任务、立即执行，当任务类型为一次性任务时存在
     one_time_task_type?: OneTimeTaskType;
     // 循环任务的 cron 表达式
     cron?: string;
     // 执行次数
     exec_count: number;
-    create_time?: string;
-    update_time?: string;
+    deleted_at?: string | null;
+    created_at?: string;
+    updated_at?: string;
   };
   type Item = {
     // 任务环境变量，JSON 字符串
@@ -76,13 +80,12 @@ declare namespace Task {
     // UUID
     uid: string;
     task_uid: string;
-    // 0: 待运行, 1: 运行中, 2: 已完成 (成功), 3: 已完成 (失败) , 4: 已停止 (手动停止), 5: 已暂停
-    status: 0 | 1 | 2 | 3 | 4 | 5;
-    task_start_time: string;
-    task_duration: number;
-    mr_total: number;
-    mr_finish: number;
-    mr_fail: number;
+    start_time: string;
+    duration: number;
+    status: TaskInstanceStatus;
+    failed_count: number;
+    succeed_count: number;
+    total_count: number;
     push_status: {
       push_rule_uid: string;
       // 实例状态 （0: 待运行 1: 运行中 2: 完成 3: 失败）
@@ -94,8 +97,9 @@ declare namespace Task {
       // 推送时间
       push_time: string;
     }[];
-    create_time: string;
-    update_time: string;
+    deleted_at: string;
+    created_at: string;
+    updated_at: string;
   };
   type InstanceList = Instance[];
 

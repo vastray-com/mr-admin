@@ -7,8 +7,8 @@ import FilterTable from '@/pages/RulesManagement/PushRules/PushRuleDetail/compon
 import PushTable from '@/pages/RulesManagement/PushRules/PushRuleDetail/components/PushTable';
 import { useCacheStore } from '@/store/useCacheStore';
 import { PushDataType, PushTargetDB, pushTargetDBOptions } from '@/typing/enum';
-import type { PushRule } from '@/typing/pushRules';
-import type { StructRule } from '@/typing/structRules';
+import type { PushRule } from '@/typing/pushRule';
+import type { StructuredRuleset } from '@/typing/structuredRuleset';
 
 const initialDetail: PushRule.Detail = {
   uid: '',
@@ -73,7 +73,7 @@ const PushRuleDetailPage: FC = () => {
   const [
     currentStructuredRuleFieldsCache,
     setCurrentStructuredRuleFieldsCache,
-  ] = useState<Record<string, StructRule.Fields>>({});
+  ] = useState<Record<string, StructuredRuleset.Fields>>({});
   const getCurrentStructuredRuleFields = useCallback(
     async (uid: string) => {
       if (!uid) return [];

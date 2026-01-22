@@ -41,8 +41,8 @@ const EncodePage: FC = () => {
     };
 
   // 拉取列表分页数据
-  const [list, setList] = useState<Encode.List>([]);
-  const searchParams = useRef<Encode.ListParams>({
+  const [list, setList] = useState<EncodeTable.List>([]);
+  const searchParams = useRef<EncodeTable.ListParams>({
     name: undefined,
     update_start: undefined,
     update_end: undefined,
@@ -164,7 +164,7 @@ const EncodePage: FC = () => {
 
   // 编辑项目
   const onEdit = useCallback(
-    (record: Encode.Item) => {
+    (record: EncodeTable.Item) => {
       console.log('编辑项目:', record);
       nav(`/rules_management/encode/${record.uid}`);
     },
@@ -172,7 +172,10 @@ const EncodePage: FC = () => {
   );
   // 停用/启用/删除项目
   const onAction = useCallback(
-    async (record: Encode.Item, action: 'enable' | 'disable' | 'delete') => {
+    async (
+      record: EncodeTable.Item,
+      action: 'enable' | 'disable' | 'delete',
+    ) => {
       console.log(`执行 ${action} 操作:`, record);
       if (action === 'delete') {
         modal.confirm({
@@ -188,7 +191,7 @@ const EncodePage: FC = () => {
       }
 
       // 启用或停用操作
-      const params: Encode.ActionParams = { uid: record.uid };
+      const params: EncodeTable.ActionParams = { uid: record.uid };
       switch (action) {
         case 'enable':
           params.status = 1;
@@ -267,7 +270,7 @@ const EncodePage: FC = () => {
         </Card>
 
         <Card className="h-[calc(100%_-_80px_-_16px)] mt-[16px]">
-          <Table<Encode.Item>
+          <Table<EncodeTable.Item>
             dataSource={list}
             rowKey="uid"
             rowSelection={{
@@ -281,7 +284,7 @@ const EncodePage: FC = () => {
             <Table.Column
               title="类型"
               dataIndex="encode_type"
-              render={(type: Encode.Item['encode_type']) => (
+              render={(type: EncodeTable.Item['encode_type']) => (
                 <p className="flex items-center">
                   {type === 0 ? '内置码表' : '自定义码表'}
                 </p>
@@ -301,7 +304,7 @@ const EncodePage: FC = () => {
             <Table.Column
               title="状态"
               dataIndex="status"
-              render={(status: Encode.Item['status']) => (
+              render={(status: EncodeTable.Item['status']) => (
                 <p className="flex items-center">
                   <span
                     className={clsx(
@@ -317,7 +320,7 @@ const EncodePage: FC = () => {
               title="操作"
               key="action"
               width={180}
-              render={(_, record: Encode.Item) => (
+              render={(_, record: EncodeTable.Item) => (
                 <div className="flex">
                   {record.encode_type === 1 ? (
                     <Button

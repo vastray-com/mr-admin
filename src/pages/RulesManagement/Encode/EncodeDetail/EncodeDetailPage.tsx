@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 
-const initialDetail: Encode.FormDetail = {
+const initialDetail: EncodeTable.FormDetail = {
   uid: '',
   name_cn: '',
   name_en: null,
@@ -21,7 +21,7 @@ const EncodeDetailPage: FC = () => {
   const isNewEncode = useRef(uid === 'NEW');
   const isInit = useRef(isNewEncode.current);
 
-  const [detail, setDetail] = useState<Encode.FormDetail>(initialDetail);
+  const [detail, setDetail] = useState<EncodeTable.FormDetail>(initialDetail);
   const fetchDetail = useCallback(
     async (uid: string) => {
       const res = await encodeApi.getEncodeDetail({ uid });
@@ -41,12 +41,12 @@ const EncodeDetailPage: FC = () => {
     [encodeApi.getEncodeDetail, message.error, nav],
   );
 
-  const [form] = Form.useForm<Encode.FormDetail>();
+  const [form] = Form.useForm<EncodeTable.FormDetail>();
 
   // 保存
   const onFinish = useCallback(
-    async (detail: Encode.FormDetail, values: Encode.FormDetail) => {
-      const submitData: Encode.Detail = {
+    async (detail: EncodeTable.FormDetail, values: EncodeTable.FormDetail) => {
+      const submitData: EncodeTable.Detail = {
         ...detail,
         ...values,
         value: JSON.parse(values.value),
@@ -93,7 +93,7 @@ const EncodeDetailPage: FC = () => {
       >
         <Card className="h-[220px]" title="基本信息">
           <div className="flex items-center gap-x-[24px] mb-[8px]">
-            <Form.Item<Encode.FormDetail>
+            <Form.Item<EncodeTable.FormDetail>
               label="码表名称"
               name="name_cn"
               className="w-[50%]"
@@ -105,7 +105,7 @@ const EncodeDetailPage: FC = () => {
               <Input />
             </Form.Item>
 
-            <Form.Item<Encode.FormDetail>
+            <Form.Item<EncodeTable.FormDetail>
               label="英文名称"
               name="name_en"
               className="w-[50%]"
@@ -119,7 +119,7 @@ const EncodeDetailPage: FC = () => {
           </div>
 
           <div className="flex items-center gap-x-[24px]">
-            <Form.Item<Encode.FormDetail>
+            <Form.Item<EncodeTable.FormDetail>
               label="码表备注"
               name="comment"
               className="w-[100%]"
@@ -134,7 +134,7 @@ const EncodeDetailPage: FC = () => {
           className="h-[calc(100%_-_220px_-_24px)] mt-[24px]"
           classNames={{ body: 'h-[calc(100%_-_56px)]' }}
         >
-          <Form.Item<Encode.FormDetail>
+          <Form.Item<EncodeTable.FormDetail>
             name="value"
             className="w-[100%]"
             label={null}
