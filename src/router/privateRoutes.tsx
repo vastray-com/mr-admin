@@ -153,6 +153,14 @@ const privateBaseRoutes: BaseRoute = [
         addToMenu: true,
         roles: [UserRole.Admin, UserRole.User],
       },
+      {
+        key: '/dataset_management/detail/:uid',
+        selectedKeys: ['/dataset_management/list'],
+        element: <div>数据集详情</div>,
+        label: '数据集详情',
+        addToMenu: false,
+        roles: [UserRole.Admin, UserRole.User],
+      },
     ],
   },
   {

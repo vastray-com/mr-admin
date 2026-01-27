@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { noInterceptorsService, service } from '@/utils/service';
 import type { AxiosResponse } from 'axios';
+import type { Dataset } from '@/typing/dataset';
 import type { PushRule } from '@/typing/pushRule';
 import type { StructuredRuleset } from '@/typing/structuredRuleset';
 import type { Task } from '@/typing/task';
@@ -52,14 +53,34 @@ export const useApi = () => {
     [],
   );
 
+  const dataset = useMemo(
+    () => ({
+      getDatasetList: (params: Dataset.ListParams) =>
+        service.get('/dataset/list', { params }) as Promise<
+          APIRes<PaginationData<Dataset.Item>>
+        >,
+      getDatasetDetail: (params: Dataset.DetailParams) =>
+        service.get('/dataset/detail', { params }) as Promise<
+          APIRes<Dataset.Item>
+        >,
+      createDataset: (params: Dataset.CreateParams) =>
+        service.post('/dataset/create', params) as Promise<APIRes<number>>,
+      updateDataset: (params: Dataset.UpdateParams) =>
+        service.post('/dataset/update', params) as Promise<APIRes<number>>,
+      actionDataset: (params: Dataset.ActionParams) =>
+        service.post('/dataset/update', params) as Promise<APIRes<null>>,
+    }),
+    [],
+  );
+
   const encode = useMemo(
     () => ({
       getEncodeList: (params: EncodeTable.ListParams) =>
-        service.get('/admin/encode_table/list', { params }) as Promise<
+        service.get('/encode_table/list', { params }) as Promise<
           APIRes<PaginationData<EncodeTable.Item>>
         >,
       getEncodeDetail: (params: EncodeTable.DetailParams) =>
-        service.get('/admin/encode_table/detail', { params }) as Promise<
+        service.get('/encode_table/detail', { params }) as Promise<
           APIRes<EncodeTable.Detail>
         >,
       createEncode: (params: EncodeTable.Detail) =>
@@ -184,6 +205,7 @@ export const useApi = () => {
 
   return {
     taskApi: task,
+    datasetApi: dataset,
     encodeApi: encode,
     ruleApi: rule,
     pushRuleApi: pushRule,

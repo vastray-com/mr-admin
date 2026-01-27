@@ -39,7 +39,7 @@ const initApp = async () => {
   // 数据接口初始化
   const paginationParams = { page_size: 1000, page_num: 1 };
   const res = await Promise.all([
-    service.get('/admin/encode_table/list', { params: paginationParams }),
+    service.get('/encode_table/list', { params: paginationParams }),
     service.get('/structured_ruleset/list', { params: paginationParams }),
     service.get('/structured_ruleset/get_preset_fields'),
     service.get('/admin/push_rule/list', { params: paginationParams }),
