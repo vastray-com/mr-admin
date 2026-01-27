@@ -180,7 +180,7 @@ export const useApi = () => {
       create: (params: User.CreateParams) =>
         service.post('/user/create', params) as Promise<APIRes<string>>,
       getList: (params: PaginationParams) =>
-        service.get('/user/list', { params }) as Promise<
+        service.get('/admin/user/list', { params }) as Promise<
           APIRes<PaginationData<User.User>>
         >,
     }),

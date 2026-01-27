@@ -3,7 +3,7 @@ import type {
   DatasetFilterOperator,
   DatasetFilterTable,
   DatasetType,
-} from '@/typing/enum';
+} from '@/typing/enum/dataset';
 
 export declare namespace Dataset {
   /// 过滤器对象数据库结构

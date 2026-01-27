@@ -11,11 +11,9 @@ import {
 } from 'antd';
 import { type FC, useEffect, useState } from 'react';
 import EditableTable from '@/components/EditableTable';
-import {
-  PushDataType,
-  pushDataTypeOptions,
-  StructuredFieldMappingType,
-} from '@/typing/enum';
+import { ENUM_VARS } from '@/typing/enum';
+import { PushDataType } from '@/typing/enum/pushRule';
+import { StructuredFieldMappingType } from '@/typing/enum/structuredRuleset';
 import type { PushRule } from '@/typing/pushRule';
 import type { StructuredRuleset } from '@/typing/structuredRuleset';
 
@@ -128,7 +126,7 @@ const PushTable: FC<Props> = ({
         data_type: PushDataType.String,
         // 枚举映射内容
         mapping_content:
-          field.mapping_type === StructuredFieldMappingType.Enum &&
+          field.mapping_type === StructuredFieldMappingType.EnumMapping &&
           field.mapping_content
             ? field.mapping_content
             : null,
@@ -185,16 +183,15 @@ const PushTable: FC<Props> = ({
       width: '160px',
       ellipsis: true,
       inputType: 'select',
-      options: pushDataTypeOptions,
+      options: ENUM_VARS.PUSH_RULE.DATA_TYPE_OPT,
       editable: true,
-      filters: pushDataTypeOptions.map((o) => ({
+      filters: ENUM_VARS.PUSH_RULE.DATA_TYPE_OPT.map((o) => ({
         text: o.label,
         value: o.value,
       })),
       onFilter: (value: any, record: PushRule.ContentItem) =>
         record.data_type.indexOf(value as string) === 0,
-      render: (v: string) =>
-        pushDataTypeOptions.find((option) => option.value === v)?.label,
+      render: (v: PushDataType) => ENUM_VARS.PUSH_RULE.DATA_TYPE_MAP[v],
     },
     {
       title: '最大值长度',

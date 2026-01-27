@@ -3,7 +3,7 @@ import type {
   DatasetFilterLogic,
   DatasetFilterOperator,
   DatasetFilterTable,
-} from '@/typing/enum';
+} from '@/typing/enum/dataset';
 
 export const datasetFilterFE2DB = (
   f: Dataset.FilterFEInput,
@@ -32,7 +32,7 @@ export const datasetFilterDB2FE = (
     const [logic, tables] = Object.entries(group)[0];
     return {
       logic: logic as DatasetFilterLogic,
-      group: tables.map((t) => {
+      group: (tables ?? []).map((t) => {
         const [table, cols] = Object.entries(t)[0];
         return {
           table: table as DatasetFilterTable,

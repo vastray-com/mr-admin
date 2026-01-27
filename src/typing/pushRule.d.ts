@@ -1,4 +1,4 @@
-import type { PushDataType, PushTargetDB } from '@/typing/enum';
+import type { PushDataType, PushTargetDB } from '@/typing/enum/pushRule';
 
 export declare namespace PushRule {
   type ListParams = {
@@ -25,11 +25,11 @@ export declare namespace PushRule {
     // 目标表名
     target_table: string;
     // 删除时间
-    deleted_at: string | null;
+    deleted_at?: string;
     /// 创建时间
-    created_at: string;
+    created_at?: string;
     /// 更新时间
-    updated_at: string;
+    updated_at?: string;
   };
   type List = Item[];
 

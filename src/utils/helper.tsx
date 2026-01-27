@@ -81,3 +81,12 @@ export const generateCurlExample = (
 
   return curl;
 };
+
+export const enumMapToOptions = <T extends Record<string, string>>(
+  enumMap: T,
+): { value: keyof T; label: string }[] => {
+  return Object.entries(enumMap).map(([k, v]) => ({
+    value: k as keyof T,
+    label: v,
+  }));
+};

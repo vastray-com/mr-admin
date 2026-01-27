@@ -2,7 +2,7 @@ import type {
   StructuredFieldMappingType,
   StructuredFieldParsingType,
   StructuredFieldValueType,
-} from './enum';
+} from '@/typing/enum/structuredRuleset';
 
 export declare namespace StructuredRuleset {
   type ListParams = {
@@ -59,7 +59,7 @@ export declare namespace StructuredRuleset {
     // 是否数组
     is_array: boolean;
     /// 映射类型
-    mapping_type: StructuredFieldMappingType | null;
+    mapping_type: StructuredFieldMappingType;
     //  映射内容 映射类型为空时忽略，为码表时为码表 ID，为枚举时为枚举列表内容
     mapping_content: string;
     /// 字段是否需要最终入库 1: 需要 0: 不需要
@@ -70,7 +70,7 @@ export declare namespace StructuredRuleset {
   type ActionParams = {
     // UUID
     uid: string;
-    action: 'enable' | 'disable' | 'delete';
+    action: 'delete'; // 'enable' | 'disable' ;
   };
 
   type PresetField = {
@@ -90,7 +90,7 @@ export declare namespace StructuredRuleset {
     // 是否数组
     is_array: boolean;
     // 映射类型
-    mapping_type: StructuredFieldMappingType | null;
+    mapping_type: StructuredFieldMappingType;
     // 映射内容 映射类型为空时忽略，为码表时为码表 ID，为枚举时为枚举列表内容
     mapping_content: string;
   };

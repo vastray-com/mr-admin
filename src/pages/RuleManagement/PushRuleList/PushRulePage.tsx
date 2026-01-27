@@ -16,9 +16,10 @@ import { useApi } from '@/hooks/useApi';
 import { useFileImport } from '@/hooks/useFileImport';
 import { usePaginationData } from '@/hooks/usePaginationData';
 import { useCacheStore } from '@/store/useCacheStore';
-import { type PushTargetDB, pushTargetDBOptions } from '@/typing/enum';
+import { ENUM_VARS } from '@/typing/enum';
 import { downloadFile } from '@/utils/helper';
 import type { FormProps } from 'antd';
+import type { PushTargetDB } from '@/typing/enum/pushRule';
 import type { PushRule } from '@/typing/pushRule';
 
 type FormValues = {
@@ -294,8 +295,7 @@ const PushRulesPage: FC = () => {
               title="推送目标"
               dataIndex="target_db"
               render={(target: PushTargetDB) =>
-                pushTargetDBOptions.find((db) => db.value === target)?.label ||
-                target
+                ENUM_VARS.PUSH_RULE.TARGET_DB_MAP[target] ?? target
               }
             />
             <Table.Column

@@ -17,18 +17,14 @@ import { type FC, useCallback, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
-import CategoryTable from '@/pages/RuleManagement/StructuredRulesetList/StructuredRulesetDetail/components/CategoryTable';
-import FieldTable from '@/pages/RuleManagement/StructuredRulesetList/StructuredRulesetDetail/components/FieldTable';
+import FieldTable from '@/pages/RuleManagement/StructuredRulesetDetail/components/FieldTable';
 import { useCacheStore } from '@/store/useCacheStore';
+import { ENUM_VARS } from '@/typing/enum';
 import {
-  StructRuleStatus,
   StructuredFieldMappingType,
   StructuredFieldParsingType,
   StructuredFieldValueType,
-  structRuleFieldMappingTypeOptions,
-  structRuleFieldParsingTypeOptions,
-  structRuleFieldValueTypeOptions,
-} from '@/typing/enum';
+} from '@/typing/enum/structuredRuleset';
 import { generateCurlExample } from '@/utils/helper';
 import { getCode } from '@/utils/highlighter';
 import { ls } from '@/utils/ls';
@@ -40,12 +36,9 @@ const initialDetail: StructuredRuleset.Item = {
   name_cn: '',
   name_en: '',
   comment: '',
-  status: StructRuleStatus.Enabled,
   creator: '',
   shared_users: [],
-  category: [],
   fields: [],
-  code_snippets: [],
 };
 const initialTestParams: Omit<StructuredRuleset.TestRuleParams, 'uid'> = {
   output_filter: [],
@@ -79,17 +72,13 @@ const StructuredRulesetDetailPage: FC = () => {
     Form.useForm<
       Pick<StructuredRuleset.Item, 'name_cn' | 'name_en' | 'comment'>
     >();
-  const [categoryForm] = Form.useForm<StructuredRuleset.Category>();
   const [fieldForm] = Form.useForm<StructuredRuleset.Field>();
-  const [codeSnippetForm] = Form.useForm<{ content: '' }>();
 
   // 添加预设字段
   const presetFields = useCacheStore((s) => s.presetFields);
   const presetFieldOptions = useMemo(() => {
     return presetFields?.map((field) => {
-      const typeLabel = structRuleFieldValueTypeOptions.find(
-        (o) => o.value === field.value_type,
-      )?.label;
+      const typeLabel = ENUM_VARS.RULESET.VALUE_TYPE_MAP[field.value_type];
       return {
         label: field.name_cn,
         value: field.id,
@@ -163,46 +152,6 @@ const StructuredRulesetDetailPage: FC = () => {
       console.log('保存病历模板:', values);
 
       // 校验字段
-      const categoryNameCnList = values.category.map((c) => c.name_cn);
-      const categoryNameEnList = values.category.map((c) => c.name_en);
-      const duplicateCategoryNameCn = categoryNameCnList.findIndex(
-        (item, index) => categoryNameCnList.indexOf(item) !== index && item,
-      );
-      if (duplicateCategoryNameCn !== -1) {
-        message.error(
-          `提交失败！大字段序号 ${duplicateCategoryNameCn + 1}【${categoryNameCnList[duplicateCategoryNameCn]}】中文名称重复`,
-        );
-        return;
-      }
-      const duplicateCategoryNameEn = categoryNameEnList.findIndex(
-        (item, index) => categoryNameEnList.indexOf(item) !== index && item,
-      );
-      if (duplicateCategoryNameEn !== -1) {
-        message.error(
-          `提交失败！大字段 ${duplicateCategoryNameEn + 1}【${categoryNameEnList[duplicateCategoryNameEn]}】英文名称重复`,
-        );
-        return;
-      }
-      const errCategoryIdx = (values.category ?? []).findIndex((c, idx) => {
-        let err = '';
-        if (!c.name_cn) {
-          err = `提交失败！大字段序号 ${idx + 1} 提取字段名称不能为空`;
-        }
-        if (!c.name_en) {
-          err = `提交失败！大字段序号 ${idx + 1} 字段名称不能为空`;
-        }
-        if (!c.content) {
-          err = `提交失败！大字段序号 ${idx + 1} 提取规则不能为空`;
-        }
-        if (err) {
-          message.error(err);
-          return true;
-        }
-        return false;
-      });
-      if (errCategoryIdx !== -1) return;
-
-      // 校验明细字段
       const nameCnList = values.fields.map((field) => field.name_cn);
       const nameEnList = values.fields.map((field) => field.name_en);
       const duplicateNameCn = nameCnList.findIndex(
@@ -236,9 +185,6 @@ const StructuredRulesetDetailPage: FC = () => {
 
         if (
           f.data_source &&
-          !values.category.find(
-            (c) => `category#${c.name_en}` === f.data_source,
-          ) &&
           !values.fields.find(
             (field) => `field#${field.name_en}` === f.data_source,
           )
@@ -246,48 +192,20 @@ const StructuredRulesetDetailPage: FC = () => {
           err = `提交失败！明细字段序号 ${idx + 1} 数据来源不合法`;
         }
 
-        if (
-          !structRuleFieldParsingTypeOptions.find(
-            (item) => item.value === f.parsing_type,
-          )
-        ) {
+        if (!ENUM_VARS.RULESET.PARSING_TYPE_MAP[f.parsing_type]) {
           err = `提交失败！明细字段序号 ${idx + 1} 字段来源类型不合法`;
         }
 
-        // if (f.parsing_type === StructuredFieldParsingType.QuoteResult) {
-        //   const isExist = values.fields.find(
-        //     (field) => field.name_en === f.parsing_rule,
-        //   );
-        //   if (!isExist) {
-        //     err = `提交失败！明细字段序号 ${idx + 1} 引用结果字段不存在`;
-        //   }
-        // }
-
-        // if (
-        //   !f.parsing_rule &&
-        //   f.parsing_type !== StructuredFieldParsingType.Static
-        // ) {
-        //   err = `提交失败！明细字段序号 ${idx + 1} 提取规则不能为空`;
-        // }
-
-        if (
-          !structRuleFieldValueTypeOptions.find(
-            (item) => item.value === f.value_type,
-          )
-        ) {
+        if (!ENUM_VARS.RULESET.VALUE_TYPE_MAP[f.value_type]) {
           err = `提交失败！明细字段序号 ${idx + 1} 字段值类型不合法`;
         }
 
-        if (
-          structRuleFieldMappingTypeOptions.find(
-            (item) => item.value === f.mapping_type,
-          ) === undefined
-        ) {
+        if (!ENUM_VARS.RULESET.MAPPING_TYPE_MAP[f.mapping_type]) {
           err = `提交失败！明细字段序号 ${idx + 1} 字段映射类型不合法`;
         }
 
         if (
-          f.mapping_type === StructuredFieldMappingType.Encode &&
+          f.mapping_type === StructuredFieldMappingType.EncodeTable &&
           !encodeOptions.find((o) => o.value === f.mapping_content)
         ) {
           err = `提交失败！明细字段序号 ${idx + 1} 字段映射码表不存在`;
@@ -301,18 +219,7 @@ const StructuredRulesetDetailPage: FC = () => {
       });
       if (errFieldIdx !== -1) return;
 
-      if (
-        values.code_snippets.length === 1 &&
-        !values.code_snippets[0].content
-      ) {
-        values.code_snippets = [];
-      }
-
       // 把所有字段名默认大写
-      values.category = values.category.map((c) => ({
-        ...c,
-        name_en: c.name_en.toUpperCase(),
-      }));
       values.fields = values.fields.map((f) => ({
         ...f,
         name_en: f.name_en.toUpperCase(),
@@ -428,17 +335,7 @@ const StructuredRulesetDetailPage: FC = () => {
               onFinish({
                 ...detail,
                 ...baseForm.getFieldsValue(),
-                category: detail.category,
                 fields: detail.fields,
-                code_snippets: codeSnippetForm.getFieldValue('content')
-                  ? [
-                      {
-                        content: codeSnippetForm.getFieldValue(
-                          'content',
-                        ) as string,
-                      },
-                    ]
-                  : [],
               })
             }
           >
@@ -702,40 +599,6 @@ const StructuredRulesetDetailPage: FC = () => {
           </Card>
 
           <Card
-            title="大字段"
-            className="mt-[12px]"
-            extra={
-              <Button
-                onClick={() => {
-                  setDetail((prev) => ({
-                    ...prev,
-                    category: [
-                      ...prev.category,
-                      {
-                        uid: `${Math.random() * 1000000}`,
-                        name_cn: '',
-                        name_en: '',
-                        content: '',
-                      },
-                    ],
-                  }));
-                }}
-                type="primary"
-              >
-                添加字段
-              </Button>
-            }
-          >
-            <CategoryTable
-              detail={detail}
-              form={categoryForm}
-              onChange={(category) =>
-                setDetail((prev) => ({ ...prev, category }))
-              }
-            />
-          </Card>
-
-          <Card
             title="明细字段"
             className="mt-[12px]"
             extra={
@@ -754,7 +617,7 @@ const StructuredRulesetDetailPage: FC = () => {
 
         <div className="ml-[12px] w-[220px] shrink-0 grow-0 h-full">
           <Card title="预览" className="h-full overflow-y-auto">
-            <Preview categories={detail.category} fields={detail.fields} />
+            <Preview fields={detail.fields} />
           </Card>
         </div>
       </div>
@@ -764,7 +627,6 @@ const StructuredRulesetDetailPage: FC = () => {
 
 // 右侧预览组件
 type PreviewProps = {
-  categories: StructuredRuleset.Categories;
   fields: StructuredRuleset.Fields;
 };
 type TreeNode = {
@@ -772,31 +634,20 @@ type TreeNode = {
   key: string;
   children?: TreeNode[];
 };
-const Preview: FC<PreviewProps> = ({ categories, fields }) => {
+const Preview: FC<PreviewProps> = ({ fields }) => {
+  // console.log('预览字段:', fields);
   const treeData = useMemo<TreeNode[]>(() => {
     const tree: TreeNode[] = [];
-    const process_categories = categories.filter(
-      (c) => c?.name_en && c?.name_cn,
-    );
     const process_fields = fields.filter((f) => f?.name_en && f?.name_cn);
 
     // 行转树
     // 先构建所有节点的 Node
     const nodes: Record<string, TreeNode> = {};
-    process_categories.forEach((c) => {
-      if (c.name_cn && c.name_en) {
-        nodes[`CATEGORY_${c.name_en}`] = {
-          title: c.name_cn,
-          key: `CATEGORY_${c.name_en}`,
-          children: [],
-        };
-      }
-    });
     process_fields.forEach((f) => {
       if (f.name_cn && f.name_en) {
-        nodes[`FIELD_${f.name_en}`] = {
+        nodes[f.name_en] = {
           title: f.name_cn,
-          key: `FIELD_${f.name_en}`,
+          key: f.name_en,
           children: [],
         };
       }
@@ -804,16 +655,11 @@ const Preview: FC<PreviewProps> = ({ categories, fields }) => {
 
     // 再构建父子关系
     process_fields.forEach((f) => {
-      const node = nodes[`FIELD_${f.name_en}`];
+      const node = nodes[f.name_en];
       if (f.data_source) {
         const [t, n] = f.data_source.split('#');
-        if (t === 'category') {
-          const parentNode = nodes[`CATEGORY_${n}`];
-          if (parentNode) {
-            parentNode.children?.push(node);
-          }
-        } else if (t === 'field') {
-          const parentNode = nodes[`FIELD_${n}`];
+        if (t === 'field') {
+          const parentNode = nodes[n];
           if (parentNode) {
             parentNode.children?.push(node);
           }
@@ -821,23 +667,18 @@ const Preview: FC<PreviewProps> = ({ categories, fields }) => {
       }
     });
     // 最后将所有顶层节点加入树
-    process_categories.forEach((c) => {
-      const node = nodes[`CATEGORY_${c.name_en}`];
-      if (node) {
-        tree.push(node);
-      }
-    });
     process_fields.forEach((f) => {
-      if (!f.data_source && f.name_en && f.name_cn) {
-        const node = nodes[`FIELD_${f.name_en}`];
+      if (!f.data_source?.startsWith('field#') && f.name_en && f.name_cn) {
+        const node = nodes[f.name_en];
         if (node) {
           tree.push(node);
         }
       }
     });
 
+    // console.log('构建预览树结果:', tree);
     return tree;
-  }, [categories, fields]);
+  }, [fields]);
 
   return <Tree showLine treeData={treeData} />;
 };

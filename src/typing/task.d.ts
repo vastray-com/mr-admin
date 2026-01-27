@@ -2,10 +2,9 @@ import type { Dayjs } from 'dayjs';
 import type {
   OneTimeTaskType,
   TaskInstanceStatus,
-  TaskPushStatus,
   TaskStatus,
   TaskType,
-} from '@/typing/enum';
+} from '@/typing/enum/task';
 
 declare namespace Task {
   // 获取任务列表的参数
@@ -86,17 +85,17 @@ declare namespace Task {
     failed_count: number;
     succeed_count: number;
     total_count: number;
-    push_status: {
-      push_rule_uid: string;
-      // 实例状态 （0: 待运行 1: 运行中 2: 完成 3: 失败）
-      status: TaskPushStatus;
-      // 运行时长（秒）
-      duration: number;
-      // 备注
-      remark: string[];
-      // 推送时间
-      push_time: string;
-    }[];
+    // push_status: {
+    //   push_rule_uid: string;
+    //   // 实例状态 （0: 待运行 1: 运行中 2: 完成 3: 失败）
+    //   status: TaskPushStatus;
+    //   // 运行时长（秒）
+    //   duration: number;
+    //   // 备注
+    //   remark: string[];
+    //   // 推送时间
+    //   push_time: string;
+    // }[];
     deleted_at: string;
     created_at: string;
     updated_at: string;

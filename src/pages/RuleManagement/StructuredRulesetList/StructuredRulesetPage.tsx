@@ -9,7 +9,6 @@ import {
   Popconfirm,
   Table,
 } from 'antd';
-import clsx from 'clsx';
 import dayjs, { type Dayjs } from 'dayjs';
 import { type FC, useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -17,7 +16,6 @@ import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { useFileImport } from '@/hooks/useFileImport';
 import { usePaginationData } from '@/hooks/usePaginationData';
-import { StructRuleStatus } from '@/typing/enum';
 import { downloadFile } from '@/utils/helper';
 import type { FormProps } from 'antd';
 import type { StructuredRuleset } from '@/typing/structuredRuleset';
@@ -272,25 +270,6 @@ const StructuredRulesetPage: FC = () => {
             />
             <Table.Column title="备注" dataIndex="comment" />
             <Table.Column
-              title="状态"
-              dataIndex="status"
-              render={(status: StructRuleStatus) => (
-                <p className="flex items-center">
-                  <span
-                    className={clsx(
-                      'w-[6px] h-[6px] rounded-full inline-block mr-[4px]',
-                      status === StructRuleStatus.Enabled
-                        ? 'bg-[#52C41A]'
-                        : 'bg-[#FF4D4F]',
-                    )}
-                  />
-                  <span>
-                    {status === StructRuleStatus.Enabled ? '启用中' : '已停用'}
-                  </span>
-                </p>
-              )}
-            />
-            <Table.Column
               title="操作"
               key="action"
               width={180}
@@ -302,22 +281,6 @@ const StructuredRulesetPage: FC = () => {
                     onClick={() => onEdit(record)}
                   >
                     编辑
-                  </Button>
-                  <Button
-                    size="small"
-                    type="link"
-                    onClick={() =>
-                      onAction(
-                        record,
-                        record.status === StructRuleStatus.Enabled
-                          ? 'disable'
-                          : 'enable',
-                      )
-                    }
-                  >
-                    {record.status === StructRuleStatus.Enabled
-                      ? '停用'
-                      : '启用'}
                   </Button>
                   <Popconfirm
                     title="删除结构化规则"

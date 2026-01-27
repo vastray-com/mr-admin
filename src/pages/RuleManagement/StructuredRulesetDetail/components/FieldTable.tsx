@@ -12,14 +12,12 @@ import {
 import { type FC, useMemo, useState } from 'react';
 import EditableTable from '@/components/EditableTable';
 import { useCacheStore } from '@/store/useCacheStore';
+import { ENUM_VARS } from '@/typing/enum';
 import {
   StructuredFieldMappingType,
   StructuredFieldParsingType,
   StructuredFieldValueType,
-  structRuleFieldMappingTypeOptions,
-  structRuleFieldParsingTypeOptions,
-  structRuleFieldValueTypeOptions,
-} from '@/typing/enum';
+} from '@/typing/enum/structuredRuleset';
 import type { StructuredRuleset } from '@/typing/structuredRuleset';
 
 type Props = {
@@ -130,17 +128,6 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
 
   // 编码选项
   const encodeOptions = useCacheStore((s) => s.encodeTableOptions);
-  // 分类选择列表
-  const categoryOptions = useMemo(
-    () =>
-      detail.category
-        .filter((category) => category.name_en && category.name_cn)
-        .map((item) => ({
-          label: item.name_cn,
-          value: `category#${item.name_en}`,
-        })),
-    [detail.category],
-  );
   // 小字段选择列表
   const fieldOptions = useMemo(
     () =>
@@ -187,11 +174,11 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       ellipsis: true,
       inputType: 'select',
       options: [
-        {
-          label: '大字段',
-          title: '大字段',
-          options: categoryOptions,
-        },
+        // {
+        //   label: '大字段',
+        //   title: '大字段',
+        //   options: categoryOptions,
+        // },
         {
           label: '明细字段',
           title: '明细字段',
@@ -199,22 +186,26 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
         },
       ],
       editable: true,
-      // enableSearch: true,
-      filters: categoryOptions
-        .map((o) => ({ text: `大字段: ${o.label}`, value: o.value }))
-        .concat(
-          fieldOptions.map((o) => ({
-            text: `明细字段: ${o.label}`,
-            value: o.value,
-          })),
-        ),
+      filters: fieldOptions.map((o) => ({
+        text: `明细字段: ${o.label}`,
+        value: o.value,
+      })),
+      // categoryOptions
+      //   .map((o) => ({ text: `大字段: ${o.label}`, value: o.value }))
+      //   .concat(
+      //     fieldOptions.map((o) => ({
+      //       text: `明细字段: ${o.label}`,
+      //       value: o.value,
+      //     })),
+      //   ),
       onFilter: (value: any, record: StructuredRuleset.Field) =>
         record.data_source?.indexOf(value as string) === 0,
       render: (v: string) => {
         if (!v) return '';
-        if (v.startsWith('category#')) {
-          return `大字段: ${categoryOptions.find((option) => option.value === v)?.label || v}`;
-        } else if (v.startsWith('field#')) {
+        // if (v.startsWith('category#')) {
+        //   return `大字段: ${categoryOptions.find((option) => option.value === v)?.label || v}`;
+        // } else
+        if (v.startsWith('field#')) {
           return `明细字段: ${fieldOptions.find((option) => option.value === v)?.label || v}`;
         }
         return v;
@@ -225,17 +216,16 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       dataIndex: 'parsing_type',
       width: '180px',
       inputType: 'select',
-      options: structRuleFieldParsingTypeOptions,
+      options: ENUM_VARS.RULESET.PARSING_TYPE_OPT,
       editable: true,
-      filters: structRuleFieldParsingTypeOptions.map((o) => ({
+      filters: ENUM_VARS.RULESET.PARSING_TYPE_OPT.map((o) => ({
         text: o.label,
         value: o.value,
       })),
       onFilter: (value: any, record: StructuredRuleset.Field) =>
         record.parsing_type === value,
       render: (v: StructuredFieldParsingType) =>
-        structRuleFieldParsingTypeOptions.find((option) => option.value === v)
-          ?.label,
+        ENUM_VARS.RULESET.PARSING_TYPE_MAP[v],
     },
     {
       title: '解析规则',
@@ -251,17 +241,16 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       dataIndex: 'value_type',
       width: '120px',
       inputType: 'select',
-      options: structRuleFieldValueTypeOptions,
+      options: ENUM_VARS.RULESET.VALUE_TYPE_OPT,
       editable: true,
-      filters: structRuleFieldValueTypeOptions.map((o) => ({
+      filters: ENUM_VARS.RULESET.VALUE_TYPE_OPT.map((o) => ({
         text: o.label,
         value: o.value,
       })),
       onFilter: (value: any, record: StructuredRuleset.Field) =>
         record.value_type === value,
       render: (v: StructuredFieldValueType) =>
-        structRuleFieldValueTypeOptions.find((option) => option.value === v)
-          ?.label,
+        ENUM_VARS.RULESET.VALUE_TYPE_MAP[v],
     },
     {
       title: '是否数组',
@@ -286,17 +275,16 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       dataIndex: 'mapping_type',
       width: '120px',
       inputType: 'select',
-      options: structRuleFieldMappingTypeOptions,
+      options: ENUM_VARS.RULESET.MAPPING_TYPE_OPT,
       editable: true,
-      filters: structRuleFieldMappingTypeOptions.map((o) => ({
+      filters: ENUM_VARS.RULESET.MAPPING_TYPE_OPT.map((o) => ({
         text: o.label,
         value: o.value,
       })),
       onFilter: (value: any, record: StructuredRuleset.Field) =>
         record.mapping_type === value,
       render: (v: StructuredFieldMappingType) =>
-        structRuleFieldMappingTypeOptions.find((option) => option.value === v)
-          ?.label,
+        ENUM_VARS.RULESET.MAPPING_TYPE_MAP[v],
     },
     {
       title: '映射内容',
@@ -306,9 +294,11 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
       inputType: 'select',
       editable: true,
       render: (v: string, record: StructuredRuleset.Field) => {
-        if (record.mapping_type === StructuredFieldMappingType.Encode) {
+        if (record.mapping_type === StructuredFieldMappingType.EncodeTable) {
           return encodeOptions.find((option) => option.value === v)?.label || v;
-        } else if (record.mapping_type === StructuredFieldMappingType.Enum) {
+        } else if (
+          record.mapping_type === StructuredFieldMappingType.EnumMapping
+        ) {
           return v;
         } else {
           return '';
@@ -451,12 +441,12 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
             return {
               record,
               inputType:
-                mappingType === StructuredFieldMappingType.Encode
+                mappingType === StructuredFieldMappingType.EncodeTable
                   ? 'select'
-                  : mappingType === StructuredFieldMappingType.Enum
+                  : mappingType === StructuredFieldMappingType.EnumMapping
                     ? 'text'
                     : 'none',
-              ...(mappingType === StructuredFieldMappingType.Encode
+              ...(mappingType === StructuredFieldMappingType.EncodeTable
                 ? { options: encodeOptions }
                 : {}),
               dataIndex: col.dataIndex,

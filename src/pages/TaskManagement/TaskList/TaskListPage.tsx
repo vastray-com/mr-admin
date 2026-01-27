@@ -19,19 +19,14 @@ import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { usePaginationData } from '@/hooks/usePaginationData';
 import { useCacheStore } from '@/store/useCacheStore';
-import {
-  OneTimeTaskType,
-  oneTimeTaskTypeOptions,
-  TaskStatus,
-  TaskType,
-  taskTypeMap,
-  taskTypeOptions,
-} from '@/typing/enum';
+import { ENUM_VARS } from '@/typing/enum';
+import { OneTimeTaskType, TaskStatus, TaskType } from '@/typing/enum/task';
 import type { Task } from '@/typing/task';
 
 const statusDisplay: Record<TaskStatus, [string, string]> = {
-  0: ['#D9D9D9', '已停用'],
-  1: ['#52C41A', '已启用'],
+  [TaskStatus.Disabled]: ['#D9D9D9', '已停用'],
+  [TaskStatus.Enabled]: ['#52C41A', '已启用'],
+  [TaskStatus.WaitingInit]: ['#FAAD14', '等待初始化'],
 };
 
 const ENV_VAR_OPTIONS = [
@@ -190,7 +185,7 @@ const TaskListPage = () => {
             <Table.Column
               title="任务类型"
               dataIndex="task_type"
-              render={(type: TaskType) => taskTypeMap[type]}
+              render={(type: TaskType) => ENUM_VARS.TASK.TYPE_MAP[type]}
             />
             <Table.Column
               title="结构化规则"
@@ -303,12 +298,15 @@ const TaskListPage = () => {
               },
             ]}
           >
-            <Select options={taskTypeOptions} placeholder="选择任务类型" />
+            <Select
+              options={ENUM_VARS.TASK.TYPE_OPT}
+              placeholder="选择任务类型"
+            />
           </Form.Item>
 
           <Form.Item<Task.CreateItem>
             label="结构化规则"
-            name="rule_uid"
+            name="dataset_uid"
             rules={[
               {
                 required: true,
@@ -465,7 +463,7 @@ const TaskListPage = () => {
                         ]}
                       >
                         <Select
-                          options={oneTimeTaskTypeOptions}
+                          options={ENUM_VARS.TASK.ONE_TIME_TYPE_OPT}
                           placeholder="选择执行方式"
                         />
                       </Form.Item>

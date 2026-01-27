@@ -2,15 +2,11 @@ import {
   App,
   Button,
   Card,
-  DatePicker,
-  Divider,
   Flex,
   Form,
   Input,
-  InputNumber,
   Modal,
   Select,
-  Space,
   Table,
 } from 'antd';
 import dayjs from 'dayjs';
@@ -23,15 +19,9 @@ import {
   datasetFilterDB2FE,
   datasetFilterFE2DB,
 } from '@/pages/DatasetManagement/DatasetList/helper';
-import {
-  type DatasetType,
-  datasetFilterLogicOptions,
-  datasetFilterOperatorOptions,
-  datasetFilterTableOptions,
-  datasetTypeMap,
-  datasetTypeOptions,
-} from '@/typing/enum';
+import { ENUM_VARS } from '@/typing/enum';
 import type { Dataset } from '@/typing/dataset';
+import type { DatasetType } from '@/typing/enum/dataset';
 
 const DatasetListPage = () => {
   const { datasetApi } = useApi();
@@ -135,7 +125,7 @@ const DatasetListPage = () => {
             <Table.Column
               title="数据集类型"
               dataIndex="dataset_type"
-              render={(type: DatasetType) => datasetTypeMap[type]}
+              render={(type: DatasetType) => ENUM_VARS.DATASET.TYPE_MAP[type]}
             />
             <Table.Column title="警告信息" dataIndex="warning_msg" />
             <Table.Column
@@ -217,7 +207,10 @@ const DatasetListPage = () => {
               },
             ]}
           >
-            <Select options={datasetTypeOptions} placeholder="选择数据集类型" />
+            <Select
+              options={ENUM_VARS.DATASET.TYPE_OPT}
+              placeholder="选择数据集类型"
+            />
           </Form.Item>
 
           <Form.Item<Dataset.InputCreateParams>
@@ -265,7 +258,7 @@ const DatasetListPage = () => {
                         >
                           <Select
                             placeholder="请选择逻辑关系"
-                            options={datasetFilterLogicOptions}
+                            options={ENUM_VARS.DATASET.FILTER_LOGIC_OPT}
                           />
                         </Form.Item>
 
@@ -301,7 +294,9 @@ const DatasetListPage = () => {
                                       >
                                         <Select
                                           placeholder="请选择表"
-                                          options={datasetFilterTableOptions}
+                                          options={
+                                            ENUM_VARS.DATASET.FILTER_TABLE_OPT
+                                          }
                                         />
                                       </Form.Item>
 
@@ -348,7 +343,8 @@ const DatasetListPage = () => {
                                                   >
                                                     <Select
                                                       options={
-                                                        datasetFilterOperatorOptions
+                                                        ENUM_VARS.DATASET
+                                                          .FILTER_OPERATOR_OPT
                                                       }
                                                       placeholder="选择操作符"
                                                     />
