@@ -15,6 +15,7 @@ import { service } from '@/utils/service';
 import type { LoaderFunction } from 'react-router-dom';
 import type { PushRule } from '@/typing/pushRule';
 import type { StructuredRuleset } from '@/typing/structuredRuleset';
+import type { Warehouse } from '@/typing/warehose';
 
 const LoginPageLazy = lazy(() => import('@/pages/Login/LoginPage'));
 
@@ -43,14 +44,21 @@ const initApp = async () => {
     service.get('/structured_ruleset/list', { params: paginationParams }),
     service.get('/structured_ruleset/get_preset_fields'),
     service.get('/admin/push_rule/list', { params: paginationParams }),
+    service.get('/warehouse/get_source_schema'),
   ]);
-  const [encodeRes, structRuleRes, presetFieldsRes, pushRuleRes] =
-    res as unknown as [
-      APIRes<PaginationData<EncodeTable.Item>>,
-      APIRes<PaginationData<StructuredRuleset.Item>>,
-      APIRes<StructuredRuleset.PresetFields>,
-      APIRes<PaginationData<PushRule.Item>>,
-    ];
+  const [
+    encodeRes,
+    structRuleRes,
+    presetFieldsRes,
+    pushRuleRes,
+    sourceSchemaRes,
+  ] = res as unknown as [
+    APIRes<PaginationData<EncodeTable.Item>>,
+    APIRes<PaginationData<StructuredRuleset.Item>>,
+    APIRes<StructuredRuleset.PresetFields>,
+    APIRes<PaginationData<PushRule.Item>>,
+    APIRes<Warehouse.SourceSchemas>,
+  ];
 
   // 初始化码表列表
   if (encodeRes.code === 200) {
@@ -86,6 +94,15 @@ const initApp = async () => {
   } else {
     console.error('推送规则列表初始化失败', pushRuleRes);
     throw new Error('推送规则列表初始化失败');
+  }
+
+  // 初始化数据源表/字段列表
+  if (sourceSchemaRes.code === 200) {
+    // console.log('数据源表/字段列表初始化成功', res.data);
+    useCacheStore.getState().setSourceSchema(sourceSchemaRes.data);
+  } else {
+    console.error('数据源表/字段列表初始化失败', sourceSchemaRes);
+    throw new Error('数据源表/字段列表初始化失败');
   }
 };
 

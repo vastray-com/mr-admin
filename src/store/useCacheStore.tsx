@@ -1,6 +1,7 @@
 import { createWithEqualityFn } from 'zustand/traditional';
 import type { PushRule } from '@/typing/pushRule';
 import type { StructuredRuleset } from '@/typing/structuredRuleset';
+import type { Warehouse } from '@/typing/warehose';
 
 type SelectOptions = {
   label: string;
@@ -15,12 +16,14 @@ type State = {
   structuredRulesetOptions: SelectOptions;
   pushRuleList: PushRule.List;
   pushRuleOptions: Record<string, SelectOptions>;
+  sourceSchemaList: Warehouse.SourceSchemas;
 };
 type Actions = {
   setPresetFields: (fields: StructuredRuleset.PresetFields) => void;
   setEncodeTableList: (list: EncodeTable.List) => void;
   setStructuredRulesetList: (list: StructuredRuleset.List) => void;
   setPushRuleList: (list: PushRule.List) => void;
+  setSourceSchema: (list: Warehouse.SourceSchemas) => void;
   reset: () => void;
 };
 type Store = State & Actions;
@@ -33,6 +36,7 @@ const initialState: State = {
   structuredRulesetOptions: [],
   pushRuleList: [],
   pushRuleOptions: {},
+  sourceSchemaList: [],
 };
 
 export const useCacheStore = createWithEqualityFn<Store>((set) => ({
@@ -66,5 +70,7 @@ export const useCacheStore = createWithEqualityFn<Store>((set) => ({
     });
     set({ pushRuleList: list, pushRuleOptions });
   },
+  setSourceSchema: (list: Warehouse.SourceSchemas) =>
+    set({ sourceSchemaList: list }),
   reset: () => set({ ...initialState }),
 }));

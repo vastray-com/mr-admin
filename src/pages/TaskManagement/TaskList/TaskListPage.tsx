@@ -69,25 +69,10 @@ const TaskListPage = () => {
   const ruleOptions = useCacheStore((s) => s.structuredRulesetOptions);
   const [form] = Form.useForm<Task.CreateItem>();
   const newTaskData = useRef<Task.CreateItem | null>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const onCreate = () => {
+  const [showInitModal, setShowInitModal] = useState(false);
+  const onInit = () => {
     form.resetFields();
-    setShowCreateModal(true);
-  };
-  const onCopy = (record: Task.Item) => {
-    console.log('xxx', record);
-    form.resetFields();
-    newTaskData.current = {
-      ...record,
-      schedule_time: record.schedule_time
-        ? dayjs(record.schedule_time)
-        : undefined,
-      env_vars: Object.entries(record.env_vars || {}),
-    };
-    console.log('复制的任务数据：', newTaskData.current);
-    form.setFieldsValue(newTaskData.current);
-    // 打开新建任务模态框
-    setShowCreateModal(true);
+    setShowInitModal(true);
   };
 
   const onAction = useCallback(
@@ -152,7 +137,7 @@ const TaskListPage = () => {
         const res = await taskApi.createTask(newTaskData);
         if (res.code === 200) {
           message.success('任务创建成功');
-          setShowCreateModal(false);
+          setShowInitModal(false);
           form.resetFields();
           // 刷新任务列表
           refresh();
@@ -214,14 +199,7 @@ const TaskListPage = () => {
 
   return (
     <>
-      <ContentLayout
-        title="任务列表"
-        action={
-          <Button type="primary" className="ml-[8px]" onClick={onCreate}>
-            新建任务
-          </Button>
-        }
-      >
+      <ContentLayout title="任务列表">
         <Card>
           <Table<Task.Item> dataSource={data} rowKey="uid" pagination={false}>
             <Table.Column title="任务编号" dataIndex="uid" />
@@ -268,46 +246,28 @@ const TaskListPage = () => {
               width={280}
               render={(_, record: Task.Item) => (
                 <>
-                  <Button type="link" onClick={() => onCopy(record)}>
-                    复制
-                  </Button>
                   <Link to={`/task_management/detail/${record.uid}`}>
                     <Button type="link">详情</Button>
-                  </Link>{' '}
-                  {record.one_time_task_type !== OneTimeTaskType.Immediate &&
-                    (record.status === TaskStatus.WaitingInit ? (
-                      <Button
-                        type="link"
-                        onClick={() => console.log('初始化任务')}
-                      >
-                        初始化
-                      </Button>
-                    ) : record.status === TaskStatus.Disabled ? (
-                      <Button
-                        type="link"
-                        onClick={() => onAction(record, 'enable')}
-                      >
-                        启用
-                      </Button>
-                    ) : (
-                      <Button
-                        type="link"
-                        onClick={() => onAction(record, 'disable')}
-                      >
-                        禁用
-                      </Button>
-                    ))}{' '}
-                  {/*{(record.status === TaskStatus.Disabled ||*/}
-                  {/*  record.one_time_task_type ===*/}
-                  {/*    OneTimeTaskType.Immediate) && (*/}
-                  {/*  <Button*/}
-                  {/*    type="link"*/}
-                  {/*    danger*/}
-                  {/*    onClick={() => onAction(record, 'delete')}*/}
-                  {/*  >*/}
-                  {/*    删除*/}
-                  {/*  </Button>*/}
-                  {/*)}*/}
+                  </Link>
+                  {record.status === TaskStatus.WaitingInit ? (
+                    <Button type="link" onClick={() => setShowInitModal(true)}>
+                      初始化
+                    </Button>
+                  ) : record.status === TaskStatus.Disabled ? (
+                    <Button
+                      type="link"
+                      onClick={() => onAction(record, 'enable')}
+                    >
+                      启用
+                    </Button>
+                  ) : (
+                    <Button
+                      type="link"
+                      onClick={() => onAction(record, 'disable')}
+                    >
+                      禁用
+                    </Button>
+                  )}
                 </>
               )}
             />
@@ -321,8 +281,8 @@ const TaskListPage = () => {
 
       <Modal
         centered
-        onCancel={() => setShowCreateModal(false)}
-        open={showCreateModal}
+        onCancel={() => setShowInitModal(false)}
+        open={showInitModal}
         title="新建任务"
         width={830}
         footer={null}

@@ -6,6 +6,7 @@ import type { PushRule } from '@/typing/pushRule';
 import type { StructuredRuleset } from '@/typing/structuredRuleset';
 import type { Task } from '@/typing/task';
 import type { User } from '@/typing/user';
+import type { Warehouse } from '@/typing/warehose';
 
 export const useApi = () => {
   const task = useMemo(
@@ -209,6 +210,16 @@ export const useApi = () => {
     [],
   );
 
+  const warehouse = useMemo(
+    () => ({
+      getSourceSchema: () =>
+        service.get('/warehouse/get_source_schema') as Promise<
+          APIRes<Warehouse.SourceSchemas>
+        >,
+    }),
+    [],
+  );
+
   return {
     taskApi: task,
     datasetApi: dataset,
@@ -217,5 +228,6 @@ export const useApi = () => {
     pushRuleApi: pushRule,
     userApi: user,
     sysApi: sys,
+    warehouseApi: warehouse,
   };
 };

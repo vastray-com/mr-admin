@@ -3,39 +3,46 @@ import type {
   DatasetFilterOperator,
   DatasetFilterTable,
   DatasetResourceType,
+  DatasetSourceColumnType,
+  DatasetSourceType,
   DatasetType,
 } from '@/typing/enum/dataset';
 
 export declare namespace Dataset {
-  /// 过滤器对象数据库结构
-  type FilterColOperateItem = Record<
-    DatasetFilterOperator,
-    string | number | boolean
-  >;
-  type FilterCol = Record<string, [FilterColOperateItem]>;
-  type FilterTable = Record<DatasetFilterTable, FilterCol[]>;
-  type Filter = Partial<Record<DatasetFilterLogic, FilterTable[]>>[];
-
-  // 前端录入时 filter 结构
-  type FilterFEInputItem = {
-    logic: DatasetFilterLogic;
-    group: {
-      table: DatasetFilterTable;
-      conditions: {
-        column: string;
-        operator: DatasetFilterOperator;
-        value: string | number | boolean;
-      }[];
-    }[];
-  };
-  type FilterFEInput = FilterFEInputItem[];
-  type InputCreateParams = {
+  type CreateBaseParams = {
     // 数据集名称
     name_cn: string;
     // 数据集英文标识
     name_en: string;
     // 数据集类型
     dataset_type: DatasetType;
+    // 数据集数据源类型
+    source_type: DatasetSourceType;
+  };
+
+  /// 过滤器对象数据库结构
+  type FilterColOperateItem = Record<
+    DatasetFilterOperator,
+    DatasetSourceColumnType
+  >;
+  type FilterCol = Record<string, [FilterColOperateItem]>;
+  type FilterTable = Record<string, FilterCol[]>;
+  type Filter = Partial<Record<DatasetFilterLogic, FilterTable[]>>[];
+
+  // 前端录入时 filter 结构
+  type FilterFEInputItem = {
+    logic: DatasetFilterLogic;
+    group: {
+      table: string;
+      conditions: {
+        column: string;
+        operator: DatasetFilterOperator;
+        value: DatasetSourceColumnType;
+      }[];
+    }[];
+  };
+  type FilterFEInput = FilterFEInputItem[];
+  type InputCreateParams = CreateBaseParams & {
     // 过滤器
     filter: FilterFEInput;
   };
@@ -45,13 +52,7 @@ export declare namespace Dataset {
   // 获取情的参数
   type DetailParams = { uid: string };
   // 创建参数
-  type CreateParams = {
-    // 数据集名称
-    name_cn: string;
-    // 数据集英文标识
-    name_en: string;
-    // 数据集类型
-    dataset_type: DatasetType;
+  type CreateParams = CreateBaseParams & {
     // 过滤器
     filter: Filter;
   };
