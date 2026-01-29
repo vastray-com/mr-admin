@@ -67,8 +67,14 @@ export const useApi = () => {
         service.post('/dataset/create', params) as Promise<APIRes<number>>,
       updateDataset: (params: Dataset.UpdateParams) =>
         service.post('/dataset/update', params) as Promise<APIRes<number>>,
-      actionDataset: (params: Dataset.ActionParams) =>
-        service.post('/dataset/update', params) as Promise<APIRes<null>>,
+      deleteDataset: (uid: string) =>
+        service.post('/dataset/delete', { uid }) as Promise<APIRes<null>>,
+      linkRuleset: (params: Dataset.LinkParams) =>
+        service.post('/dataset/link_ruleset', params) as Promise<APIRes<null>>,
+      archiveDataset: (params: Dataset.ArchiveParams) =>
+        service.post('/dataset/archive_and_create', params) as Promise<
+          APIRes<null>
+        >,
     }),
     [],
   );
@@ -91,8 +97,8 @@ export const useApi = () => {
         service.post('/admin/encode_table/update', params) as Promise<
           APIRes<number>
         >,
-      actionEncode: (params: EncodeTable.ActionParams) =>
-        service.post('/admin/encode_table/update', params) as Promise<
+      deleteEncode: (params: EncodeTable.DeleteParams) =>
+        service.post('/admin/encode_table/delete', params) as Promise<
           APIRes<null>
         >,
       exportEncode: (params: { uids: string[] }) =>

@@ -2,6 +2,7 @@ import type {
   DatasetFilterLogic,
   DatasetFilterOperator,
   DatasetFilterTable,
+  DatasetResourceType,
   DatasetType,
 } from '@/typing/enum/dataset';
 
@@ -58,6 +59,16 @@ export declare namespace Dataset {
   type UpdateParams = { uid: string } & CreateParams;
   // 操作参数
   type ActionParams = { uid: string; action: 'delete' };
+  // 关联参数
+  type LinkItem = {
+    resource_type: DatasetResourceType;
+    structured_ruleset_uid: string;
+  };
+  type LinkContent = LinkItem[];
+  type LinkParams = {
+    dataset_uid: string;
+    content: LinkContent;
+  };
 
   // 数据集项
   type Item = {
@@ -65,6 +76,8 @@ export declare namespace Dataset {
     warning_msg: string;
     // 创建者
     creator: string;
+    // 关联信息
+    linked_ruleset: LinkContent;
     // 删除时间
     deleted_at: string;
     // 创建时间
@@ -74,4 +87,9 @@ export declare namespace Dataset {
   } & UpdateParams;
 
   type List = Item[];
+
+  type ArchiveParams = {
+    uid: string;
+    reason: string;
+  };
 }

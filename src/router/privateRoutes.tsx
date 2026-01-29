@@ -132,31 +132,31 @@ const privateBaseRoutes: BaseRoute = [
     ],
   },
   {
-    key: '/dataset_management',
+    key: '/data',
     element: <Outlet />,
-    label: '数据集管理',
+    label: '数据资产',
     addToMenu: true,
     roles: [UserRole.Admin, UserRole.User],
     loader: ({ request }) => {
       const url = new URL(request.url);
-      if (url.pathname === '/dataset_management') {
-        return redirect('/dataset_management/list');
+      if (url.pathname === '/data' || url.pathname === '/data/dataset') {
+        return redirect('/data/dataset/list');
       }
       return null;
     },
     icon: <i className="i-icon-park-outline:data" />,
     children: [
       {
-        key: '/dataset_management/list',
+        key: '/data/dataset/list',
         element: <LazyComponents.DatasetList />,
         label: '数据集列表',
         addToMenu: true,
         roles: [UserRole.Admin, UserRole.User],
       },
       {
-        key: '/dataset_management/detail/:uid',
-        selectedKeys: ['/dataset_management/list'],
-        element: <div>数据集详情</div>,
+        key: '/data/dataset/detail/:uid',
+        selectedKeys: ['/data/dataset/list'],
+        element: <LazyComponents.DatasetDetail />,
         label: '数据集详情',
         addToMenu: false,
         roles: [UserRole.Admin, UserRole.User],

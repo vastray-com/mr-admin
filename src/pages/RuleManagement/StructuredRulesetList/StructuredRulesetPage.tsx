@@ -18,6 +18,7 @@ import { useFileImport } from '@/hooks/useFileImport';
 import { usePaginationData } from '@/hooks/usePaginationData';
 import { downloadFile } from '@/utils/helper';
 import type { FormProps } from 'antd';
+import type { AxiosError } from 'axios';
 import type { StructuredRuleset } from '@/typing/structuredRuleset';
 
 type FormValues = {
@@ -128,7 +129,7 @@ const StructuredRulesetPage: FC = () => {
   // 导入文件
   const { FileImportModal, openFileImportModal } = useFileImport({
     title: '通过文件导入结构化规则',
-    path: '/admin/structured_rule/import',
+    path: '/structured_ruleset/import',
     onSucceed: refresh,
   });
 
@@ -173,12 +174,17 @@ const StructuredRulesetPage: FC = () => {
       action: StructuredRuleset.ActionParams['action'],
     ) => {
       console.log(`执行 ${action} 操作:`, record);
-      const res = await ruleApi.actionRule({ uid: record.uid, action });
-      if (res.code === 200) {
-        message.success(`操作成功`);
-        refresh();
-      } else {
-        message.error(`操作失败: ${res.message}`);
+      try {
+        const res = await ruleApi.actionRule({ uid: record.uid, action });
+        if (res.code === 200) {
+          message.success(`操作成功`);
+          refresh();
+        } else {
+          message.error(`操作失败: ${res.message}`);
+        }
+      } catch (err) {
+        const e = err as AxiosError<APIRes<any>>;
+        message.error(e.response?.data.message ?? '操作失败，服务异常');
       }
     },
     [refresh, message, ruleApi],

@@ -8,7 +8,6 @@ import {
   Input,
   Table,
 } from 'antd';
-import clsx from 'clsx';
 import dayjs, { type Dayjs } from 'dayjs';
 import { type FC, useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -77,7 +76,7 @@ const EncodeTablePage: FC = () => {
     refresh();
   };
 
-  // 导入病历模版
+  // 导入码表
   const importText = useRef<string>('');
   const onImport = useCallback(async () => {
     console.log('导入码表', importText.current);
@@ -134,7 +133,7 @@ const EncodeTablePage: FC = () => {
   // 导入文件
   const { FileImportModal, openFileImportModal } = useFileImport({
     title: '通过文件导入码表',
-    path: '/admin/encode/import',
+    path: '/admin/encode_table/import',
     onSucceed: refresh,
   });
 
@@ -172,40 +171,24 @@ const EncodeTablePage: FC = () => {
   );
   // 停用/启用/删除项目
   const onAction = useCallback(
-    async (
-      record: EncodeTable.Item,
-      action: 'enable' | 'disable' | 'delete',
-    ) => {
+    async (record: EncodeTable.Item, action: 'delete') => {
       console.log(`执行 ${action} 操作:`, record);
       if (action === 'delete') {
         modal.confirm({
           title: '确认删除',
-          content: `是否确认删除码表 ${record.name_cn}？`,
+          content: `是否确认删除码表 ${record.name}？`,
           onOk: async () => {
-            await encodeApi.actionEncode({ uid: record.uid, is_deleted: 1 });
-            message.success(`删除码表 ${record.name_cn} 成功`);
+            await encodeApi.deleteEncode({ uid: record.uid });
+            message.success(`删除码表 ${record.name} 成功`);
             refresh();
           },
         });
         return;
+      } else {
+        console.warn(`不支持的操作类型: ${action}`);
       }
-
-      // 启用或停用操作
-      const params: EncodeTable.ActionParams = { uid: record.uid };
-      switch (action) {
-        case 'enable':
-          params.status = 1;
-          break;
-        case 'disable':
-          params.status = 0;
-          break;
-      }
-      await encodeApi.actionEncode(params);
-      message.success(`操作码表 ${record.name_cn} 成功`);
-      // 刷新列表
-      refresh();
     },
-    [encodeApi.actionEncode, message.success, modal.confirm, refresh],
+    [encodeApi.deleteEncode, message.success, modal.confirm, refresh],
   );
 
   // 页面渲染
@@ -279,42 +262,15 @@ const EncodeTablePage: FC = () => {
             }}
             pagination={false}
           >
-            <Table.Column title="码表名称" dataIndex="name_cn" />
+            <Table.Column title="码表 ID" dataIndex="uid" />
+            <Table.Column title="码表名称" dataIndex="name" />
             <Table.Column title="简述/备注" dataIndex="comment" />
             <Table.Column
-              title="类型"
-              dataIndex="encode_type"
-              render={(type: EncodeTable.Item['encode_type']) => (
-                <p className="flex items-center">
-                  {type === 0 ? '内置码表' : '自定义码表'}
-                </p>
-              )}
-            />
-            <Table.Column title="码表 ID" dataIndex="uid" />
-            <Table.Column
               title="更新时间"
-              dataIndex="update_time"
-              sorter={(a, b) =>
-                dayjs(a.update_time).isBefore(dayjs(b.update_time)) ? -1 : 1
-              }
+              dataIndex="updated_at"
               render={(time: string) =>
                 dayjs(time).format('YYYY-MM-DD HH:mm:ss')
               }
-            />
-            <Table.Column
-              title="状态"
-              dataIndex="status"
-              render={(status: EncodeTable.Item['status']) => (
-                <p className="flex items-center">
-                  <span
-                    className={clsx(
-                      'w-[6px] h-[6px] rounded-full inline-block mr-[4px]',
-                      status === 1 ? 'bg-[#52C41A]' : 'bg-[#FF4D4F]',
-                    )}
-                  />
-                  <span>{status === 1 ? '启用中' : '已停用'}</span>
-                </p>
-              )}
             />
             <Table.Column
               title="操作"
@@ -322,37 +278,21 @@ const EncodeTablePage: FC = () => {
               width={180}
               render={(_, record: EncodeTable.Item) => (
                 <div className="flex">
-                  {record.encode_type === 1 ? (
-                    <Button
-                      size="small"
-                      type="link"
-                      onClick={() => onEdit(record)}
-                    >
-                      编辑
-                    </Button>
-                  ) : null}
                   <Button
                     size="small"
                     type="link"
-                    onClick={() =>
-                      onAction(
-                        record,
-                        record.status === 1 ? 'disable' : 'enable',
-                      )
-                    }
+                    onClick={() => onEdit(record)}
                   >
-                    {record.status === 1 ? '停用' : '启用'}
+                    编辑
                   </Button>
-                  {record.encode_type === 1 ? (
-                    <Button
-                      size="small"
-                      type="link"
-                      danger
-                      onClick={() => onAction(record, 'delete')}
-                    >
-                      删除
-                    </Button>
-                  ) : null}
+                  <Button
+                    size="small"
+                    type="link"
+                    danger
+                    onClick={() => onAction(record, 'delete')}
+                  >
+                    删除
+                  </Button>
                 </div>
               )}
             />

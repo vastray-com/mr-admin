@@ -21,6 +21,7 @@ import { usePaginationData } from '@/hooks/usePaginationData';
 import { useCacheStore } from '@/store/useCacheStore';
 import { ENUM_VARS } from '@/typing/enum';
 import { OneTimeTaskType, TaskStatus, TaskType } from '@/typing/enum/task';
+import type { Dataset } from '@/typing/dataset';
 import type { Task } from '@/typing/task';
 
 const statusDisplay: Record<TaskStatus, [string, string]> = {
@@ -53,7 +54,7 @@ const ENV_VAR_OPTIONS = [
 ];
 
 const TaskListPage = () => {
-  const { taskApi } = useApi();
+  const { taskApi, datasetApi } = useApi();
   const { message } = App.useApp();
 
   // 拉取列表分页数据
@@ -62,6 +63,7 @@ const TaskListPage = () => {
     fetchData: taskApi.getTaskList,
     setData: setData,
   });
+  const [archiveForm] = Form.useForm<Dataset.ArchiveParams>();
 
   // 新建任务
   const ruleOptions = useCacheStore((s) => s.structuredRulesetOptions);
@@ -89,15 +91,21 @@ const TaskListPage = () => {
   };
 
   const onAction = useCallback(
-    (uid: string, action: Task.ActionParams['action']) => {
-      console.log(`执行操作：${action}，任务 ID：${uid}`);
+    (task: Task.Item, action: Task.ActionParams['action']) => {
+      console.log(`执行操作：${action}，任务 ID：${task.uid}`);
       taskApi
-        .actionTask({ uid, action })
+        .actionTask({ uid: task.uid, action })
         .then((res) => {
           if (res.code === 200) {
-            message.success(`操作成功`);
-            // 刷新任务列表
-            refresh();
+            // 由于字段变更需要归档才可开启
+            if (res.data === 'cached_fields_changed') {
+              archiveForm.setFieldValue('uid', task.dataset_uid);
+              setShowArchiveModal(true);
+            } else {
+              message.success(`操作成功`);
+              // 刷新任务列表
+              refresh();
+            }
           } else {
             message.error(`操作失败：${res.message}`);
           }
@@ -107,7 +115,13 @@ const TaskListPage = () => {
           message.error('操作任务失败，请稍后重试');
         });
     },
-    [taskApi, refresh, message.error, message.success],
+    [
+      taskApi,
+      refresh,
+      message.error,
+      message.success,
+      archiveForm.setFieldValue,
+    ],
   );
 
   const onFinish = useCallback(
@@ -168,6 +182,35 @@ const TaskListPage = () => {
     const selectedKeys = envVars.filter((v) => !!v && !!v[0]).map((v) => v[0]);
     return ENV_VAR_OPTIONS.filter((o) => !selectedKeys.includes(o.value));
   }, [envVars]);
+
+  // 规则变化需要归档数据集重建
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
+  const onArchive = useCallback(
+    async (values: Dataset.ArchiveParams) => {
+      try {
+        const res = await datasetApi.archiveDataset(values);
+        if (res.code === 200) {
+          message.success('归档成功，请重新启动任务');
+          // 刷新任务列表
+          refresh();
+          setShowArchiveModal(false);
+          archiveForm.resetFields();
+        } else {
+          message.error(`归档失败：${res.message}`);
+        }
+      } catch (error) {
+        console.error('归档失败：', error);
+        message.error('归档失败，请稍后重试');
+      }
+    },
+    [
+      datasetApi.archiveDataset,
+      message.error,
+      message.success,
+      refresh,
+      archiveForm.resetFields,
+    ],
+  );
 
   return (
     <>
@@ -232,32 +275,39 @@ const TaskListPage = () => {
                     <Button type="link">详情</Button>
                   </Link>{' '}
                   {record.one_time_task_type !== OneTimeTaskType.Immediate &&
-                    (record.status === TaskStatus.Disabled ? (
+                    (record.status === TaskStatus.WaitingInit ? (
                       <Button
                         type="link"
-                        onClick={() => onAction(record.uid, 'enable')}
+                        onClick={() => console.log('初始化任务')}
+                      >
+                        初始化
+                      </Button>
+                    ) : record.status === TaskStatus.Disabled ? (
+                      <Button
+                        type="link"
+                        onClick={() => onAction(record, 'enable')}
                       >
                         启用
                       </Button>
                     ) : (
                       <Button
                         type="link"
-                        onClick={() => onAction(record.uid, 'disable')}
+                        onClick={() => onAction(record, 'disable')}
                       >
                         禁用
                       </Button>
                     ))}{' '}
-                  {(record.status === TaskStatus.Disabled ||
-                    record.one_time_task_type ===
-                      OneTimeTaskType.Immediate) && (
-                    <Button
-                      type="link"
-                      danger
-                      onClick={() => onAction(record.uid, 'delete')}
-                    >
-                      删除
-                    </Button>
-                  )}
+                  {/*{(record.status === TaskStatus.Disabled ||*/}
+                  {/*  record.one_time_task_type ===*/}
+                  {/*    OneTimeTaskType.Immediate) && (*/}
+                  {/*  <Button*/}
+                  {/*    type="link"*/}
+                  {/*    danger*/}
+                  {/*    onClick={() => onAction(record, 'delete')}*/}
+                  {/*  >*/}
+                  {/*    删除*/}
+                  {/*  </Button>*/}
+                  {/*)}*/}
                 </>
               )}
             />
@@ -494,6 +544,56 @@ const TaskListPage = () => {
             <div className="flex items-center justify-center mt-[36px]">
               <Button type="primary" htmlType="submit">
                 创建
+              </Button>
+            </div>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        centered
+        onCancel={() => setShowArchiveModal(false)}
+        open={showArchiveModal}
+        title="归档数据集"
+        width={830}
+        footer={null}
+      >
+        <p>
+          由于任务关联的解析规则发生变动，需要归档此任务过去的数据后才可重新启动任务，如需启动任务请录入归档原因后重新在页面进行启动。
+        </p>
+        <Form<Dataset.ArchiveParams>
+          className="mt-[36px]"
+          form={archiveForm}
+          name="archive-form"
+          onFinish={onArchive}
+          onFinishFailed={(v) => {
+            console.log('表单提交失败：', v);
+          }}
+          autoComplete="off"
+          labelCol={{ span: 4 }}
+        >
+          <Form.Item<Dataset.ArchiveParams> name="uid" hidden>
+            <Input />
+          </Form.Item>
+
+          <Form.Item<Dataset.ArchiveParams>
+            name="reason"
+            rules={[
+              {
+                required: true,
+                whitespace: true,
+                message: '请输入归档原因',
+              },
+            ]}
+          >
+            <Input placeholder="输入归档原因" />
+          </Form.Item>
+
+          <Form.Item noStyle>
+            <div className="flex items-center justify-center mt-[36px] gap-x-[12px]">
+              <Button onClick={() => setShowArchiveModal(false)}>取消</Button>
+              <Button type="primary" htmlType="submit">
+                确认归档
               </Button>
             </div>
           </Form.Item>

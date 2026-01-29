@@ -18,7 +18,7 @@ import { usePaginationData } from '@/hooks/usePaginationData';
 import {
   datasetFilterDB2FE,
   datasetFilterFE2DB,
-} from '@/pages/DatasetManagement/DatasetList/helper';
+} from '@/pages/DatasetManagement/Dataset/helper';
 import { ENUM_VARS } from '@/typing/enum';
 import type { Dataset } from '@/typing/dataset';
 import type { DatasetType } from '@/typing/enum/dataset';
@@ -60,21 +60,23 @@ const DatasetListPage = () => {
   const onAction = useCallback(
     (uid: string, action: Dataset.ActionParams['action']) => {
       console.log(`执行操作：${action}，数据集 ID：${uid}`);
-      datasetApi
-        .actionDataset({ uid, action })
-        .then((res) => {
-          if (res.code === 200) {
-            message.success(`操作成功`);
-            // 刷新任务列表
-            refresh();
-          } else {
-            message.error(`操作失败：${res.message}`);
-          }
-        })
-        .catch((err) => {
-          console.error(`操作任务失败：`, err);
-          message.error('操作任务失败，请稍后重试');
-        });
+      if (action === 'delete') {
+        datasetApi
+          .deleteDataset(uid)
+          .then((res) => {
+            if (res.code === 200) {
+              message.success(`操作成功`);
+              // 刷新任务列表
+              refresh();
+            } else {
+              message.error(`操作失败：${res.message}`);
+            }
+          })
+          .catch((err) => {
+            console.error(`操作任务失败：`, err);
+            message.error('操作任务失败，请稍后重试');
+          });
+      }
     },
     [datasetApi, refresh, message.error, message.success],
   );
@@ -157,7 +159,7 @@ const DatasetListPage = () => {
                   <Button type="link" onClick={() => onCopy(record)}>
                     复制
                   </Button>
-                  <Link to={`/dataset_management/detail/${record.uid}`}>
+                  <Link to={`/data/dataset/detail/${record.uid}`}>
                     <Button type="link">详情</Button>
                   </Link>
                   <Button

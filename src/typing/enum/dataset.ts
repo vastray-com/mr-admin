@@ -88,6 +88,50 @@ const FILTER_TABLE_MAP: Record<DatasetFilterTable, string> = {
   [DatasetFilterTable.ECGReport]: '心电图报告',
 };
 
+export enum DatasetResourceType {
+  /// 门/急诊病历
+  EmergencyRecord = 'emergency_record',
+  /// 入院记录
+  AdmissionRecord = 'admission_record',
+  /// 首次病程记录
+  FirstCourseRecord = 'first_course_record',
+  /// 出院记录
+  DischargeRecord = 'discharge_record',
+  /// 手术前小结
+  PreoperativeSummary = 'preoperative_summary',
+  /// 手术记录
+  SurgeryRecord = 'surgery_record',
+  /// 实验室检查
+  LaboratoryExamination = 'laboratory_examination',
+  /// CT 报告
+  CTReport = 'ct_report',
+  /// MRI 报告
+  MRIReport = 'mri_report',
+  /// 超声报告
+  UltrasoundReport = 'ultrasound_report',
+  /// 病理报告
+  PathologyReport = 'pathology_report',
+  /// X光报告
+  XRayReport = 'xray_report',
+  /// 心电图报告
+  ECGReport = 'ecg_report',
+}
+const RESOURCE_TYPE_MAP: Record<DatasetResourceType, string> = {
+  [DatasetResourceType.EmergencyRecord]: '门/急诊病历',
+  [DatasetResourceType.AdmissionRecord]: '入院记录',
+  [DatasetResourceType.FirstCourseRecord]: '首次病程记录',
+  [DatasetResourceType.DischargeRecord]: '出院记录',
+  [DatasetResourceType.PreoperativeSummary]: '手术前小结',
+  [DatasetResourceType.SurgeryRecord]: '手术记录',
+  [DatasetResourceType.LaboratoryExamination]: '实验室检查',
+  [DatasetResourceType.CTReport]: 'CT 报告',
+  [DatasetResourceType.MRIReport]: 'MRI 报告',
+  [DatasetResourceType.UltrasoundReport]: '超声报告',
+  [DatasetResourceType.PathologyReport]: '病理报告',
+  [DatasetResourceType.XRayReport]: 'X光报告',
+  [DatasetResourceType.ECGReport]: '心电图报告',
+};
+
 export default {
   TYPE_MAP,
   TYPE_OPT: enumMapToOptions(TYPE_MAP),
@@ -97,4 +141,6 @@ export default {
   FILTER_OPERATOR_OPT: enumMapToOptions(FILTER_OPERATOR_MAP),
   FILTER_TABLE_MAP,
   FILTER_TABLE_OPT: enumMapToOptions(FILTER_TABLE_MAP),
+  RESOURCE_TYPE_MAP,
+  RESOURCE_TYPE_OPT: enumMapToOptions(RESOURCE_TYPE_MAP),
 };

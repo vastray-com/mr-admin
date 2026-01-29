@@ -3,14 +3,13 @@ import { type FC, useCallback, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
+import type { AxiosError } from 'axios';
 
 const initialDetail: EncodeTable.FormDetail = {
   uid: '',
-  name_cn: '',
-  name_en: null,
-  encode_type: 1,
+  name: '',
   comment: '',
-  value: '',
+  content: '',
 };
 
 const EncodeTableDetailPage: FC = () => {
@@ -34,7 +33,7 @@ const EncodeTableDetailPage: FC = () => {
       console.log('拉取码表详情成功:', res);
       setDetail({
         ...res.data,
-        value: JSON.stringify(res.data.value, null, 2),
+        content: JSON.stringify(res.data.content, null, 2),
       });
       isInit.current = true;
     },
@@ -49,19 +48,29 @@ const EncodeTableDetailPage: FC = () => {
       const submitData: EncodeTable.Detail = {
         ...detail,
         ...values,
-        value: JSON.parse(values.value),
+        content: JSON.parse(values.content),
       };
-      if (isNewEncode.current) {
-        console.log('新建码表:', submitData);
-        const res = await encodeApi.createEncode(submitData);
-        console.log('新建码表成功:', res);
-      } else {
-        console.log('更新码表:', submitData);
-        const res = await encodeApi.updateEncode(submitData);
-        console.log('更新码表成功:', res);
+      try {
+        let res: APIRes<number>;
+        if (isNewEncode.current) {
+          console.log('新建码表:', submitData);
+          res = await encodeApi.createEncode(submitData);
+        } else {
+          console.log('更新码表:', submitData);
+          res = await encodeApi.updateEncode(submitData);
+        }
+
+        if (res.code === 200) {
+          message.success('保存码表成功');
+        } else {
+          message.error(res.message || '保存码表失败，请重试');
+        }
+      } catch (err) {
+        const e = err as AxiosError<APIRes<any>>;
+        message.error(e.response?.data.message ?? '保存码表失败，请重试');
       }
     },
-    [encodeApi],
+    [encodeApi, message.error, message.success],
   );
   if (!isInit.current && !isNewEncode.current && uid) {
     fetchDetail(uid);
@@ -95,23 +104,11 @@ const EncodeTableDetailPage: FC = () => {
           <div className="flex items-center gap-x-[24px] mb-[8px]">
             <Form.Item<EncodeTable.FormDetail>
               label="码表名称"
-              name="name_cn"
+              name="name"
               className="w-[50%]"
               rules={[
                 { required: true, message: '请输入码表名称' },
                 { whitespace: true, message: '码表名称不能为空' },
-              ]}
-            >
-              <Input />
-            </Form.Item>
-
-            <Form.Item<EncodeTable.FormDetail>
-              label="英文名称"
-              name="name_en"
-              className="w-[50%]"
-              rules={[
-                { required: true, message: '请输入英文名称' },
-                { whitespace: true, message: '英文名称不能为空' },
               ]}
             >
               <Input />
@@ -135,7 +132,7 @@ const EncodeTableDetailPage: FC = () => {
           classNames={{ body: 'h-[calc(100%_-_56px)]' }}
         >
           <Form.Item<EncodeTable.FormDetail>
-            name="value"
+            name="content"
             className="w-[100%]"
             label={null}
             rules={[

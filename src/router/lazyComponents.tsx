@@ -45,7 +45,11 @@ const EncodeTableDetail = lazy(
 
 // 数据集管理
 const DatasetList = lazy(
-  () => import('@/pages/DatasetManagement/DatasetList/DatasetListPage'),
+  () => import('@/pages/DatasetManagement/Dataset/DatasetList/DatasetListPage'),
+);
+const DatasetDetail = lazy(
+  () =>
+    import('@/pages/DatasetManagement/Dataset/DatasetDetail/DatasetDetailPage'),
 );
 
 // 用户管理
@@ -69,6 +73,7 @@ export default {
   TaskDetail,
   TaskInstanceDetail,
   DatasetList,
+  DatasetDetail,
   UserList,
   TokenList,
 };
