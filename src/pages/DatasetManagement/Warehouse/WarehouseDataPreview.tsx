@@ -1,5 +1,5 @@
-const WarehouseDataListPage = () => {
+const WarehouseDataPreviewPage = () => {
   return <div>123</div>;
 };
 
-export default WarehouseDataListPage;
+export default WarehouseDataPreviewPage;

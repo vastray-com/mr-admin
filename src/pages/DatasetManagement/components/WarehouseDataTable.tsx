@@ -1,4 +1,4 @@
-import { App, Spin } from 'antd';
+import { App, Empty, Table } from 'antd';
 import { type FC, useEffect, useState } from 'react';
 import { useApi } from '@/hooks/useApi';
 import type { AxiosError } from 'axios';
@@ -50,21 +50,38 @@ export const WarehouseDataTable: FC<Props> = ({
     return <div className="w-full h-[200px]">还没有设置过滤器</div>;
   }
 
-  if (loading) {
-    return <Spin spinning={loading} tip="数据加载中..." />;
-  }
-
-  if (!isFetched) {
+  if (!isFetched && !loading) {
     fetchData({ filter });
   }
 
-  if (!data) {
-    return <div className="w-full h-[200px]">当前过滤器未查询到数据</div>;
-  }
-
-  return data.data?.map((d, i) => (
-    <p key={i} className="whitespace-pre-line">
-      {JSON.stringify(d, null, 2)}
-    </p>
-  ));
+  return (
+    <Table<Record<string, string>>
+      loading={loading}
+      scroll={{ x: true }}
+      dataSource={data?.data}
+      rowKey={(r, i) => (i ? i.toString() : JSON.stringify(r))}
+      pagination={{
+        hideOnSinglePage: true,
+        showTotal: (t) => `共 ${t} 条`,
+        showSizeChanger: true,
+      }}
+      locale={{
+        emptyText: (
+          <Empty
+            style={{ padding: '48px 0' }}
+            description="当前过滤器未过滤出数据，可尝试修改条件再试"
+          />
+        ),
+      }}
+    >
+      {data?.columns.map((c) => (
+        <Table.Column
+          title={c.label}
+          dataIndex={c.value}
+          key={c.value}
+          ellipsis
+        />
+      ))}
+    </Table>
+  );
 };
