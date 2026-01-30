@@ -51,6 +51,9 @@ const DatasetDetail = lazy(
   () =>
     import('@/pages/DatasetManagement/Dataset/DatasetDetail/DatasetDetailPage'),
 );
+const WarehouseDataPreview = lazy(
+  () => import('@/pages/DatasetManagement/Warehouse/WarehouseDataPreview'),
+);
 
 // 用户管理
 const UserList = lazy(
@@ -74,6 +77,7 @@ export default {
   TaskInstanceDetail,
   DatasetList,
   DatasetDetail,
+  WarehouseDataPreview,
   UserList,
   TokenList,
 };

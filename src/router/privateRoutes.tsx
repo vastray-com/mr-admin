@@ -161,6 +161,13 @@ const privateBaseRoutes: BaseRoute = [
         addToMenu: false,
         roles: [UserRole.Admin, UserRole.User],
       },
+      {
+        key: '/data/warehouse/data_list',
+        element: <LazyComponents.WarehouseDataPreview />,
+        label: '明细数据',
+        addToMenu: true,
+        roles: [UserRole.Admin, UserRole.User],
+      },
     ],
   },
   {

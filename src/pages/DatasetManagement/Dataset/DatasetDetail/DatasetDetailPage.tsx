@@ -13,7 +13,7 @@ import { useCallback, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
-import { WarehouseDataTable } from '@/pages/DatasetManagement/Dataset/components/WarehouseDataTable';
+import { WarehouseDataTable } from '@/pages/DatasetManagement/components/WarehouseDataTable';
 import { useCacheStore } from '@/store/useCacheStore';
 import { ENUM_VARS } from '@/typing/enum';
 import type { Dataset } from '@/typing/dataset';
