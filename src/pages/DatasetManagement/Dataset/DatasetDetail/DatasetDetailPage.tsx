@@ -15,9 +15,8 @@ import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
-import { DatasetFilterForm } from '@/pages/DatasetManagement/components/DatasetFilterForm';
+import { DatasetFilterDisplay } from '@/pages/DatasetManagement/components/DatasetFilterDisplay';
 import { WarehouseDataTable } from '@/pages/DatasetManagement/components/WarehouseDataTable';
-import { datasetFilterDB2FE } from '@/pages/DatasetManagement/helper';
 import { useCacheStore } from '@/store/useCacheStore';
 import { ENUM_VARS } from '@/typing/enum';
 import type { Dataset } from '@/typing/dataset';
@@ -30,15 +29,12 @@ const DatasetDetailPage = () => {
 
   const rulesetOptions = useCacheStore((s) => s.structuredRulesetOptions);
 
-  // 用表单渲染过滤器
-  const [filterForm] = Form.useForm();
   const [detail, setDetail] = useState<Dataset.Item | null>(null);
   const fetchDetail = useCallback(
     async (uid: string) => {
       const res = await datasetApi.getDatasetDetail({ uid });
       console.log('拉取数据集详情成功:', res);
       setDetail(res.data);
-      filterForm.setFieldValue('filter', datasetFilterDB2FE(res.data.filter));
     },
     [datasetApi],
   );
@@ -105,7 +101,7 @@ const DatasetDetailPage = () => {
   // 过滤器展示模式
   const filterDisplayMode = [
     { value: 'form', label: '表单模式' },
-    { value: 'json', label: 'JSON 模式' },
+    { value: 'json', label: ' JSON 模式' },
   ] as const;
   const [curFilterDisplayMode, setCurFilterDisplayMode] = useState<
     (typeof filterDisplayMode)[number]['value']
@@ -123,7 +119,6 @@ const DatasetDetailPage = () => {
     );
     const nextIdx = (idx + 1) % filterDisplayMode.length;
     setCurFilterDisplayMode(filterDisplayMode[nextIdx].value);
-    filterForm.setFieldValue('filter', datasetFilterDB2FE(detail.filter));
   }, [curFilterDisplayMode, detail]);
 
   if (!uid) {
@@ -219,21 +214,8 @@ const DatasetDetailPage = () => {
                   <div className="max-h-[480px] overflow-auto">
                     {curFilterDisplayMode === 'json' ? (
                       <pre>{JSON.stringify(detail.filter, null, 2)}</pre>
-                    ) : curFilterDisplayMode === 'form' && detail.filter ? (
-                      <Form
-                        form={filterForm}
-                        name="dataset-display-filter-form"
-                        disabled
-                        style={{ width: '800px' }}
-                      >
-                        <DatasetFilterForm
-                          onlyPreview
-                          name="filter"
-                          form={filterForm}
-                          sourceType={detail.source_type}
-                          label={null}
-                        />
-                      </Form>
+                    ) : curFilterDisplayMode === 'form' ? (
+                      <DatasetFilterDisplay filter={detail.filter} />
                     ) : null}
                   </div>
                 ),

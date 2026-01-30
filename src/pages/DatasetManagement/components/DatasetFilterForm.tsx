@@ -22,7 +22,6 @@ type Props = {
   name: string;
   form: FormInstance;
   sourceType?: DatasetSourceType;
-  onlyPreview?: boolean;
   label?: string | null;
 };
 
@@ -30,7 +29,6 @@ export const DatasetFilterForm: FC<Props> = ({
   name,
   sourceType,
   form,
-  onlyPreview = false,
   label = '数据过滤器',
 }) => {
   const sourceSchema = useCacheStore((s) => s.sourceSchemaList);
@@ -88,15 +86,13 @@ export const DatasetFilterForm: FC<Props> = ({
                     />
                   </Form.Item>
 
-                  {!onlyPreview && (
-                    <Button
-                      danger
-                      onClick={() => removeLogic(logicName)}
-                      icon={<i className="i-line-md:trash text-[20px]" />}
-                    >
-                      删除过滤器
-                    </Button>
-                  )}
+                  <Button
+                    danger
+                    onClick={() => removeLogic(logicName)}
+                    icon={<i className="i-line-md:trash text-[20px]" />}
+                  >
+                    删除过滤器
+                  </Button>
                 </Flex>
 
                 <Form.Item shouldUpdate>
@@ -145,17 +141,15 @@ export const DatasetFilterForm: FC<Props> = ({
                                     />
                                   </Form.Item>
 
-                                  {!onlyPreview && (
-                                    <Button
-                                      danger
-                                      onClick={() => removeGroup(groupName)}
-                                      icon={
-                                        <i className="i-line-md:trash text-[20px]" />
-                                      }
-                                    >
-                                      删除条件组
-                                    </Button>
-                                  )}
+                                  <Button
+                                    danger
+                                    onClick={() => removeGroup(groupName)}
+                                    icon={
+                                      <i className="i-line-md:trash text-[20px]" />
+                                    }
+                                  >
+                                    删除条件组
+                                  </Button>
                                 </Flex>
 
                                 <Form.Item shouldUpdate>
@@ -410,37 +404,33 @@ export const DatasetFilterForm: FC<Props> = ({
                                                   }}
                                                 </Form.Item>
 
-                                                {!onlyPreview && (
-                                                  <Button
-                                                    danger
-                                                    type="link"
-                                                    onClick={() =>
-                                                      removeCondition(
-                                                        conditionName,
-                                                      )
-                                                    }
-                                                    className="basis-[32px]"
-                                                    icon={
-                                                      <i className="i-line-md:trash text-[20px]" />
-                                                    }
-                                                  />
-                                                )}
+                                                <Button
+                                                  danger
+                                                  type="link"
+                                                  onClick={() =>
+                                                    removeCondition(
+                                                      conditionName,
+                                                    )
+                                                  }
+                                                  className="basis-[32px]"
+                                                  icon={
+                                                    <i className="i-line-md:trash text-[20px]" />
+                                                  }
+                                                />
                                               </Flex>
                                             ),
                                           )}
 
-                                          {!onlyPreview && (
-                                            <Button
-                                              block
-                                              type="dashed"
-                                              onClick={addCondition}
-                                              icon={
-                                                <i className="i-line-md:plus-circle text-[20px]" />
-                                              }
-                                            >
-                                              添加条件
-                                            </Button>
-                                          )}
+                                          <Button
+                                            block
+                                            type="dashed"
+                                            onClick={addCondition}
+                                            icon={
+                                              <i className="i-line-md:plus-circle text-[20px]" />
+                                            }
+                                          >
+                                            添加条件
+                                          </Button>
                                         </>
                                       )}
                                     </Form.List>
@@ -450,18 +440,16 @@ export const DatasetFilterForm: FC<Props> = ({
                             ),
                           )}
 
-                          {!onlyPreview && (
-                            <Button
-                              block
-                              type="dashed"
-                              onClick={addGroup}
-                              icon={
-                                <i className="i-line-md:plus-circle text-[20px]" />
-                              }
-                            >
-                              添加条件组
-                            </Button>
-                          )}
+                          <Button
+                            block
+                            type="dashed"
+                            onClick={addGroup}
+                            icon={
+                              <i className="i-line-md:plus-circle text-[20px]" />
+                            }
+                          >
+                            添加条件组
+                          </Button>
                         </>
                       )}
                     </Form.List>
@@ -470,18 +458,16 @@ export const DatasetFilterForm: FC<Props> = ({
               </Card>
             ))}
 
-            {!onlyPreview && (
-              <Button
-                block
-                type="dashed"
-                onClick={addLogic}
-                icon={
-                  <i className="i-line-md:plus-circle text-[20px] fg-secondary" />
-                }
-              >
-                添加过滤器
-              </Button>
-            )}
+            <Button
+              block
+              type="dashed"
+              onClick={addLogic}
+              icon={
+                <i className="i-line-md:plus-circle text-[20px] fg-secondary" />
+              }
+            >
+              添加过滤器
+            </Button>
           </>
         )}
       </Form.List>
