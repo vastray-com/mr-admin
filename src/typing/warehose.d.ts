@@ -54,4 +54,13 @@ export declare namespace Warehouse {
     columns: SourceColumns;
   };
   type SourceSchemas = SourceSchema[];
+
+  type GetSourceDataParams = {
+    filter: Dataset.Filter;
+  };
+  type SourceData = {
+    data: Record<string, string>[];
+    columns: SourceColumns;
+    total: number;
+  };
 }

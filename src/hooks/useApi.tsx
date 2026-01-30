@@ -216,6 +216,10 @@ export const useApi = () => {
         service.get('/warehouse/get_source_schema') as Promise<
           APIRes<Warehouse.SourceSchemas>
         >,
+      getSourceData: (params: Warehouse.GetSourceDataParams) =>
+        service.post('/warehouse/get_source_data', params) as Promise<
+          APIRes<Warehouse.SourceData>
+        >,
     }),
     [],
   );

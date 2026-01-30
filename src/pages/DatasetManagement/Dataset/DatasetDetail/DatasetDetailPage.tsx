@@ -13,6 +13,7 @@ import { useCallback, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
+import { WarehouseDataTable } from '@/pages/DatasetManagement/Dataset/components/WarehouseDataTable';
 import { useCacheStore } from '@/store/useCacheStore';
 import { ENUM_VARS } from '@/typing/enum';
 import type { Dataset } from '@/typing/dataset';
@@ -118,6 +119,10 @@ const DatasetDetailPage = () => {
         <Card>
           <p>{JSON.stringify(detail, null, 2)}</p>
           <Button onClick={() => setShowLinkModal(true)}>关联规则集</Button>
+        </Card>
+
+        <Card>
+          <WarehouseDataTable filter={detail.filter} showMessage />
         </Card>
       </ContentLayout>
 

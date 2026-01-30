@@ -1,7 +1,6 @@
 import type {
   DatasetFilterLogic,
   DatasetFilterOperator,
-  DatasetFilterTable,
   DatasetResourceType,
   DatasetSourceColumnType,
   DatasetSourceType,
