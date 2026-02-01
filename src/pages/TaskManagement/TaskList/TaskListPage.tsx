@@ -13,12 +13,11 @@ import {
 } from 'antd';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { usePaginationData } from '@/hooks/usePaginationData';
-import { useCacheStore } from '@/store/useCacheStore';
 import { ENUM_VARS } from '@/typing/enum';
 import { OneTimeTaskType, TaskStatus, TaskType } from '@/typing/enum/task';
 import type { Dataset } from '@/typing/dataset';
@@ -63,17 +62,66 @@ const TaskListPage = () => {
     fetchData: taskApi.getTaskList,
     setData: setData,
   });
+
+  // 表单
+  const [form] = Form.useForm<Task.InitFEParams>();
   const [archiveForm] = Form.useForm<Dataset.ArchiveParams>();
 
-  // 新建任务
-  const ruleOptions = useCacheStore((s) => s.structuredRulesetOptions);
-  const [form] = Form.useForm<Task.CreateItem>();
-  const newTaskData = useRef<Task.CreateItem | null>(null);
+  // 初始化任务
   const [showInitModal, setShowInitModal] = useState(false);
-  const onInit = () => {
-    form.resetFields();
-    setShowInitModal(true);
-  };
+  const onInit = useCallback(
+    (r: Task.Item) => {
+      form.resetFields();
+      form.setFieldValue('uid', r.uid);
+      form.setFieldValue('task_type', r.task_type);
+      setShowInitModal(true);
+    },
+    [form.resetFields],
+  );
+  const onFinish = useCallback(
+    async (values: Task.InitFEParams) => {
+      console.log('初始化新任务：', values);
+      // 转换日期格式
+      const envVars: Record<string, string> = {};
+      if (values.env_vars.length > 0) {
+        values.env_vars.forEach((v) => {
+          if (v && v.length === 2) {
+            const [key, val] = v;
+            const opt = ENV_VAR_OPTIONS.find((o) => o.value === key);
+            if (opt?.input_type === 'date' && dayjs(val).isValid()) {
+              envVars[key] = dayjs(val).toISOString();
+            } else {
+              envVars[key] = val;
+            }
+          }
+        });
+      }
+
+      const newTaskData: Task.InitParams = {
+        ...values,
+        schedule_time: values.schedule_time?.toISOString(),
+        env_vars: envVars,
+      };
+      console.log('转换后的新任务数据：', newTaskData);
+
+      try {
+        const res = await taskApi.initTask(newTaskData);
+        if (res.code === 200) {
+          message.success('任务初始化成功');
+          setShowInitModal(false);
+          form.resetFields();
+          // 刷新任务列表
+          refresh();
+        } else {
+          message.error(`初始化任务失败：${res.message}`);
+        }
+      } catch (error) {
+        console.error('初始化任务失败：', error);
+        message.error('初始化任务失败，请稍后重试');
+      }
+    },
+    [taskApi, refresh, form.resetFields, message.error, message.success],
+  );
 
   const onAction = useCallback(
     (task: Task.Item, action: Task.ActionParams['action']) => {
@@ -109,56 +157,13 @@ const TaskListPage = () => {
     ],
   );
 
-  const onFinish = useCallback(
-    async (values: Task.CreateItem) => {
-      console.log('提交的新任务数据：', values);
-      // 转换日期格式
-      const envVars: Record<string, string> = {};
-      if (values.env_vars.length > 0) {
-        values.env_vars.forEach((v) => {
-          if (v && v.length === 2) {
-            const [key, val] = v;
-            const opt = ENV_VAR_OPTIONS.find((o) => o.value === key);
-            if (opt?.input_type === 'date' && dayjs(val).isValid()) {
-              envVars[key] = dayjs(val).toISOString();
-            } else {
-              envVars[key] = val;
-            }
-          }
-        });
-      }
-      const newTaskData: Task.Item = {
-        ...values,
-        schedule_time: values.schedule_time?.toISOString(),
-        env_vars: envVars,
-      };
-      console.log('转换后的新任务数据：', newTaskData);
-      try {
-        const res = await taskApi.createTask(newTaskData);
-        if (res.code === 200) {
-          message.success('任务创建成功');
-          setShowInitModal(false);
-          form.resetFields();
-          // 刷新任务列表
-          refresh();
-        } else {
-          message.error(`创建任务失败：${res.message}`);
-        }
-      } catch (error) {
-        console.error('创建任务失败：', error);
-        message.error('创建任务失败，请稍后重试');
-      }
-    },
-    [taskApi, refresh, form.resetFields, message.error, message.success],
-  );
-
   // 推送规则联动
-  const pushRules = useCacheStore((s) => s.pushRuleOptions);
-  const rule_uid = Form.useWatch('rule_uid', form);
-  const pushRuleOptions = useMemo(() => {
-    if (!rule_uid) return [];
-    return pushRules[rule_uid] || [];
-  }, [rule_uid, pushRules]);
+  // const pushRules = useCacheStore((s) => s.pushRuleOptions);
+  // const rule_uid = Form.useWatch('rule_uid', form);
+  // const pushRuleOptions = useMemo(() => {
+  //   if (!rule_uid) return [];
+  //   return pushRules[rule_uid] || [];
+  // }, [rule_uid, pushRules]);
 
   // 环境变量选择时过滤已选项
   const envVars = Form.useWatch('env_vars', form);
@@ -202,22 +207,17 @@ const TaskListPage = () => {
       <ContentLayout title="任务列表">
         <Card>
           <Table<Task.Item> dataSource={data} rowKey="uid" pagination={false}>
+            <Table.Column title="任务名称" dataIndex="name" />
             <Table.Column title="任务编号" dataIndex="uid" />
+            <Table.Column title="关联数据集" dataIndex="dataset_name" />
             <Table.Column
               title="任务类型"
               dataIndex="task_type"
               render={(type: TaskType) => ENUM_VARS.TASK.TYPE_MAP[type]}
             />
             <Table.Column
-              title="结构化规则"
-              dataIndex="rule_uid"
-              render={(uid) =>
-                ruleOptions.find((rule) => rule.value === uid)?.label ?? '-'
-              }
-            />
-            <Table.Column
               title="创建时间"
-              dataIndex="create_time"
+              dataIndex="created_at"
               render={(time) => dayjs(time).format('YYYY-MM-DD HH:mm:ss')}
             />
             <Table.Column
@@ -246,11 +246,14 @@ const TaskListPage = () => {
               width={280}
               render={(_, record: Task.Item) => (
                 <>
-                  <Link to={`/task_management/detail/${record.uid}`}>
-                    <Button type="link">详情</Button>
-                  </Link>
+                  {record.status !== TaskStatus.WaitingInit && (
+                    <Link to={`/task_management/detail/${record.uid}`}>
+                      <Button type="link">详情</Button>
+                    </Link>
+                  )}
+
                   {record.status === TaskStatus.WaitingInit ? (
-                    <Button type="link" onClick={() => setShowInitModal(true)}>
+                    <Button type="link" onClick={() => onInit(record)}>
                       初始化
                     </Button>
                   ) : record.status === TaskStatus.Disabled ? (
@@ -283,14 +286,14 @@ const TaskListPage = () => {
         centered
         onCancel={() => setShowInitModal(false)}
         open={showInitModal}
-        title="新建任务"
+        title="初始化任务"
         width={830}
         footer={null}
       >
-        <Form<Task.CreateItem>
+        <Form<Task.InitFEParams>
           className="mt-[36px]"
           form={form}
-          name="new-task-form"
+          name="init-task-form"
           onFinish={onFinish}
           onFinishFailed={(v) => {
             console.log('表单提交失败：', v);
@@ -298,53 +301,27 @@ const TaskListPage = () => {
           autoComplete="off"
           labelCol={{ span: 4 }}
         >
-          <Form.Item<Task.CreateItem>
-            label="任务类型"
-            name="task_type"
-            rules={[
-              {
-                required: true,
-                message: '请选择任务类型',
-              },
-            ]}
-          >
-            <Select
-              options={ENUM_VARS.TASK.TYPE_OPT}
-              placeholder="选择任务类型"
-            />
+          <Form.Item<Task.InitFEParams> noStyle hidden name="uid">
+            <Input />
+          </Form.Item>
+          <Form.Item<Task.InitFEParams> noStyle hidden name="task_type">
+            <Select options={ENUM_VARS.TASK.TYPE_OPT} />
           </Form.Item>
 
-          <Form.Item<Task.CreateItem>
-            label="结构化规则"
-            name="dataset_uid"
-            rules={[
-              {
-                required: true,
-                message: '请选择结构化规则',
-              },
-            ]}
-          >
-            <Select
-              options={ruleOptions}
-              placeholder="选择结构化规则"
-              onChange={() => form.setFieldValue('push_uids', [])}
-            />
-          </Form.Item>
+          {/*<Form.Item noStyle dependencies={['rule_uid']}>*/}
+          {/*  {() => (*/}
+          {/*    <Form.Item<Task.InitFEParams> label="推送规则" name="push_uids">*/}
+          {/*      <Select*/}
+          {/*        options={pushRuleOptions}*/}
+          {/*        placeholder="选择推送规则"*/}
+          {/*        allowClear*/}
+          {/*        mode="multiple"*/}
+          {/*      />*/}
+          {/*    </Form.Item>*/}
+          {/*  )}*/}
+          {/*</Form.Item>*/}
 
-          <Form.Item noStyle dependencies={['rule_uid']}>
-            {() => (
-              <Form.Item<Task.CreateItem> label="推送规则" name="push_uids">
-                <Select
-                  options={pushRuleOptions}
-                  placeholder="选择推送规则"
-                  allowClear
-                  mode="multiple"
-                />
-              </Form.Item>
-            )}
-          </Form.Item>
-
-          <Form.Item<Task.CreateItem>
+          <Form.Item<Task.InitFEParams>
             label="环境变量"
             help="环境变量可选项及对应值规则见文档"
           >
@@ -434,13 +411,13 @@ const TaskListPage = () => {
             </Form.List>
           </Form.Item>
 
-          <Form.Item<Task.CreateItem>
+          <Form.Item<Task.InitFEParams>
             noStyle
             shouldUpdate={(pre, cur) => pre.task_type !== cur.task_type}
           >
             {() =>
               form.getFieldValue('task_type') === TaskType.Circular ? (
-                <Form.Item<Task.CreateItem>
+                <Form.Item<Task.InitFEParams>
                   label="执行时间"
                   name="cron"
                   rules={[
@@ -454,7 +431,7 @@ const TaskListPage = () => {
                   <Input placeholder="输入 7 位 cron 表达式" />
                 </Form.Item>
               ) : (
-                <Form.Item<Task.CreateItem>
+                <Form.Item<Task.InitFEParams>
                   noStyle
                   shouldUpdate={(pre, cur) =>
                     pre.one_time_task_type !== cur.one_time_task_type
@@ -462,7 +439,7 @@ const TaskListPage = () => {
                 >
                   {() => (
                     <>
-                      <Form.Item<Task.CreateItem>
+                      <Form.Item<Task.InitFEParams>
                         label="执行方式"
                         name="one_time_task_type"
                         rules={[
@@ -480,7 +457,7 @@ const TaskListPage = () => {
 
                       {form.getFieldValue('one_time_task_type') ===
                         OneTimeTaskType.Schedule && (
-                        <Form.Item<Task.CreateItem>
+                        <Form.Item<Task.InitFEParams>
                           label="执行时间"
                           name="schedule_time"
                           rules={[
@@ -503,7 +480,7 @@ const TaskListPage = () => {
           <Form.Item noStyle>
             <div className="flex items-center justify-center mt-[36px]">
               <Button type="primary" htmlType="submit">
-                创建
+                确认初始化
               </Button>
             </div>
           </Form.Item>

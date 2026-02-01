@@ -56,12 +56,22 @@ declare namespace Task {
     schedule_time?: string;
   } & BaseItem;
   type List = Item[];
-  type CreateItem = {
-    // 任务环境变量，JSON 字符串
+
+  // 初始化任务参数
+  type InitBase = {
+    uid: string;
+    task_type: TaskType;
+    one_time_task_type?: OneTimeTaskType;
+    cron?: string;
+  };
+  type InitFEParams = {
     env_vars: [string, string][];
-    // 执行时间，当任务类型为一次性任务且执行时间类型为定时任务时存在
     schedule_time?: Dayjs;
-  } & BaseItem;
+  } & InitBase;
+  type InitParams = {
+    env_vars: Record<string, string>;
+    schedule_time?: string;
+  } & InitBase;
 
   // 获取任务实例列表的参数
   type InstanceListParams = PaginationParams & {
