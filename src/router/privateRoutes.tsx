@@ -147,6 +147,13 @@ const privateBaseRoutes: BaseRoute = [
     icon: <i className="i-icon-park-outline:data" />,
     children: [
       {
+        key: '/data/warehouse/data_list',
+        element: <LazyComponents.WarehouseDataPreview />,
+        label: '数据查询',
+        addToMenu: true,
+        roles: [UserRole.Admin, UserRole.User],
+      },
+      {
         key: '/data/dataset/list',
         element: <LazyComponents.DatasetList />,
         label: '数据集列表',
@@ -159,13 +166,6 @@ const privateBaseRoutes: BaseRoute = [
         element: <LazyComponents.DatasetDetail />,
         label: '数据集详情',
         addToMenu: false,
-        roles: [UserRole.Admin, UserRole.User],
-      },
-      {
-        key: '/data/warehouse/data_list',
-        element: <LazyComponents.WarehouseDataPreview />,
-        label: '明细数据',
-        addToMenu: true,
         roles: [UserRole.Admin, UserRole.User],
       },
     ],

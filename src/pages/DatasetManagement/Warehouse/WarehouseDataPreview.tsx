@@ -9,27 +9,33 @@ import { ENUM_VARS } from '@/typing/enum';
 import type { Dataset } from '@/typing/dataset';
 
 const WarehouseDataPreviewPage = () => {
+  // 过滤数据
+  const [filterForm] = Form.useForm<Dataset.GetDataParams>();
   // 新建数据集
-  const [form] = Form.useForm<Dataset.InputCreateParams>();
+  const [createForm] = Form.useForm<Dataset.InputCreateParams>();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const onCreate = () => {
+    createForm.resetFields();
+    const filterFormValues = filterForm.getFieldsValue();
+    createForm.setFieldsValue({
+      source_type: filterFormValues.source_type,
+      filter: filterFormValues.filter,
+    });
     setShowCreateModal(true);
   };
 
   // 过滤数据
   const [filter, setFilter] = useState<Dataset.Filter | null>(null);
-  const onFilterFinish = useCallback(async () => {
-    form
-      .validateFields(['filter', 'source_type'], {
-        recursive: true,
-      })
-      .then((v) => {
-        if (!v.filter || v.filter.length === 0) {
+  const onFilterFinish = useCallback(() => {
+    filterForm
+      .validateFields()
+      .then((values) => {
+        if (!values.filter || values.filter.length === 0) {
           message.warning('请至少设置一个过滤器');
           return;
         }
-        console.log('过滤条件：', v.filter);
-        const f = datasetFilterFE2DB(v.filter);
+        console.log('过滤条件：', values.filter);
+        const f = datasetFilterFE2DB(values.filter);
         console.log('转换后过滤条件：', f);
         setFilter(f);
       })
@@ -42,7 +48,7 @@ const WarehouseDataPreviewPage = () => {
   return (
     <>
       <CreateDatasetModal
-        form={form}
+        form={createForm}
         open={showCreateModal}
         onClose={() => setShowCreateModal(false)}
       />
@@ -63,10 +69,9 @@ const WarehouseDataPreviewPage = () => {
           ]}
         >
           <div className="overflow-y-scroll max-h-[440px] pr-[12px]">
-            <Form<Dataset.InputCreateParams>
-              form={form}
+            <Form<Dataset.GetDataParams>
+              form={filterForm}
               name="filter-dataset-form"
-              onFinish={onFilterFinish}
               onFinishFailed={(v) => {
                 console.log('表单提交失败：', v);
               }}
@@ -74,7 +79,7 @@ const WarehouseDataPreviewPage = () => {
               labelCol={{ span: 1 }}
               requiredMark={false}
             >
-              <Form.Item<Dataset.InputCreateParams>
+              <Form.Item<Dataset.GetDataParams>
                 label="数据源类型"
                 name="source_type"
                 rules={[
@@ -93,7 +98,7 @@ const WarehouseDataPreviewPage = () => {
               <DatasetFilterForm
                 name="filter"
                 sourceTypeName="source_type"
-                form={form}
+                form={filterForm}
                 cardWidth="540px"
               />
             </Form>

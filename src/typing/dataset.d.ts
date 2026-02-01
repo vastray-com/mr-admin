@@ -46,6 +46,13 @@ export declare namespace Dataset {
     filter: FilterFEInput;
   };
 
+  type GetDataParams = {
+    // 数据集数据源类型
+    source_type: DatasetSourceType;
+    // 过滤器
+    filter: FilterFEInput;
+  };
+
   // 获取列表的参数
   type ListParams = PaginationParams;
   // 获取情的参数
