@@ -5,7 +5,7 @@ import { Link, useParams } from 'react-router';
 import { ScrollableCard } from '@/components/Card';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
-import { taskInstanceStatusDisplay } from '@/pages/TaskManagement/TaskList/TaskDetail/TaskDetailPage';
+import { ENUM_VARS } from '@/typing/enum';
 import { formatCountToString } from '@/utils/helper';
 import type { Task } from '@/typing/task';
 
@@ -91,30 +91,28 @@ const TaskInstanceDetailPage = () => {
             {
               key: '2',
               label: '运行状态',
-              children: taskInstanceStatusDisplay[data.status][1],
+              children: ENUM_VARS.TASK.INSTANCE_STATUS_DISPLAY[data.status][1],
             },
             {
               key: '3',
               label: '开始执行时间',
-              children: dayjs(data.task_start_time).format(
-                'YYYY-MM-DD HH:mm:ss',
-              ),
+              children: dayjs(data.start_time).format('YYYY-MM-DD HH:mm:ss'),
             },
-            { key: '4', label: '执行时长', children: data.task_duration },
+            { key: '4', label: '执行时长', children: data.duration },
             {
               key: '5',
               label: '总量',
-              children: formatCountToString(data.mr_total),
+              children: formatCountToString(data.total_count),
             },
             {
               key: '6',
               label: '任务结果',
               children: (
                 <p>
-                  <span>{`已执行${formatCountToString(data.mr_finish + data.mr_fail)}`}</span>
-                  <span>{`，成功 ${formatCountToString(data.mr_finish)}`}</span>
+                  <span>{`已执行${formatCountToString(data.succeed_count + data.failed_count)}`}</span>
+                  <span>{`，成功 ${formatCountToString(data.succeed_count)}`}</span>
                   <span>{`，失败 `}</span>
-                  <span className="text-red">{`${formatCountToString(data.mr_fail)}`}</span>
+                  <span className="text-red">{`${formatCountToString(data.failed_count)}`}</span>
                 </p>
               ),
             },
@@ -183,7 +181,7 @@ const TaskInstanceDetailPage = () => {
 
       <Drawer
         title="结果查看"
-        width="88%"
+        size="88%"
         closable={{ 'aria-label': 'Close Button' }}
         open={drawer.open}
         onClose={() => setDrawer({ open: false, data: null })}

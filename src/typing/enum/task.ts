@@ -35,6 +35,11 @@ export enum TaskStatus {
   // 等待初始化
   WaitingInit = 'waiting_init',
 }
+const STATUS_DISPLAY: Record<TaskStatus, [string, string]> = {
+  [TaskStatus.Disabled]: ['#D9D9D9', '已停用'],
+  [TaskStatus.Enabled]: ['#52C41A', '已启用'],
+  [TaskStatus.WaitingInit]: ['#FAAD14', '等待初始化'],
+};
 
 // 任务实例状态 pending: 待运行 running: 运行中 completed: 完成 failed: 失败 stopped: 停止 (手动停止) paused: 暂停
 export enum TaskInstanceStatus {
@@ -51,6 +56,14 @@ export enum TaskInstanceStatus {
   // 暂停
   Paused = 'paused',
 }
+const INSTANCE_STATUS_DISPLAY: Record<TaskInstanceStatus, [string, string]> = {
+  [TaskInstanceStatus.Pending]: ['#EC622B', '待运行'],
+  [TaskInstanceStatus.Running]: ['#108ee9', '运行中'],
+  [TaskInstanceStatus.Completed]: ['#87d068', '运行完成'],
+  [TaskInstanceStatus.Failed]: ['#BD342B', '运行失败'],
+  [TaskInstanceStatus.Stopped]: ['#BFBFBF', '已停止'],
+  [TaskInstanceStatus.Paused]: ['#F1BB59', '已暂停'],
+};
 
 // 任务推送状态 pending: 待运行 running: 运行中 completed: 完成 failed: 失败
 // export enum TaskPushStatus {
@@ -69,4 +82,6 @@ export default {
   TYPE_OPT: enumMapToOptions(TYPE_MAP),
   ONE_TIME_TYPE_MAP,
   ONE_TIME_TYPE_OPT: enumMapToOptions(ONE_TIME_TYPE_MAP),
+  STATUS_DISPLAY,
+  INSTANCE_STATUS_DISPLAY,
 };

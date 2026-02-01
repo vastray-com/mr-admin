@@ -23,12 +23,6 @@ import { OneTimeTaskType, TaskStatus, TaskType } from '@/typing/enum/task';
 import type { Dataset } from '@/typing/dataset';
 import type { Task } from '@/typing/task';
 
-const statusDisplay: Record<TaskStatus, [string, string]> = {
-  [TaskStatus.Disabled]: ['#D9D9D9', '已停用'],
-  [TaskStatus.Enabled]: ['#52C41A', '已启用'],
-  [TaskStatus.WaitingInit]: ['#FAAD14', '等待初始化'],
-};
-
 const ENV_VAR_OPTIONS = [
   {
     label: '偏移天数（循环任务执行时取数向前 X 天）',
@@ -232,10 +226,12 @@ const TaskListPage = () => {
                 return (
                   <p className="flex gap-x-[6px] items-center">
                     <span
-                      style={{ background: statusDisplay[status][0] }}
+                      style={{
+                        background: ENUM_VARS.TASK.STATUS_DISPLAY[status][0],
+                      }}
                       className={clsx('w-[6px] h-[6px] rounded-full')}
                     />
-                    <span>{statusDisplay[status][1]}</span>
+                    <span>{ENUM_VARS.TASK.STATUS_DISPLAY[status][1]}</span>
                   </p>
                 );
               }}

@@ -1,4 +1,4 @@
-import { App, Button, Card, Descriptions, Divider, Popover, Table } from 'antd';
+import { App, Button, Card, Descriptions, Divider, Table } from 'antd';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
 import { useCallback, useRef, useState } from 'react';
@@ -6,22 +6,14 @@ import { Link, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { usePaginationData } from '@/hooks/usePaginationData';
-import { useCacheStore } from '@/store/useCacheStore';
-import { TaskPushStatus, taskTypeMap } from '@/typing/enum';
+import { ENUM_VARS } from '@/typing/enum';
+import {
+  OneTimeTaskType,
+  TaskInstanceStatus,
+  TaskType,
+} from '@/typing/enum/task';
 import { formatCountToString, formatSecondsToTime } from '@/utils/helper';
 import type { Task } from '@/typing/task';
-
-export const taskInstanceStatusDisplay: Record<
-  Task.Instance['status'],
-  [string, string]
-> = {
-  0: ['#EC622B', '待运行'],
-  1: ['#108ee9', '运行中'],
-  2: ['#87d068', '运行完成'],
-  3: ['#BD342B', '运行失败'],
-  4: ['#BFBFBF', '已停止'],
-  5: ['#F1BB59', '已暂停'],
-};
 
 const TaskDetailPage = () => {
   const { taskUid } = useParams();
@@ -29,8 +21,8 @@ const TaskDetailPage = () => {
   const { message } = App.useApp();
 
   const isInitial = useRef(false);
-  const ruleOptions = useCacheStore((s) => s.structuredRulesetOptions);
-  const pushRuleList = useCacheStore((s) => s.pushRuleList);
+  // const ruleOptions = useCacheStore((s) => s.structuredRulesetOptions);
+  // const pushRuleList = useCacheStore((s) => s.pushRuleList);
 
   const [data, setData] = useState<Task.Item | null>(null);
 
@@ -74,26 +66,26 @@ const TaskDetailPage = () => {
   );
 
   // 重新执行推送
-  const rePushTaskInstance = useCallback(
-    async (params: Task.RePushParams) => {
-      console.log('重新执行推送参数：', params);
-      try {
-        const res = await taskApi.taskInstanceRePush(params);
-        console.log('重新执行推送结果：', res);
-        if (res.code !== 200) {
-          message.error(`重新执行推送失败：${res.message}`);
-          return;
-        }
-        message.success('重新执行推送成功，请稍后查看结果');
-        // 刷新列表
-        refresh();
-      } catch (e) {
-        console.error('重新执行推送失败：', e);
-        message.error('重新执行推送失败，请稍后重试');
-      }
-    },
-    [message, refresh, taskApi],
-  );
+  // const rePushTaskInstance = useCallback(
+  //   async (params: Task.RePushParams) => {
+  //     console.log('重新执行推送参数：', params);
+  //     try {
+  //       const res = await taskApi.taskInstanceRePush(params);
+  //       console.log('重新执行推送结果：', res);
+  //       if (res.code !== 200) {
+  //         message.error(`重新执行推送失败：${res.message}`);
+  //         return;
+  //       }
+  //       message.success('重新执行推送成功，请稍后查看结果');
+  //       // 刷新列表
+  //       refresh();
+  //     } catch (e) {
+  //       console.error('重新执行推送失败：', e);
+  //       message.error('重新执行推送失败，请稍后重试');
+  //     }
+  //   },
+  //   [message, refresh, taskApi],
+  // );
 
   if (!taskUid) return null;
   if (!isInitial.current) {
@@ -118,26 +110,61 @@ const TaskDetailPage = () => {
     >
       <Card title="基本信息">
         <Descriptions
-          column={2}
+          bordered
+          column={3}
           items={[
             {
-              key: '1',
+              key: 'name',
+              label: '任务名称',
+              children: data.dataset_name,
+            },
+            {
+              key: 'uid',
+              label: '任务 ID',
+              children: data.uid,
+            },
+            {
+              key: 'task_type',
               label: '任务类型',
-              children: taskTypeMap[data.task_type],
+              children: ENUM_VARS.TASK.TYPE_MAP[data.task_type],
             },
             {
-              key: '2',
-              label: '结构化规则',
+              key: 'dataset_name',
+              label: '关联数据集',
+              children: data.dataset_name,
+            },
+            {
+              key: 'status',
+              label: '任务状态',
+              children: data.status ? (
+                <p className="flex gap-x-[6px] items-center">
+                  <span
+                    style={{
+                      background: ENUM_VARS.TASK.STATUS_DISPLAY[data.status][0],
+                    }}
+                    className={clsx('w-[6px] h-[6px] rounded-full')}
+                  />
+                  <span>{ENUM_VARS.TASK.STATUS_DISPLAY[data.status][1]}</span>
+                </p>
+              ) : (
+                '-'
+              ),
+            },
+            {
+              key: 'created_at',
+              label: '任务创建时间',
+              children: dayjs(data.created_at).format('YYYY-MM-DD HH:mm:ss'),
+            },
+            {
+              key: 'cron',
+              label: '执行时间',
               children:
-                ruleOptions.find((r) => r.value === data.rule_uid)?.label ||
-                '-',
+                data.task_type !== TaskType.Circular &&
+                data.one_time_task_type === OneTimeTaskType.Immediate
+                  ? '立即执行'
+                  : data.cron,
+              span: 3,
             },
-            {
-              key: '3',
-              label: '输入源',
-              children: '-',
-            },
-            { key: '4', label: '执行时间', children: data.cron },
           ]}
         />
       </Card>
@@ -156,10 +183,15 @@ const TaskDetailPage = () => {
               return (
                 <p className="flex gap-x-[6px] items-center">
                   <span
-                    style={{ background: taskInstanceStatusDisplay[status][0] }}
+                    style={{
+                      background:
+                        ENUM_VARS.TASK.INSTANCE_STATUS_DISPLAY[status][0],
+                    }}
                     className={clsx('w-[6px] h-[6px] rounded-full')}
                   />
-                  <span>{taskInstanceStatusDisplay[status][1]}</span>
+                  <span>
+                    {ENUM_VARS.TASK.INSTANCE_STATUS_DISPLAY[status][1]}
+                  </span>
                 </p>
               );
             }}
@@ -184,95 +216,102 @@ const TaskDetailPage = () => {
             dataIndex="result"
             render={(_, record: Task.Instance) => (
               <p className="flex gap-x-[2px] items-center">
-                <span>
-                  {formatCountToString(record.mr_finish + record.mr_fail)}
-                </span>
+                <span>{formatCountToString(record.total_count)}</span>
                 <span className="opacity-48">/</span>
-                <span>{formatCountToString(record.mr_finish)}</span>
+                <span>{formatCountToString(record.succeed_count)}</span>
                 <span className="opacity-48">/</span>
                 <span className="text-red">
-                  {formatCountToString(record.mr_fail)}
+                  {formatCountToString(record.failed_count)}
                 </span>
               </p>
             )}
           />
 
-          <Table.Column
-            title="推送结果"
-            dataIndex="push"
-            render={(_, record: Task.Instance) =>
-              record.push_status && record.push_status.length > 0 ? (
-                <Popover
-                  content={record.push_status?.map((s) => {
-                    const rule = pushRuleList.find(
-                      (r) => r.uid === s.push_rule_uid,
-                    );
-                    const ruleName = rule ? rule.name_cn : '未知规则';
-                    const statusText =
-                      s.status === TaskPushStatus.Pending
-                        ? '待运行'
-                        : s.status === TaskPushStatus.Running
-                          ? '运行中'
-                          : s.status === TaskPushStatus.Completed
-                            ? '完成'
-                            : s.status === TaskPushStatus.Failed
-                              ? '失败'
-                              : '未知状态';
-                    return (
-                      <div key={s.push_time} className="mb-[16px]">
-                        <p>
-                          <span className="font-medium">{ruleName}</span>
-                          <span className="mx-[4px]">-</span>
-                          <span>{statusText}</span>
-                          {(s.status === TaskPushStatus.Failed ||
-                            s.status === TaskPushStatus.Completed) && (
-                            <Button
-                              className="ml-[8px]"
-                              type="link"
-                              onClick={() => {
-                                rePushTaskInstance({
-                                  task_instance_uid: record.uid,
-                                  push_rule_uid: s.push_rule_uid,
-                                });
-                              }}
-                            >
-                              重新执行
-                            </Button>
-                          )}
-                        </p>
-                        <p className="fg-tertiary">
-                          <span>推送时间:</span>
-                          <span>
-                            {s.push_time
-                              ? dayjs(s.push_time).format('YYYY-MM-DD HH:mm:ss')
-                              : '-'}
-                          </span>
-                        </p>
-                      </div>
-                    );
-                  })}
-                >
-                  <Button type="link">查看</Button>
-                </Popover>
-              ) : (
-                <span>未配置推送</span>
-              )
-            }
-          />
+          {/*<Table.Column*/}
+          {/*  title="推送结果"*/}
+          {/*  dataIndex="push"*/}
+          {/*  render={(_, record: Task.Instance) =>*/}
+          {/*    record.push_status && record.push_status.length > 0 ? (*/}
+          {/*      <Popover*/}
+          {/*        content={record.push_status?.map((s) => {*/}
+          {/*          const rule = pushRuleList.find(*/}
+          {/*            (r) => r.uid === s.push_rule_uid,*/}
+          {/*          );*/}
+          {/*          const ruleName = rule ? rule.name_cn : '未知规则';*/}
+          {/*          const statusText =*/}
+          {/*            s.status === TaskPushStatus.Pending*/}
+          {/*              ? '待运行'*/}
+          {/*              : s.status === TaskPushStatus.Running*/}
+          {/*                ? '运行中'*/}
+          {/*                : s.status === TaskPushStatus.Completed*/}
+          {/*                  ? '完成'*/}
+          {/*                  : s.status === TaskPushStatus.Failed*/}
+          {/*                    ? '失败'*/}
+          {/*                    : '未知状态';*/}
+          {/*          return (*/}
+          {/*            <div key={s.push_time} className="mb-[16px]">*/}
+          {/*              <p>*/}
+          {/*                <span className="font-medium">{ruleName}</span>*/}
+          {/*                <span className="mx-[4px]">-</span>*/}
+          {/*                <span>{statusText}</span>*/}
+          {/*                {(s.status === TaskPushStatus.Failed ||*/}
+          {/*                  s.status === TaskPushStatus.Completed) && (*/}
+          {/*                  <Button*/}
+          {/*                    className="ml-[8px]"*/}
+          {/*                    type="link"*/}
+          {/*                    onClick={() => {*/}
+          {/*                      rePushTaskInstance({*/}
+          {/*                        task_instance_uid: record.uid,*/}
+          {/*                        push_rule_uid: s.push_rule_uid,*/}
+          {/*                      });*/}
+          {/*                    }}*/}
+          {/*                  >*/}
+          {/*                    重新执行*/}
+          {/*                  </Button>*/}
+          {/*                )}*/}
+          {/*              </p>*/}
+          {/*              <p className="fg-tertiary">*/}
+          {/*                <span>推送时间:</span>*/}
+          {/*                <span>*/}
+          {/*                  {s.push_time*/}
+          {/*                    ? dayjs(s.push_time).format('YYYY-MM-DD HH:mm:ss')*/}
+          {/*                    : '-'}*/}
+          {/*                </span>*/}
+          {/*              </p>*/}
+          {/*            </div>*/}
+          {/*          );*/}
+          {/*        })}*/}
+          {/*      >*/}
+          {/*        <Button type="link">查看</Button>*/}
+          {/*      </Popover>*/}
+          {/*    ) : (*/}
+          {/*      <span>未配置推送</span>*/}
+          {/*    )*/}
+          {/*  }*/}
+          {/*/>*/}
 
           <Table.Column
             title="操作"
             key="action"
             render={(_, record: Task.Instance) => (
               <>
-                <Link to={`/task_management/detail/${taskUid}/${record.uid}`}>
-                  <Button type="link">下载</Button>
-                </Link>
-                <Divider type="vertical" />
-                <Link to={`/task_management/detail/${taskUid}/${record.uid}`}>
-                  <Button type="link">查看结果</Button>
-                </Link>
-                {record.status === 1 && (
+                {record.status === TaskInstanceStatus.Completed && (
+                  <>
+                    <Link
+                      to={`/task_management/detail/${taskUid}/${record.uid}`}
+                    >
+                      <Button type="link">下载</Button>
+                    </Link>
+                    <Divider orientation="vertical" />
+                    <Link
+                      to={`/task_management/detail/${taskUid}/${record.uid}`}
+                    >
+                      <Button type="link">查看结果</Button>
+                    </Link>
+                  </>
+                )}
+
+                {record.status === TaskInstanceStatus.Running && (
                   <Button
                     type="link"
                     danger
