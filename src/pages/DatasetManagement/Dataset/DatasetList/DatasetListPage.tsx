@@ -1,15 +1,12 @@
-import { App, Button, Card, Form, Input, Modal, Select, Table } from 'antd';
+import { App, Button, Card, Form, Table } from 'antd';
 import dayjs from 'dayjs';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { usePaginationData } from '@/hooks/usePaginationData';
-import { DatasetFilterForm } from '@/pages/DatasetManagement/components/DatasetFilterForm';
-import {
-  datasetFilterDB2FE,
-  datasetFilterFE2DB,
-} from '@/pages/DatasetManagement/helper';
+import { CreateDatasetModal } from '@/pages/DatasetManagement/components/CreateDatasetModal';
+import { datasetFilterDB2FE } from '@/pages/DatasetManagement/helper';
 import { ENUM_VARS } from '@/typing/enum';
 import type { Dataset } from '@/typing/dataset';
 import type { DatasetSourceType, DatasetType } from '@/typing/enum/dataset';
@@ -25,17 +22,11 @@ const DatasetListPage = () => {
     setData: setData,
   });
 
-  // 新建数据集
+  // 复制数据集
   const [form] = Form.useForm<Dataset.InputCreateParams>();
+  const [showCopyModal, setShowCopyModal] = useState(false);
   const newDatasetData = useRef<Dataset.InputCreateParams | null>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const onCreate = () => {
-    form.resetFields();
-    setShowCreateModal(true);
-  };
   const onCopy = (record: Dataset.Item) => {
-    console.log('xxx', record);
-    form.resetFields();
     newDatasetData.current = {
       name_cn: `${record.name_cn}_Copy`,
       name_en: '',
@@ -46,9 +37,10 @@ const DatasetListPage = () => {
     console.log('复制的数据集：', newDatasetData.current);
     form.setFieldsValue(newDatasetData.current);
     // 打开新建任务模态框
-    setShowCreateModal(true);
+    setShowCopyModal(true);
   };
 
+  // 数据集操作
   const onAction = useCallback(
     (uid: string, action: Dataset.ActionParams['action']) => {
       console.log(`执行操作：${action}，数据集 ID：${uid}`);
@@ -73,49 +65,16 @@ const DatasetListPage = () => {
     [datasetApi, refresh, message.error, message.success],
   );
 
-  const onFinish = useCallback(
-    async (values: Dataset.InputCreateParams) => {
-      console.log('提交的新数据集：', values);
-      try {
-        const res = await datasetApi.createDataset({
-          ...values,
-          filter: datasetFilterFE2DB(values.filter),
-        });
-        if (res.code === 200) {
-          message.success('数据集创建成功');
-          setShowCreateModal(false);
-          form.resetFields();
-          // 刷新任务列表
-          refresh();
-        } else {
-          message.error(`创建数据集失败：${res.message}`);
-        }
-      } catch (error) {
-        console.error('创建数据集失败：', error);
-        message.error('创建数据集失败，请稍后重试');
-      }
-    },
-    [datasetApi, refresh, form.resetFields, message.error, message.success],
-  );
-
-  // 数据集创建表单相关数据构造
-  const sourceType = Form.useWatch('source_type', form);
-  const sourceTypeRef = useRef<string | null>(null);
-  // 当切换数据源类型时，重置 filter 字段
-  useEffect(() => {
-    sourceTypeRef.current = sourceType || null;
-  }, [sourceType]);
-
   return (
     <>
-      <ContentLayout
-        title="数据集列表"
-        action={
-          <Button type="primary" className="ml-[8px]" onClick={onCreate}>
-            新建数据集
-          </Button>
-        }
-      >
+      <CreateDatasetModal
+        form={form}
+        open={showCopyModal}
+        onClose={() => setShowCopyModal(false)}
+        onFinish={() => refresh()}
+      />
+
+      <ContentLayout title="数据集列表">
         <Card>
           <Table<Dataset.Item>
             dataSource={data}
@@ -142,21 +101,6 @@ const DatasetListPage = () => {
               dataIndex="created_at"
               render={(time) => dayjs(time).format('YYYY-MM-DD HH:mm:ss')}
             />
-            {/*<Table.Column*/}
-            {/*  title="状态"*/}
-            {/*  dataIndex="status"*/}
-            {/*  render={(status: TaskStatus) => {*/}
-            {/*    return (*/}
-            {/*      <p className="flex gap-x-[6px] items-center">*/}
-            {/*        <span*/}
-            {/*          style={{ background: statusDisplay[status][0] }}*/}
-            {/*          className={clsx('w-[6px] h-[6px] rounded-full')}*/}
-            {/*        />*/}
-            {/*        <span>{statusDisplay[status][1]}</span>*/}
-            {/*      </p>*/}
-            {/*    );*/}
-            {/*  }}*/}
-            {/*/>*/}
             <Table.Column
               title="操作"
               key="action"
@@ -186,104 +130,6 @@ const DatasetListPage = () => {
           </div>
         </Card>
       </ContentLayout>
-
-      <Modal
-        centered
-        onCancel={() => setShowCreateModal(false)}
-        open={showCreateModal}
-        title="新建数据集"
-        width={830}
-        footer={null}
-      >
-        <Form<Dataset.InputCreateParams>
-          className="mt-[36px]"
-          form={form}
-          name="new-dataset-form"
-          onFinish={onFinish}
-          onFinishFailed={(v) => {
-            console.log('表单提交失败：', v);
-          }}
-          autoComplete="off"
-          labelCol={{ span: 4 }}
-        >
-          <Form.Item<Dataset.InputCreateParams>
-            label="数据集类型"
-            name="dataset_type"
-            rules={[
-              {
-                required: true,
-                message: '请选择数据集类型',
-              },
-            ]}
-          >
-            <Select
-              options={ENUM_VARS.DATASET.TYPE_OPT}
-              placeholder="选择数据集类型"
-            />
-          </Form.Item>
-
-          <Form.Item<Dataset.InputCreateParams>
-            label="数据源类型"
-            name="source_type"
-            rules={[
-              {
-                required: true,
-                message: '请选择数据源类型',
-              },
-            ]}
-          >
-            <Select
-              options={ENUM_VARS.DATASET.SOURCE_TYPE_OPT}
-              placeholder="选择数据源类型"
-              onChange={(v) => {
-                if (sourceTypeRef.current && sourceTypeRef.current !== v) {
-                  form.setFieldsValue({ filter: [] });
-                }
-              }}
-            />
-          </Form.Item>
-
-          <Form.Item<Dataset.InputCreateParams>
-            label="数据集名称"
-            name="name_cn"
-            rules={[
-              {
-                required: true,
-                message: '请输入数据集名称',
-              },
-            ]}
-          >
-            <Input placeholder="输入数据集名称" />
-          </Form.Item>
-
-          <Form.Item<Dataset.InputCreateParams>
-            label="数据集标识"
-            name="name_en"
-            rules={[
-              {
-                required: true,
-                message: '请输入数据集标识',
-              },
-            ]}
-          >
-            <Input placeholder="输入数据集标识" />
-          </Form.Item>
-
-          <DatasetFilterForm
-            name="filter"
-            form={form}
-            sourceType={sourceType}
-          />
-
-          <Form.Item noStyle>
-            <div className="flex items-center justify-center mt-[36px]">
-              <Button type="primary" htmlType="submit">
-                创建
-              </Button>
-            </div>
-          </Form.Item>
-        </Form>
-      </Modal>
     </>
   );
 };

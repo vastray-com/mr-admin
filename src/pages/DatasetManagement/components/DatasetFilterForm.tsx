@@ -8,9 +8,10 @@ import {
   Input,
   InputNumber,
   Select,
+  Tag,
 } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
-import { type FC, useCallback, useMemo } from 'react';
+import { type FC, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useCacheStore } from '@/store/useCacheStore';
 import { ENUM_VARS } from '@/typing/enum';
 import {
@@ -21,16 +22,31 @@ import {
 type Props = {
   name: string;
   form: FormInstance;
-  sourceType?: DatasetSourceType;
+  sourceTypeName?: string;
   label?: string | null;
+  cardWidth?: string;
 };
 
 export const DatasetFilterForm: FC<Props> = ({
   name,
-  sourceType,
+  sourceTypeName,
   form,
   label = '数据过滤器',
+  cardWidth = '100%',
 }) => {
+  const sourceType = Form.useWatch(
+    sourceTypeName,
+    form,
+  ) as DatasetSourceType | null;
+  const sourceTypeRef = useRef<string | null>(null);
+  // 当切换数据源类型时，重置 filter 字段
+  useEffect(() => {
+    if (sourceTypeRef.current && sourceTypeRef.current !== sourceType) {
+      form.setFieldsValue({ [name]: [] });
+    }
+    sourceTypeRef.current = sourceType || null;
+  }, [sourceType]);
+
   const sourceSchema = useCacheStore((s) => s.sourceSchemaList);
 
   const sourceTableOpt = useMemo(() => {
@@ -60,405 +76,424 @@ export const DatasetFilterForm: FC<Props> = ({
       <Form.List name={name}>
         {(logicFields, { add: addLogic, remove: removeLogic }) => (
           <>
-            {logicFields.map(({ key, name: logicName, ...restField }) => (
-              <Card
-                key={key}
-                className="mb-[12px]"
-                styles={{ body: { paddingBottom: 0 } }}
-              >
-                <Flex gap={16}>
-                  <Form.Item
-                    {...restField}
-                    name={[logicName, 'logic']}
-                    label="逻辑关系"
-                    className="flex-1"
-                    rules={[
-                      {
-                        required: true,
-                        whitespace: true,
-                        message: '请选择逻辑关系',
-                      },
-                    ]}
-                  >
-                    <Select
-                      placeholder="请选择逻辑关系"
-                      options={ENUM_VARS.DATASET.FILTER_LOGIC_OPT}
-                    />
-                  </Form.Item>
+            <Flex gap={12} wrap>
+              {logicFields.map(({ key, name: logicName, ...restField }, i) => (
+                <Card
+                  key={key}
+                  styles={{
+                    root: { width: cardWidth },
+                    body: { paddingBottom: 0 },
+                  }}
+                >
+                  <Flex gap={16} className="items-start">
+                    <Tag color="magenta" className="text-[14px] mt-[6px]">
+                      {`过滤器 ${i + 1}`}
+                    </Tag>
 
-                  <Button
-                    danger
-                    onClick={() => removeLogic(logicName)}
-                    icon={<i className="i-line-md:trash text-[20px]" />}
-                  >
-                    删除过滤器
-                  </Button>
-                </Flex>
+                    <Form.Item
+                      {...restField}
+                      name={[logicName, 'logic']}
+                      label="逻辑关系"
+                      className="flex-1"
+                      rules={[
+                        {
+                          required: true,
+                          whitespace: true,
+                          message: '请选择逻辑关系',
+                        },
+                      ]}
+                    >
+                      <Select
+                        placeholder="请选择逻辑关系"
+                        options={ENUM_VARS.DATASET.FILTER_LOGIC_OPT}
+                      />
+                    </Form.Item>
 
-                <Form.Item shouldUpdate>
-                  {() => (
-                    <Form.List name={[logicName, 'group']}>
-                      {(
-                        groupFields,
-                        { add: addGroup, remove: removeGroup },
-                      ) => (
-                        <>
-                          {groupFields.map(
-                            ({ key, name: groupName, ...restField }) => (
-                              <Card
-                                key={key}
-                                className="mb-[12px]"
-                                styles={{ body: { paddingBottom: 0 } }}
-                              >
-                                <Flex gap={16}>
-                                  <Form.Item
-                                    {...restField}
-                                    name={[groupName, 'table']}
-                                    className="flex-1"
-                                    label="条件组数据表"
-                                    rules={[
-                                      {
-                                        required: true,
-                                        whitespace: true,
-                                        message: '请选择数据表',
-                                      },
-                                    ]}
-                                  >
-                                    <Select
-                                      placeholder="请选择表"
-                                      options={sourceTableOpt}
-                                      onChange={() => {
-                                        const copied = form.getFieldValue([
-                                          name,
-                                        ]);
-                                        copied[logicName].group[
-                                          groupName
-                                        ].conditions = [];
-                                        form.setFieldsValue({
-                                          [name]: copied,
-                                        });
-                                      }}
-                                    />
-                                  </Form.Item>
+                    <Button
+                      danger
+                      onClick={() => removeLogic(logicName)}
+                      icon={<i className="i-line-md:trash text-[20px]" />}
+                    >
+                      删除过滤器
+                    </Button>
+                  </Flex>
 
-                                  <Button
-                                    danger
-                                    onClick={() => removeGroup(groupName)}
-                                    icon={
-                                      <i className="i-line-md:trash text-[20px]" />
-                                    }
-                                  >
-                                    删除条件组
-                                  </Button>
-                                </Flex>
-
-                                <Form.Item shouldUpdate>
-                                  {() => (
-                                    <Form.List name={[groupName, 'conditions']}>
-                                      {(
-                                        conditionFields,
+                  <Form.Item shouldUpdate>
+                    {() => (
+                      <Form.List name={[logicName, 'group']}>
+                        {(
+                          groupFields,
+                          { add: addGroup, remove: removeGroup },
+                        ) => (
+                          <>
+                            {groupFields.map(
+                              ({ key, name: groupName, ...restField }) => (
+                                <Card
+                                  key={key}
+                                  className="mb-[12px]"
+                                  styles={{ body: { paddingBottom: 0 } }}
+                                >
+                                  <Flex gap={16}>
+                                    <Form.Item
+                                      {...restField}
+                                      name={[groupName, 'table']}
+                                      className="flex-1"
+                                      label="条件组数据表"
+                                      rules={[
                                         {
-                                          add: addCondition,
-                                          remove: removeCondition,
+                                          required: true,
+                                          whitespace: true,
+                                          message: '请选择数据表',
                                         },
-                                      ) => (
-                                        <>
-                                          {conditionFields.map(
-                                            ({
-                                              key,
-                                              name: conditionName,
-                                              ...restField
-                                            }) => (
-                                              <Flex
-                                                key={key}
-                                                className="w-full"
-                                                gap={8}
-                                              >
-                                                <Form.Item
-                                                  {...restField}
-                                                  name={[
-                                                    conditionName,
-                                                    'column',
-                                                  ]}
-                                                  className="basis-[188px]"
-                                                  rules={[
-                                                    {
-                                                      required: true,
-                                                      whitespace: true,
-                                                      message: '请选择过滤字段',
-                                                    },
-                                                  ]}
+                                      ]}
+                                    >
+                                      <Select
+                                        placeholder="请选择表"
+                                        options={sourceTableOpt}
+                                        onChange={() => {
+                                          const copied = form.getFieldValue([
+                                            name,
+                                          ]);
+                                          copied[logicName].group[
+                                            groupName
+                                          ].conditions = [];
+                                          form.setFieldsValue({
+                                            [name]: copied,
+                                          });
+                                        }}
+                                      />
+                                    </Form.Item>
+
+                                    <Button
+                                      danger
+                                      onClick={() => removeGroup(groupName)}
+                                      icon={
+                                        <i className="i-line-md:trash text-[20px]" />
+                                      }
+                                    >
+                                      删除条件组
+                                    </Button>
+                                  </Flex>
+
+                                  <Form.Item shouldUpdate>
+                                    {() => (
+                                      <Form.List
+                                        name={[groupName, 'conditions']}
+                                      >
+                                        {(
+                                          conditionFields,
+                                          {
+                                            add: addCondition,
+                                            remove: removeCondition,
+                                          },
+                                        ) => (
+                                          <>
+                                            {conditionFields.map(
+                                              ({
+                                                key,
+                                                name: conditionName,
+                                                ...restField
+                                              }) => (
+                                                <Flex
+                                                  key={key}
+                                                  className="w-full"
+                                                  gap={8}
                                                 >
-                                                  <Select
-                                                    placeholder="选择过滤字段"
-                                                    options={getTableColumns(
-                                                      form.getFieldValue([
-                                                        name,
-                                                        logicName,
-                                                        'group',
-                                                        groupName,
-                                                        'table',
-                                                      ]),
-                                                    )}
-                                                  />
-                                                </Form.Item>
+                                                  <Form.Item
+                                                    {...restField}
+                                                    name={[
+                                                      conditionName,
+                                                      'column',
+                                                    ]}
+                                                    className="basis-[144px]"
+                                                    rules={[
+                                                      {
+                                                        required: true,
+                                                        whitespace: true,
+                                                        message:
+                                                          '请选择过滤字段',
+                                                      },
+                                                    ]}
+                                                  >
+                                                    <Select
+                                                      placeholder="选择过滤字段"
+                                                      options={getTableColumns(
+                                                        form.getFieldValue([
+                                                          name,
+                                                          logicName,
+                                                          'group',
+                                                          groupName,
+                                                          'table',
+                                                        ]),
+                                                      )}
+                                                    />
+                                                  </Form.Item>
 
-                                                <Form.Item
-                                                  {...restField}
-                                                  name={[
-                                                    conditionName,
-                                                    'operator',
-                                                  ]}
-                                                  className="basis-[100px]"
-                                                  rules={[
-                                                    {
-                                                      required: true,
-                                                      whitespace: true,
-                                                      message: '请选择操作符',
-                                                    },
-                                                  ]}
-                                                >
-                                                  <Select
-                                                    options={
-                                                      ENUM_VARS.DATASET
-                                                        .FILTER_OPERATOR_OPT
-                                                    }
-                                                    placeholder="选择操作符"
-                                                  />
-                                                </Form.Item>
+                                                  <Form.Item
+                                                    {...restField}
+                                                    name={[
+                                                      conditionName,
+                                                      'operator',
+                                                    ]}
+                                                    className="basis-[100px]"
+                                                    rules={[
+                                                      {
+                                                        required: true,
+                                                        whitespace: true,
+                                                        message: '请选择操作符',
+                                                      },
+                                                    ]}
+                                                  >
+                                                    <Select
+                                                      options={
+                                                        ENUM_VARS.DATASET
+                                                          .FILTER_OPERATOR_OPT
+                                                      }
+                                                      placeholder="选择操作符"
+                                                    />
+                                                  </Form.Item>
 
-                                                <Form.Item shouldUpdate noStyle>
-                                                  {() => {
-                                                    const curFilter =
-                                                      form.getFieldValue(name);
-                                                    const tableName: string =
-                                                      curFilter[logicName]
-                                                        .group[groupName].table;
-                                                    const columnName: string =
-                                                      curFilter[logicName]
-                                                        .group[groupName]
-                                                        .conditions[
-                                                        conditionName
-                                                      ].column;
-                                                    const dataType =
-                                                      getDataType(
-                                                        tableName,
-                                                        columnName,
-                                                      );
-
-                                                    switch (dataType) {
-                                                      case DatasetSourceColumnType.String:
-                                                        return (
-                                                          <Form.Item
-                                                            {...restField}
-                                                            name={[
-                                                              conditionName,
-                                                              'value',
-                                                            ]}
-                                                            className="flex-1"
-                                                            rules={[
-                                                              {
-                                                                required: true,
-                                                                whitespace: true,
-                                                                message:
-                                                                  '请输入过滤值',
-                                                              },
-                                                            ]}
-                                                          >
-                                                            <Input placeholder="输入值" />
-                                                          </Form.Item>
+                                                  <Form.Item
+                                                    shouldUpdate
+                                                    noStyle
+                                                  >
+                                                    {() => {
+                                                      const curFilter =
+                                                        form.getFieldValue(
+                                                          name,
                                                         );
-                                                      case DatasetSourceColumnType.Bool:
-                                                        return (
-                                                          <Form.Item
-                                                            {...restField}
-                                                            name={[
-                                                              conditionName,
-                                                              'value',
-                                                            ]}
-                                                            className="flex-1"
-                                                            rules={[
-                                                              {
-                                                                required: true,
-                                                                whitespace: true,
-                                                                message:
-                                                                  '请选择过滤值',
-                                                              },
-                                                            ]}
-                                                          >
-                                                            <Select
-                                                              options={[
+                                                      const tableName: string =
+                                                        curFilter[logicName]
+                                                          .group[groupName]
+                                                          .table;
+                                                      const columnName: string =
+                                                        curFilter[logicName]
+                                                          .group[groupName]
+                                                          .conditions[
+                                                          conditionName
+                                                        ].column;
+                                                      const dataType =
+                                                        getDataType(
+                                                          tableName,
+                                                          columnName,
+                                                        );
+
+                                                      switch (dataType) {
+                                                        case DatasetSourceColumnType.String:
+                                                          return (
+                                                            <Form.Item
+                                                              {...restField}
+                                                              name={[
+                                                                conditionName,
+                                                                'value',
+                                                              ]}
+                                                              className="flex-1"
+                                                              rules={[
                                                                 {
-                                                                  label: '是',
-                                                                  value: 'true',
-                                                                },
-                                                                {
-                                                                  label: '否',
-                                                                  value:
-                                                                    'false',
+                                                                  required: true,
+                                                                  whitespace: true,
+                                                                  message:
+                                                                    '请输入过滤值',
                                                                 },
                                                               ]}
-                                                              placeholder="选择值"
-                                                            />
-                                                          </Form.Item>
-                                                        );
-                                                      case DatasetSourceColumnType.Int:
-                                                        return (
-                                                          <Form.Item
-                                                            {...restField}
-                                                            name={[
-                                                              conditionName,
-                                                              'value',
-                                                            ]}
-                                                            className="flex-1"
-                                                            rules={[
-                                                              {
-                                                                required: true,
-                                                                whitespace: true,
-                                                                message:
-                                                                  '请输入过滤值',
-                                                              },
-                                                            ]}
-                                                          >
-                                                            <InputNumber
-                                                              placeholder="输入值"
-                                                              precision={0}
-                                                            />
-                                                          </Form.Item>
-                                                        );
-                                                      case DatasetSourceColumnType.Float:
-                                                        return (
-                                                          <Form.Item
-                                                            {...restField}
-                                                            name={[
-                                                              conditionName,
-                                                              'value',
-                                                            ]}
-                                                            className="flex-1"
-                                                            rules={[
-                                                              {
-                                                                required: true,
-                                                                whitespace: true,
-                                                                message:
-                                                                  '请输入过滤值',
-                                                              },
-                                                            ]}
-                                                          >
-                                                            <InputNumber placeholder="输入值" />
-                                                          </Form.Item>
-                                                        );
-                                                      case DatasetSourceColumnType.Date:
-                                                        return (
-                                                          <Form.Item
-                                                            {...restField}
-                                                            name={[
-                                                              conditionName,
-                                                              'value',
-                                                            ]}
-                                                            getValueProps={(
-                                                              v,
-                                                            ) => ({
-                                                              value:
-                                                                v && dayjs(v),
-                                                            })}
-                                                            normalize={(
-                                                              v: Dayjs,
-                                                            ) =>
-                                                              v?.toISOString()
-                                                            }
-                                                            className="flex-1"
-                                                            rules={[
-                                                              {
-                                                                required: true,
-                                                                whitespace: true,
-                                                                message:
-                                                                  '请选择时间',
-                                                              },
-                                                            ]}
-                                                          >
-                                                            <DatePicker
-                                                              showTime
-                                                              placeholder="选择时间"
-                                                              needConfirm={
-                                                                false
+                                                            >
+                                                              <Input placeholder="输入值" />
+                                                            </Form.Item>
+                                                          );
+                                                        case DatasetSourceColumnType.Bool:
+                                                          return (
+                                                            <Form.Item
+                                                              {...restField}
+                                                              name={[
+                                                                conditionName,
+                                                                'value',
+                                                              ]}
+                                                              className="flex-1"
+                                                              rules={[
+                                                                {
+                                                                  required: true,
+                                                                  whitespace: true,
+                                                                  message:
+                                                                    '请选择过滤值',
+                                                                },
+                                                              ]}
+                                                            >
+                                                              <Select
+                                                                options={[
+                                                                  {
+                                                                    label: '是',
+                                                                    value:
+                                                                      'true',
+                                                                  },
+                                                                  {
+                                                                    label: '否',
+                                                                    value:
+                                                                      'false',
+                                                                  },
+                                                                ]}
+                                                                placeholder="选择值"
+                                                              />
+                                                            </Form.Item>
+                                                          );
+                                                        case DatasetSourceColumnType.Int:
+                                                          return (
+                                                            <Form.Item
+                                                              {...restField}
+                                                              name={[
+                                                                conditionName,
+                                                                'value',
+                                                              ]}
+                                                              className="flex-1"
+                                                              rules={[
+                                                                {
+                                                                  required: true,
+                                                                  whitespace: true,
+                                                                  message:
+                                                                    '请输入过滤值',
+                                                                },
+                                                              ]}
+                                                            >
+                                                              <InputNumber
+                                                                placeholder="输入值"
+                                                                precision={0}
+                                                              />
+                                                            </Form.Item>
+                                                          );
+                                                        case DatasetSourceColumnType.Float:
+                                                          return (
+                                                            <Form.Item
+                                                              {...restField}
+                                                              name={[
+                                                                conditionName,
+                                                                'value',
+                                                              ]}
+                                                              className="flex-1"
+                                                              rules={[
+                                                                {
+                                                                  required: true,
+                                                                  whitespace: true,
+                                                                  message:
+                                                                    '请输入过滤值',
+                                                                },
+                                                              ]}
+                                                            >
+                                                              <InputNumber placeholder="输入值" />
+                                                            </Form.Item>
+                                                          );
+                                                        case DatasetSourceColumnType.Date:
+                                                          return (
+                                                            <Form.Item
+                                                              {...restField}
+                                                              name={[
+                                                                conditionName,
+                                                                'value',
+                                                              ]}
+                                                              getValueProps={(
+                                                                v,
+                                                              ) => ({
+                                                                value:
+                                                                  v && dayjs(v),
+                                                              })}
+                                                              normalize={(
+                                                                v: Dayjs,
+                                                              ) =>
+                                                                v?.toISOString()
                                                               }
-                                                              disabledDate={(
-                                                                cur,
-                                                              ) => {
-                                                                return (
-                                                                  cur &&
-                                                                  (cur >
-                                                                    dayjs().endOf(
-                                                                      'day',
-                                                                    ) ||
-                                                                    cur <
-                                                                      dayjs(
-                                                                        '1970-01-01',
-                                                                      ))
-                                                                );
-                                                              }}
-                                                            />
-                                                          </Form.Item>
-                                                        );
+                                                              className="flex-1"
+                                                              rules={[
+                                                                {
+                                                                  required: true,
+                                                                  whitespace: true,
+                                                                  message:
+                                                                    '请选择时间',
+                                                                },
+                                                              ]}
+                                                            >
+                                                              <DatePicker
+                                                                showTime
+                                                                placeholder="选择时间"
+                                                                needConfirm={
+                                                                  false
+                                                                }
+                                                                disabledDate={(
+                                                                  cur,
+                                                                ) => {
+                                                                  return (
+                                                                    cur &&
+                                                                    (cur >
+                                                                      dayjs().endOf(
+                                                                        'day',
+                                                                      ) ||
+                                                                      cur <
+                                                                        dayjs(
+                                                                          '1970-01-01',
+                                                                        ))
+                                                                  );
+                                                                }}
+                                                              />
+                                                            </Form.Item>
+                                                          );
+                                                      }
+                                                    }}
+                                                  </Form.Item>
+
+                                                  <Button
+                                                    danger
+                                                    type="link"
+                                                    onClick={() =>
+                                                      removeCondition(
+                                                        conditionName,
+                                                      )
                                                     }
-                                                  }}
-                                                </Form.Item>
+                                                    className="basis-[32px]"
+                                                    icon={
+                                                      <i className="i-line-md:trash text-[20px]" />
+                                                    }
+                                                  />
+                                                </Flex>
+                                              ),
+                                            )}
 
-                                                <Button
-                                                  danger
-                                                  type="link"
-                                                  onClick={() =>
-                                                    removeCondition(
-                                                      conditionName,
-                                                    )
-                                                  }
-                                                  className="basis-[32px]"
-                                                  icon={
-                                                    <i className="i-line-md:trash text-[20px]" />
-                                                  }
-                                                />
-                                              </Flex>
-                                            ),
-                                          )}
+                                            <Button
+                                              block
+                                              type="dashed"
+                                              onClick={addCondition}
+                                              icon={
+                                                <i className="i-line-md:plus-circle text-[20px]" />
+                                              }
+                                            >
+                                              添加条件
+                                            </Button>
+                                          </>
+                                        )}
+                                      </Form.List>
+                                    )}
+                                  </Form.Item>
+                                </Card>
+                              ),
+                            )}
 
-                                          <Button
-                                            block
-                                            type="dashed"
-                                            onClick={addCondition}
-                                            icon={
-                                              <i className="i-line-md:plus-circle text-[20px]" />
-                                            }
-                                          >
-                                            添加条件
-                                          </Button>
-                                        </>
-                                      )}
-                                    </Form.List>
-                                  )}
-                                </Form.Item>
-                              </Card>
-                            ),
-                          )}
-
-                          <Button
-                            block
-                            type="dashed"
-                            onClick={addGroup}
-                            icon={
-                              <i className="i-line-md:plus-circle text-[20px]" />
-                            }
-                          >
-                            添加条件组
-                          </Button>
-                        </>
-                      )}
-                    </Form.List>
-                  )}
-                </Form.Item>
-              </Card>
-            ))}
+                            <Button
+                              block
+                              type="dashed"
+                              onClick={addGroup}
+                              icon={
+                                <i className="i-line-md:plus-circle text-[20px]" />
+                              }
+                            >
+                              添加条件组
+                            </Button>
+                          </>
+                        )}
+                      </Form.List>
+                    )}
+                  </Form.Item>
+                </Card>
+              ))}
+            </Flex>
 
             <Button
+              className="mt-[12px]"
               block
               type="dashed"
               onClick={addLogic}

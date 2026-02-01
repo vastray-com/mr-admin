@@ -220,6 +220,10 @@ export const useApi = () => {
         service.post('/warehouse/get_source_data', params) as Promise<
           APIRes<Warehouse.SourceData>
         >,
+      getPatientDetail: (params: Warehouse.GetPatientDetailParams) =>
+        service.get('/warehouse/get_patient_detail', { params }) as Promise<
+          APIRes<Warehouse.PatientDetail>
+        >,
     }),
     [],
   );

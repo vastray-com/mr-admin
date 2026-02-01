@@ -1,3 +1,4 @@
+import type { Dataset } from '@/typing/dataset';
 import type {
   DatasetSourceColumnType,
   DatasetSourceType,
@@ -63,4 +64,15 @@ export declare namespace Warehouse {
     columns: SourceColumns;
     total: number;
   };
+
+  type GetPatientDetailParams = {
+    visit_no: string;
+  };
+  type PatientDetail = {
+    name: string;
+    label: string;
+    columns: SourceColumns;
+    data: any;
+    total: number;
+  }[];
 }
