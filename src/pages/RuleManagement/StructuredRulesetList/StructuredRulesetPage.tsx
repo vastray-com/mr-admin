@@ -193,7 +193,7 @@ const StructuredRulesetPage: FC = () => {
   // 页面渲染
   return (
     <ContentLayout
-      title="结构化规则列表"
+      title="结构化规则配置"
       action={
         <>
           <Button onClick={onOpenImportModal}>快速导入</Button>

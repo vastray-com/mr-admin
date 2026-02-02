@@ -53,7 +53,7 @@ const WarehouseDataPreviewPage = () => {
         onClose={() => setShowCreateModal(false)}
       />
 
-      <ContentLayout title="明细数据列表">
+      <ContentLayout title="数据查询">
         <Card
           actions={[
             <Flex

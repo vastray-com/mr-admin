@@ -30,49 +30,48 @@ export const DEFAULT_PRIVATE_PATH = '/rule_management/ruleset';
 // 需要鉴权的路由
 const privateBaseRoutes: BaseRoute = [
   {
-    key: '/task_management',
+    key: '/data',
     element: <Outlet />,
-    label: '任务管理',
+    label: '数据资产',
     addToMenu: true,
-    roles: [UserRole.Admin],
+    roles: [UserRole.Admin, UserRole.User],
     loader: ({ request }) => {
       const url = new URL(request.url);
-      if (url.pathname === '/task_management') {
-        return redirect('/task_management/list');
+      if (url.pathname === '/data' || url.pathname === '/data/dataset') {
+        return redirect('/data/dataset/list');
       }
       return null;
     },
-    icon: <i className="i-icon-park-outline:command" />,
+    icon: <i className="i-icon-park-outline:data" />,
     children: [
       {
-        key: '/task_management/list',
-        element: <LazyComponents.TaskList />,
-        label: '任务列表',
+        key: '/data/warehouse/data_list',
+        element: <LazyComponents.WarehouseDataPreview />,
+        label: '数据查询',
         addToMenu: true,
-        roles: [UserRole.Admin],
+        roles: [UserRole.Admin, UserRole.User],
       },
       {
-        key: '/task_management/detail/:taskUid',
-        element: <LazyComponents.TaskDetail />,
-        label: '任务详情',
-        addToMenu: false,
-        selectedKeys: ['/task_management/list'],
-        roles: [UserRole.Admin],
+        key: '/data/dataset/list',
+        element: <LazyComponents.DatasetList />,
+        label: '数据集列表',
+        addToMenu: true,
+        roles: [UserRole.Admin, UserRole.User],
       },
       {
-        key: '/task_management/detail/:taskUid/:instanceUid',
-        element: <LazyComponents.TaskInstanceDetail />,
-        label: '执行结果',
+        key: '/data/dataset/detail/:uid',
+        selectedKeys: ['/data/dataset/list'],
+        element: <LazyComponents.DatasetDetail />,
+        label: '数据集详情',
         addToMenu: false,
-        selectedKeys: ['/task_management/list'],
-        roles: [UserRole.Admin],
+        roles: [UserRole.Admin, UserRole.User],
       },
     ],
   },
   {
     key: '/rule_management',
     element: <Outlet />,
-    label: '规则配置',
+    label: '结构化规则',
     addToMenu: true,
     roles: [UserRole.Admin, UserRole.User],
     loader: ({ request }) => {
@@ -87,7 +86,7 @@ const privateBaseRoutes: BaseRoute = [
       {
         key: '/rule_management/ruleset',
         element: <LazyComponents.StructuredRulesetList />,
-        label: '结构化规则',
+        label: '规则配置',
         addToMenu: true,
         roles: [UserRole.Admin, UserRole.User],
       },
@@ -95,7 +94,7 @@ const privateBaseRoutes: BaseRoute = [
         key: '/rule_management/ruleset/:uid',
         selectedKeys: ['/rule_management/ruleset'],
         element: <LazyComponents.StructuredRulesetDetail />,
-        label: '结构化规则详情',
+        label: '规则详情',
         addToMenu: false,
         roles: [UserRole.Admin, UserRole.User],
       },
@@ -132,41 +131,42 @@ const privateBaseRoutes: BaseRoute = [
     ],
   },
   {
-    key: '/data',
+    key: '/task_management',
     element: <Outlet />,
-    label: '数据资产',
+    label: '结构化任务',
     addToMenu: true,
-    roles: [UserRole.Admin, UserRole.User],
+    roles: [UserRole.Admin],
     loader: ({ request }) => {
       const url = new URL(request.url);
-      if (url.pathname === '/data' || url.pathname === '/data/dataset') {
-        return redirect('/data/dataset/list');
+      if (url.pathname === '/task_management') {
+        return redirect('/task_management/list');
       }
       return null;
     },
-    icon: <i className="i-icon-park-outline:data" />,
+    icon: <i className="i-icon-park-outline:command" />,
     children: [
       {
-        key: '/data/warehouse/data_list',
-        element: <LazyComponents.WarehouseDataPreview />,
-        label: '数据查询',
+        key: '/task_management/list',
+        element: <LazyComponents.TaskList />,
+        label: '任务列表',
         addToMenu: true,
-        roles: [UserRole.Admin, UserRole.User],
+        roles: [UserRole.Admin],
       },
       {
-        key: '/data/dataset/list',
-        element: <LazyComponents.DatasetList />,
-        label: '数据集列表',
-        addToMenu: true,
-        roles: [UserRole.Admin, UserRole.User],
-      },
-      {
-        key: '/data/dataset/detail/:uid',
-        selectedKeys: ['/data/dataset/list'],
-        element: <LazyComponents.DatasetDetail />,
-        label: '数据集详情',
+        key: '/task_management/detail/:taskUid',
+        element: <LazyComponents.TaskDetail />,
+        label: '任务详情',
         addToMenu: false,
-        roles: [UserRole.Admin, UserRole.User],
+        selectedKeys: ['/task_management/list'],
+        roles: [UserRole.Admin],
+      },
+      {
+        key: '/task_management/detail/:taskUid/:instanceUid',
+        element: <LazyComponents.TaskInstanceDetail />,
+        label: '执行结果',
+        addToMenu: false,
+        selectedKeys: ['/task_management/list'],
+        roles: [UserRole.Admin],
       },
     ],
   },
