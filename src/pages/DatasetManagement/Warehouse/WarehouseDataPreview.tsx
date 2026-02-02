@@ -78,6 +78,7 @@ const WarehouseDataPreviewPage = () => {
               autoComplete="off"
               labelCol={{ span: 1 }}
               requiredMark={false}
+              colon={false}
             >
               <Form.Item<Dataset.GetDataParams>
                 label="数据源类型"

@@ -41,6 +41,7 @@ export declare namespace Warehouse {
     // 字段标识
     value: string;
     data_type: DatasetSourceColumnType;
+    data_length: number;
   };
   type SourceColumns = SourceColumn[];
 

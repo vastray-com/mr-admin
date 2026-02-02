@@ -22,7 +22,7 @@ export enum OneTimeTaskType {
 }
 
 const ONE_TIME_TYPE_MAP: Record<OneTimeTaskType, string> = {
-  [OneTimeTaskType.Schedule]: '定时任务',
+  [OneTimeTaskType.Schedule]: '定时执行',
   [OneTimeTaskType.Immediate]: '立即执行',
 };
 

@@ -1,4 +1,4 @@
-import { Descriptions, Divider, Empty, Modal, Spin } from 'antd';
+import { Descriptions, Empty, Modal, Spin } from 'antd';
 import type { FC } from 'react';
 import type { Warehouse } from '@/typing/warehose';
 
@@ -20,10 +20,10 @@ export const WarehousePatientDetailModal: FC<Props> = ({
       onCancel={() => onClose()}
       open={open}
       title="患者明细信息"
-      width={1000}
       classNames={{
-        body: 'h-[80vh] overflow-y-auto',
+        body: 'h-[80vh]',
       }}
+      width={1000}
       footer={null}
     >
       {loading && (
@@ -33,22 +33,34 @@ export const WarehousePatientDetailModal: FC<Props> = ({
         </div>
       )}
       {!loading && !detail && <Empty description="暂无患者明细信息" />}
-      {!loading &&
-        detail &&
-        detail.map((d, i) => (
-          <>
-            {i > 0 && <Divider />}
+      {!loading && detail && (
+        <div className="h-full overflow-y-auto overflow-x-hidden pr-[16px]">
+          {detail.map((d) => (
             <Descriptions
+              className="mt-[48px] first:mt-[16px]"
               key={d.name}
               title={d.label}
-              items={d.columns.map((c) => ({
-                key: c.value,
-                label: c.label,
-                children: d.data[0][c.value] ?? '—',
-              }))}
+              items={d.columns
+                .filter((c) => {
+                  // 仅展示有数据的字段
+                  return ![undefined, null, 'NULL'].includes(
+                    d.data[0][c.value],
+                  );
+                })
+                .map((c) => ({
+                  key: c.value,
+                  label: c.label,
+                  children: <p>{d.data[0][c.value] ?? '—'}</p>,
+                  span: c.data_length > 100 ? 3 : 1,
+                }))}
+              column={3}
+              bordered
+              layout="vertical"
+              size="middle"
             />
-          </>
-        ))}
+          ))}
+        </div>
+      )}
     </Modal>
   );
 };

@@ -318,6 +318,7 @@ const TaskListPage = () => {
           {/*</Form.Item>*/}
 
           <Form.Item<Task.InitFEParams>
+            hidden
             label="环境变量"
             help="环境变量可选项及对应值规则见文档"
           >

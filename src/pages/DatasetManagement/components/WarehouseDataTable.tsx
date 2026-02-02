@@ -109,7 +109,7 @@ export const WarehouseDataTable: FC<Props> = ({
         loading={loading}
         scroll={{ x: true }}
         dataSource={data?.data}
-        rowKey={(r, i) => (i ? i.toString() : JSON.stringify(r))}
+        rowKey={(r) => JSON.stringify(r).substring(0, 72)}
         pagination={{
           hideOnSinglePage: true,
           showTotal: (t) => `共 ${t} 条`,
