@@ -43,7 +43,10 @@ const EncodeTableDetail = lazy(
     import('@/pages/RuleManagement/EncodeTableDetail/EncodeTableDetailPage'),
 );
 
-// 数据集管理
+// 数据资产
+const Dashboard = lazy(
+  () => import('@/pages/DatasetManagement/Dashboard/DashboardPage'),
+);
 const DatasetList = lazy(
   () => import('@/pages/DatasetManagement/Dataset/DatasetList/DatasetListPage'),
 );
@@ -75,6 +78,7 @@ export default {
   TaskList,
   TaskDetail,
   TaskInstanceDetail,
+  Dashboard,
   DatasetList,
   DatasetDetail,
   WarehouseDataPreview,

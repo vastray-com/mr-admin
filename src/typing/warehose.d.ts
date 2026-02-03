@@ -76,4 +76,24 @@ export declare namespace Warehouse {
     data: any;
     total: number;
   }[];
+
+  // 获取总览数据参数
+  type GetDashboardDataParams = {
+    date_start: string;
+    date_end: string;
+    department_name: string;
+  };
+  type DashboardDataItem<T> = {
+    columns: SourceColumns;
+    data: T[];
+  };
+  type DashboardData = {
+    core: DashboardDataItem<Record<string, number>>;
+    time_serial: DashboardDataItem<
+      Record<'date', string> & Record<string, number>
+    >;
+    distribution: DashboardDataItem<
+      Record<'dept_name', string> & Record<string, number>
+    >;
+  };
 }

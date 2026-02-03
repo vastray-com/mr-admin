@@ -25,7 +25,7 @@ type BaseRoute = {
 }[];
 
 // 默认私有路由
-export const DEFAULT_PRIVATE_PATH = '/rule_management/ruleset';
+export const DEFAULT_PRIVATE_PATH = '/data/dashboard';
 
 // 需要鉴权的路由
 const privateBaseRoutes: BaseRoute = [
@@ -37,13 +37,20 @@ const privateBaseRoutes: BaseRoute = [
     roles: [UserRole.Admin, UserRole.User],
     loader: ({ request }) => {
       const url = new URL(request.url);
-      if (url.pathname === '/data' || url.pathname === '/data/dataset') {
-        return redirect('/data/dataset/list');
+      if (url.pathname === '/data') {
+        return redirect('/data/dashboard');
       }
       return null;
     },
     icon: <i className="i-icon-park-outline:data" />,
     children: [
+      {
+        key: '/data/dashboard',
+        element: <LazyComponents.Dashboard />,
+        label: '数据总览',
+        addToMenu: true,
+        roles: [UserRole.Admin, UserRole.User],
+      },
       {
         key: '/data/warehouse/data_list',
         element: <LazyComponents.WarehouseDataPreview />,
