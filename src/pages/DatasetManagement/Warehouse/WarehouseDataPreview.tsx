@@ -76,7 +76,6 @@ const WarehouseDataPreviewPage = () => {
                 console.log('表单提交失败：', v);
               }}
               autoComplete="off"
-              labelCol={{ span: 1 }}
               requiredMark={false}
               colon={false}
             >
