@@ -99,4 +99,8 @@ export declare namespace Dataset {
     uid: string;
     reason: string;
   };
+
+  type GenAIFilterParams = {
+    content: string;
+  };
 }

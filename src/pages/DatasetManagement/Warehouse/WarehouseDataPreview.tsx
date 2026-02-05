@@ -1,12 +1,17 @@
 import { Button, Card, Flex, Form, message, Select } from 'antd';
 import { useCallback, useState } from 'react';
 import { ContentLayout } from '@/components/ContentLayout';
+import {
+  AIGenBtnStyle,
+  AIGenFilterModal,
+} from '@/pages/DatasetManagement/components/AIGenFilterModal';
 import { CreateDatasetModal } from '@/pages/DatasetManagement/components/CreateDatasetModal';
 import { DatasetFilterForm } from '@/pages/DatasetManagement/components/DatasetFilterForm';
 import { WarehouseDataTable } from '@/pages/DatasetManagement/components/WarehouseDataTable';
 import { datasetFilterFE2DB } from '@/pages/DatasetManagement/helper';
 import { ENUM_VARS } from '@/typing/enum';
 import type { Dataset } from '@/typing/dataset';
+import type { DatasetSourceType } from '@/typing/enum/dataset';
 
 const WarehouseDataPreviewPage = () => {
   // 过滤数据
@@ -45,6 +50,24 @@ const WarehouseDataPreviewPage = () => {
       });
   }, [message]);
 
+  // AI 生成过滤条件 回调
+  const [showAIModal, setShowAIModal] = useState(false);
+  const onAIGenResponse = useCallback((res: string) => {
+    console.log('AI 生成的过滤条件：', res);
+    try {
+      const data = JSON.parse(res) as {
+        source_type: DatasetSourceType;
+        filter: Dataset.FilterFEInput;
+      };
+      filterForm.setFieldsValue(data);
+      message.success('生成成功');
+      setShowAIModal(false);
+    } catch (e) {
+      console.error('生成过滤条件失败', e);
+      message.error('生成过滤条件失败，请重试');
+    }
+  }, []);
+
   return (
     <>
       <CreateDatasetModal
@@ -53,18 +76,35 @@ const WarehouseDataPreviewPage = () => {
         onClose={() => setShowCreateModal(false)}
       />
 
+      <AIGenFilterModal
+        open={showAIModal}
+        onClose={() => setShowAIModal(false)}
+        onResponse={onAIGenResponse}
+      />
+
       <ContentLayout title="数据查询">
         <Card
           actions={[
             <Flex
               key="group"
               gap={8}
-              className="items-center justify-end px-[24px]"
+              className="items-center justify-between px-[24px]"
             >
-              <Button onClick={onFilterFinish}>查询数据</Button>
-              <Button type="primary" onClick={onCreate}>
-                以此条件创建数据集
-              </Button>
+              <div>
+                <Button
+                  type="primary"
+                  onClick={() => setShowAIModal(true)}
+                  style={AIGenBtnStyle}
+                >
+                  AI 生成过滤条件
+                </Button>
+              </div>
+              <div className="flex items-center gap-[8px]">
+                <Button onClick={onFilterFinish}>查询数据</Button>
+                <Button type="primary" onClick={onCreate}>
+                  以此条件创建数据集
+                </Button>
+              </div>
             </Flex>,
           ]}
         >
@@ -77,7 +117,6 @@ const WarehouseDataPreviewPage = () => {
               }}
               autoComplete="off"
               requiredMark={false}
-              colon={false}
             >
               <Form.Item<Dataset.GetDataParams>
                 label="数据源类型"
