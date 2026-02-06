@@ -32,3 +32,17 @@ div.ant-app {
   height: 100%;
   width: 100%;
 }
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.infinite-rotate {
+  animation: rotate 2s linear infinite;
+}
