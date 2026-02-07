@@ -148,7 +148,7 @@ export const useApi = () => {
         >,
       testRule: (params: StructuredRuleset.TestRuleParams) => {
         const { api_key, ...rest } = params;
-        return service.post('/structured_rule/test', rest, {
+        return service.post('/structured_ruleset/test', rest, {
           headers: { Authorization: api_key },
         }) as Promise<APIRes<Record<string, string>>>;
       },

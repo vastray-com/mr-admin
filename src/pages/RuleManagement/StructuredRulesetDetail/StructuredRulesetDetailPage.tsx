@@ -13,7 +13,14 @@ import {
   Spin,
   Tree,
 } from 'antd';
-import { type FC, useCallback, useMemo, useRef, useState } from 'react';
+import {
+  type FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
@@ -54,8 +61,8 @@ const StructuredRulesetDetailPage: FC = () => {
   const { ruleApi } = useApi();
   const { message } = App.useApp();
   const nav = useNavigate();
-  const isNewRule = useRef(uid === 'NEW');
-  const isInit = useRef(isNewRule.current);
+  const [isNewRule, setIsNewRule] = useState(uid === 'NEW');
+  const isInit = useRef(isNewRule);
 
   const [detail, setDetail] = useState<StructuredRuleset.Item>(initialDetail);
   const fetchDetail = useCallback(
@@ -70,9 +77,14 @@ const StructuredRulesetDetailPage: FC = () => {
 
   const [baseForm] =
     Form.useForm<
-      Pick<StructuredRuleset.Item, 'name_cn' | 'name_en' | 'comment'>
+      Pick<StructuredRuleset.Item, 'uid' | 'name_cn' | 'name_en' | 'comment'>
     >();
   const [fieldForm] = Form.useForm<StructuredRuleset.Field>();
+
+  useEffect(() => {
+    setIsNewRule(uid === 'NEW');
+    baseForm.setFieldValue('uid', uid === 'NEW' ? '' : uid);
+  }, [uid]);
 
   // 添加预设字段
   const presetFields = useCacheStore((s) => s.presetFields);
@@ -226,11 +238,11 @@ const StructuredRulesetDetailPage: FC = () => {
       }));
 
       // 新建或更新
-      if (isNewRule.current) {
+      if (isNewRule) {
         const res = await ruleApi.createRule(values);
         if (res.code === 200) {
           message.success('新建病历模板成功!');
-          nav(`/rule_management/ruleset/${res.data}`);
+          nav(`/rule_management/ruleset/${res.data}`, { replace: true });
         } else {
           message.error(res.message || '新建病历模板失败');
         }
@@ -244,7 +256,7 @@ const StructuredRulesetDetailPage: FC = () => {
         }
       }
     },
-    [ruleApi, message, nav, encodeOptions],
+    [ruleApi, message, nav, encodeOptions, isNewRule],
   );
 
   // 测试结构化规则
@@ -305,7 +317,7 @@ const StructuredRulesetDetailPage: FC = () => {
     }));
   }, [testModelForm, uid]);
 
-  if (!isInit.current && !isNewRule.current && uid) {
+  if (!isInit.current && !isNewRule && uid) {
     fetchDetail(uid);
   }
 
@@ -325,7 +337,7 @@ const StructuredRulesetDetailPage: FC = () => {
         },
         { title: '编辑模版' },
       ]}
-      title={isNewRule.current ? '新建病历模板' : '编辑病历模板'}
+      title={isNewRule ? '新建病历模板' : '编辑病历模板'}
       action={
         <Space>
           <Button onClick={() => setOpenTestRuleModal(true)}>模型提取</Button>
