@@ -296,7 +296,7 @@ const StructuredRulesetDetailPage: FC = () => {
   }, [uid, ruleApi, message, testModelForm]);
   const [testCode, setTestCode] = useState<Record<string, string>>({
     curl: getCode(
-      generateCurlExample('POST', '/admin/structured_rule/test', {
+      generateCurlExample('POST', '/structured_ruleset/test', {
         uid,
         ...initialTestParams,
       }),
@@ -308,7 +308,7 @@ const StructuredRulesetDetailPage: FC = () => {
     setTestCode((prev) => ({
       ...prev,
       curl: getCode(
-        generateCurlExample('POST', '/admin/structured_rule/test', {
+        generateCurlExample('POST', '/structured_ruleset/test', {
           uid,
           ...body,
         }),
