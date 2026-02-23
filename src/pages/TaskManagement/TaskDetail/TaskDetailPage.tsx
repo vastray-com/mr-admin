@@ -198,17 +198,17 @@ const TaskDetailPage = () => {
           />
           <Table.Column
             title="开始执行时间"
-            dataIndex="task_start_time"
+            dataIndex="start_time"
             render={(time: string) => dayjs(time).format('YYYY-MM-DD HH:mm:ss')}
           />
           <Table.Column
             title="执行时长"
-            dataIndex="task_duration"
+            dataIndex="duration"
             render={(duration: number) => formatSecondsToTime(duration)}
           />
           <Table.Column
             title="总文书量"
-            dataIndex="mr_total"
+            dataIndex="total_count"
             render={(total: number) => formatCountToString(total)}
           />
           <Table.Column
