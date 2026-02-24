@@ -54,27 +54,42 @@ export const DatasetFilterDisplay: FC<Props> = ({ filter }) => {
                     <div className="flex flex-col gap-y-[8px]">
                       {g.conditions.map((c, ci) => {
                         return (
-                          <Flex
-                            key={ci}
-                            gap="12px"
-                            className="px-[8px] py-[4px] items-center"
-                          >
-                            <span>
-                              {
-                                getTableColumns(g.table).find(
-                                  (col) => col.value === c.column,
-                                )?.label
-                              }
-                            </span>
-                            <span>
-                              {
-                                ENUM_VARS.DATASET.FILTER_OPERATOR_MAP[
-                                  c.operator
-                                ]
-                              }
-                            </span>
-                            <span>{c.value}</span>
-                          </Flex>
+                          <Card key={ci}>
+                            <Tag
+                              color="orange"
+                              className="pos-absolute top-0 left-0"
+                            >
+                              {ENUM_VARS.DATASET.FILTER_LOGIC_MAP[c.logic]}
+                            </Tag>
+
+                            <div className="mt-[8px]">
+                              {c.cols.map((c, coli) => {
+                                return (
+                                  <Flex
+                                    key={coli}
+                                    gap="12px"
+                                    className="py-[4px] items-center"
+                                  >
+                                    <span>
+                                      {
+                                        getTableColumns(g.table).find(
+                                          (col) => col.value === c.column,
+                                        )?.label
+                                      }
+                                    </span>
+                                    <span>
+                                      {
+                                        ENUM_VARS.DATASET.FILTER_OPERATOR_MAP[
+                                          c.operator
+                                        ]
+                                      }
+                                    </span>
+                                    <span>{c.value}</span>
+                                  </Flex>
+                                );
+                              })}
+                            </div>
+                          </Card>
                         );
                       })}
                     </div>

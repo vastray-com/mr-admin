@@ -25,18 +25,24 @@ export declare namespace Dataset {
     DatasetSourceColumnType
   >;
   type FilterCol = Record<string, [FilterColOperateItem]>;
-  type FilterTable = Record<string, FilterCol[]>;
+  type FilterCondition = Record<DatasetFilterLogic, FilterCol[]>;
+  type FilterTable = Record<string, FilterCondition[]>;
   type Filter = Partial<Record<DatasetFilterLogic, FilterTable[]>>[];
 
   // 前端录入时 filter 结构
+  type FilterFEInputConditionCol = {
+    column: string;
+    operator: DatasetFilterOperator;
+    value: DatasetSourceColumnType;
+  };
+  type FilterFEInputConditionCols = FilterFEInputConditionCol[];
   type FilterFEInputItem = {
     logic: DatasetFilterLogic;
     group: {
       table: string;
       conditions: {
-        column: string;
-        operator: DatasetFilterOperator;
-        value: DatasetSourceColumnType;
+        logic: DatasetFilterLogic;
+        cols: FilterFEInputConditionCols;
       }[];
     }[];
   };
