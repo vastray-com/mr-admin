@@ -1,5 +1,5 @@
 import { App, Button, Card, Flex, Form, Input, Select } from 'antd';
-import { type FC, useCallback, useState } from 'react';
+import { type FC, useCallback, useEffect, useState } from 'react';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import {
@@ -15,8 +15,8 @@ import type { AxiosError } from 'axios';
 import type { Dataset } from '@/typing/dataset';
 import type { DatasetSourceType } from '@/typing/enum/dataset';
 
-const aiGenPlaceholder = `你可以说帮我查询 2026 年入院的有吸烟史的肺癌患者...
-`;
+const titleText = `👋 你好，我是常一数据管家，你想要查询什么数据？`;
+const aiGenPlaceholder = `你可以说帮我查询 2026 年入院的有吸烟史的肺癌患者...`;
 
 type Props = {
   generating: boolean;
@@ -33,50 +33,62 @@ const DefaultPage: FC<Props> = ({
   onGenerate,
   onSwitchToManual,
 }) => {
+  const [title, setTitle] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setTitle(titleText.slice(0, title.length + 1));
+    }, 60);
+    return () => clearTimeout(timer);
+  }, [title]);
+
   return (
     <div
-      className="w-full h-full flex flex-col justify-center items-center gap-y-[16px]"
+      className="w-full h-full"
       style={{ background: 'linear-gradient(135deg,#c621e522,#7d7cf922)' }}
     >
-      <h1 className="font-bold text-[28px]">你想要查询什么数据？</h1>
-      <div className="w-[48vw]">
-        <div className="flex gap-x-[12px] h-[48px]">
-          <Input
-            className="text-[16px] bg-[#fff8] h-full"
-            style={{
-              '--ant-input-active-border-color': '#c621e5',
-              '--ant-input-hover-border-color': '#c621e599',
-              '--ant-input-hover-bg': '#ffffffaa',
-              '--ant-input-active-bg': '#ffffffee',
-            }}
-            value={value}
-            onChange={(v) => onChange(v.target.value)}
-            placeholder={aiGenPlaceholder}
-            disabled={generating}
-          />
+      <div className="h-full w-[48vw] mx-auto flex flex-col justify-center gap-y-[16px]">
+        <div className="w-full ml-[calc((100%_-_650px)_/_2)]">
+          <h1 className="font-bold text-[28px] inline">{title}</h1>
+        </div>
+        <div className="w-full">
+          <div className="flex gap-x-[12px] h-[48px]">
+            <Input
+              className="text-[16px] bg-[#fff8] h-full"
+              style={{
+                '--ant-input-active-border-color': '#c621e5',
+                '--ant-input-hover-border-color': '#c621e599',
+                '--ant-input-hover-bg': '#ffffffaa',
+                '--ant-input-active-bg': '#ffffffee',
+              }}
+              value={value}
+              onChange={(v) => onChange(v.target.value)}
+              placeholder={aiGenPlaceholder}
+              disabled={generating}
+            />
+            <Button
+              onClick={onGenerate}
+              className="h-full aspect-ratio-[5/3] text-[#fffb] important:not-disabled:hover:text-[#fff] disabled:hover:text-[#aaa] disabled:text-[#aaa]"
+              style={!value.trim() || generating ? {} : AIGenBtnStyle}
+              disabled={!value.trim() || generating}
+            >
+              {!generating ? (
+                <i className="i-icon-park-outline:send text-[24px] text-inherit" />
+              ) : (
+                <i className="i-icon-park-outline:loading-four text-[24px] text-inherit infinite-rotate" />
+              )}
+            </Button>
+          </div>
+
           <Button
-            onClick={onGenerate}
-            className="h-full aspect-ratio-[5/3] text-[#fffb] important:not-disabled:hover:text-[#fff] disabled:hover:text-[#aaa] disabled:text-[#aaa]"
-            style={!value.trim() || generating ? {} : AIGenBtnStyle}
-            disabled={!value.trim() || generating}
+            type="link"
+            onClick={onSwitchToManual}
+            className="mt-[12px]"
+            disabled={generating}
           >
-            {!generating ? (
-              <i className="i-icon-park-outline:send text-[24px] text-inherit" />
-            ) : (
-              <i className="i-icon-park-outline:loading-four text-[24px] text-inherit infinite-rotate" />
-            )}
+            <i className="i-icon-park-outline:switch" />
+            切换到手动配置
           </Button>
         </div>
-
-        <Button
-          type="link"
-          onClick={onSwitchToManual}
-          className="mt-[12px]"
-          disabled={generating}
-        >
-          <i className="i-icon-park-outline:switch" />
-          切换到手动配置
-        </Button>
       </div>
     </div>
   );
