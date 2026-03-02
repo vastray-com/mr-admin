@@ -230,6 +230,12 @@ export const useApi = () => {
         service.get('/warehouse/get_patient_detail', { params }) as Promise<
           APIRes<Warehouse.PatientDetail>
         >,
+      getParsedPatientDetail: (
+        params: Warehouse.GetParsedPatientDetailParams,
+      ) =>
+        service.get('/warehouse/get_parsed_patient_detail', {
+          params,
+        }) as Promise<APIRes<Warehouse.PatientDetail>>,
       getDashboardData: (params: Warehouse.GetDashboardDataParams) =>
         service.get('/warehouse/get_dashboard_data', { params }) as Promise<
           APIRes<Warehouse.DashboardData>

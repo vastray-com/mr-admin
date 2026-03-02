@@ -69,6 +69,10 @@ export declare namespace Warehouse {
   type GetPatientDetailParams = {
     visit_no: string;
   };
+  type GetParsedPatientDetailParams = {
+    visit_no: string;
+    dataset_uid: string;
+  };
   type PatientDetail = {
     name: string;
     label: string;

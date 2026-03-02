@@ -1,4 +1,4 @@
-import { App, Button, Card, Descriptions, Divider, Table } from 'antd';
+import { App, Button, Card, Descriptions, Table } from 'antd';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
 import { useCallback, useRef, useState } from 'react';
@@ -295,21 +295,21 @@ const TaskDetailPage = () => {
             key="action"
             render={(_, record: Task.Instance) => (
               <>
-                {record.status === TaskInstanceStatus.Completed && (
-                  <>
-                    <Link
-                      to={`/task_management/detail/${taskUid}/${record.uid}`}
-                    >
-                      <Button type="link">下载</Button>
-                    </Link>
-                    <Divider orientation="vertical" />
-                    <Link
-                      to={`/task_management/detail/${taskUid}/${record.uid}`}
-                    >
-                      <Button type="link">查看结果</Button>
-                    </Link>
-                  </>
-                )}
+                {/*{record.status === TaskInstanceStatus.Completed && (*/}
+                {/*  <>*/}
+                {/*    <Link*/}
+                {/*      to={`/task_management/detail/${taskUid}/${record.uid}`}*/}
+                {/*    >*/}
+                {/*      <Button type="link">下载</Button>*/}
+                {/*    </Link>*/}
+                {/*    <Divider orientation="vertical" />*/}
+                {/*    <Link*/}
+                {/*      to={`/task_management/detail/${taskUid}/${record.uid}`}*/}
+                {/*    >*/}
+                {/*      <Button type="link">查看结果</Button>*/}
+                {/*    </Link>*/}
+                {/*  </>*/}
+                {/*)}*/}
 
                 {record.status === TaskInstanceStatus.Running && (
                   <Button

@@ -9,11 +9,13 @@ import type { Warehouse } from '@/typing/warehose';
 type Props = {
   filter?: Dataset.Filter | null;
   showMessage?: boolean;
+  datasetUid?: string;
 };
 
 export const WarehouseDataTable: FC<Props> = ({
   filter,
   showMessage = false,
+  datasetUid,
 }) => {
   const { message } = App.useApp();
   const { warehouseApi } = useApi();
@@ -51,42 +53,70 @@ export const WarehouseDataTable: FC<Props> = ({
   const [openDetail, setOpenDetail] = useState(false);
   const [getDetailLoading, setGetDetailLoading] = useState(false);
   const [detail, setDetail] = useState<Warehouse.PatientDetail | null>(null);
+  const [parsedDetail, setParsedData] =
+    useState<Warehouse.PatientDetail | null>(null);
   const onCloseDetail = useCallback(() => {
     setOpenDetail(false);
   }, []);
-  const onClickPatient = useCallback(async (r: Record<string, string>) => {
-    console.log('row', r);
-    if (!r.visit_no) {
-      message.warning('无患者 visit_no，无法查看详情');
-      return;
-    }
+  const onClickPatient = useCallback(
+    async (r: Record<string, string>) => {
+      console.log('row', r);
+      if (!r.visit_no) {
+        message.warning('无患者 visit_no，无法查看详情');
+        return;
+      }
 
-    try {
       setGetDetailLoading(true);
       setOpenDetail(true);
 
-      const detail = await warehouseApi.getPatientDetail({
-        visit_no: r.visit_no,
-      });
+      Promise.allSettled([
+        warehouseApi.getPatientDetail({ visit_no: r.visit_no }),
+        ...(datasetUid
+          ? [
+              warehouseApi.getParsedPatientDetail({
+                visit_no: r.visit_no,
+                dataset_uid: datasetUid,
+              }),
+            ]
+          : []),
+      ])
+        .then(([detailRes, parsedRes]) => {
+          console.log('detailRes', detailRes);
+          console.log('parsedRes', parsedRes);
 
-      if (detail.code === 200) {
-        // 打开患者详情弹窗
-        console.log('获取患者详情成功', detail);
-        setDetail(detail.data);
-      } else {
-        console.error('获取患者详情失败:', detail);
-        message.error(`获取患者详情失败: ${detail.message}`);
-      }
-    } catch (error) {
-      const e = error as AxiosError<APIRes<string>>;
-      console.error('获取患者详情失败:', e);
-      message.error(
-        `获取患者详情失败: ${e.response?.data?.message || e.message}`,
-      );
-    } finally {
-      setGetDetailLoading(false);
-    }
-  }, []);
+          if (
+            detailRes.status === 'fulfilled' &&
+            detailRes.value.code === 200
+          ) {
+            // 打开患者详情弹窗
+            console.log('获取患者详情成功', detailRes);
+            setDetail(detailRes.value.data);
+          } else {
+            console.error('获取患者详情失败:', detailRes);
+            message.error(
+              `获取患者详情失败: ${detailRes.status === 'fulfilled' ? detailRes.value.message : '请求失败'}`,
+            );
+          }
+
+          if (parsedRes) {
+            if (
+              parsedRes.status === 'fulfilled' &&
+              parsedRes.value.code === 200
+            ) {
+              console.log('获取患者解析后详情成功', parsedRes);
+              setParsedData(parsedRes.value.data);
+            } else {
+              console.error('获取患者解析后详情失败:', parsedRes);
+              message.error(
+                `获取患者解析后详情失败: ${parsedRes.status === 'fulfilled' ? parsedRes.value.message : '请求失败'}`,
+              );
+            }
+          }
+        })
+        .finally(() => setGetDetailLoading(false));
+    },
+    [datasetUid],
+  );
 
   if (!filter) {
     return <Empty description="还没有设置过滤器" />;
@@ -102,6 +132,8 @@ export const WarehouseDataTable: FC<Props> = ({
         open={openDetail}
         onClose={onCloseDetail}
         detail={detail}
+        isParsed={!!datasetUid}
+        parsedDetail={parsedDetail}
         loading={getDetailLoading}
       />
 
