@@ -87,16 +87,16 @@ const DatasetDetailPage = () => {
   );
 
   // 动态禁用已关联的资源类型选项
-  const linked = Form.useWatch('content', form);
-  const resourceOptions = useMemo(() => {
-    if (!linked) return ENUM_VARS.DATASET.RESOURCE_TYPE_OPT;
-    console.log('linked:', linked);
-    const hasLinkedResource = linked.map((r) => r.resource_type);
-    return ENUM_VARS.DATASET.RESOURCE_TYPE_OPT.map((opt) => ({
-      ...opt,
-      disabled: hasLinkedResource.includes(opt.value),
-    }));
-  }, [linked]);
+  // const linked = Form.useWatch('content', form);
+  // const resourceOptions = useMemo(() => {
+  //   if (!linked) return ENUM_VARS.DATASET.RESOURCE_TYPE_OPT;
+  //   console.log('linked:', linked);
+  //   const hasLinkedResource = linked.map((r) => r.resource_type);
+  //   return ENUM_VARS.DATASET.RESOURCE_TYPE_OPT.map((opt) => ({
+  //     ...opt,
+  //     disabled: hasLinkedResource.includes(opt.value),
+  //   }));
+  // }, [linked]);
 
   // 过滤器展示模式
   const filterDisplayMode = [
@@ -237,7 +237,7 @@ const DatasetDetailPage = () => {
                       ? '暂未关联解析规则'
                       : detail.linked_ruleset.map((l) => (
                           <div
-                            key={l.resource_type}
+                            key={l.resource_type + l.structured_ruleset_uid}
                             className="flex items-center gap-x-[16px] py-[8px] first:mt-0"
                           >
                             <span className="w-[4px] h-[4px] bg-[#666]" />
@@ -316,7 +316,13 @@ const DatasetDetailPage = () => {
                       >
                         <Select
                           placeholder="请选择资源类型"
-                          options={resourceOptions}
+                          options={ENUM_VARS.DATASET.RESOURCE_TYPE_OPT}
+                          showSearch={{
+                            filterOption: (input, option) =>
+                              (option?.label ?? '')
+                                .toLowerCase()
+                                .includes(input.toLowerCase()),
+                          }}
                         />
                       </Form.Item>
 
@@ -330,6 +336,12 @@ const DatasetDetailPage = () => {
                         <Select
                           placeholder="请选择关联规则"
                           options={rulesetOptions}
+                          showSearch={{
+                            filterOption: (input, option) =>
+                              (option?.label ?? '')
+                                .toLowerCase()
+                                .includes(input.toLowerCase()),
+                          }}
                         />
                       </Form.Item>
 
