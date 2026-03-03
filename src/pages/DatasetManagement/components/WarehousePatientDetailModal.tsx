@@ -75,7 +75,7 @@ export const WarehousePatientDetailModal: FC<Props> = ({
         <DetailDesc detail={detail} />
       )}
 
-      {!loading && segmented === 'parsed' && detail && (
+      {!loading && segmented === 'parsed' && parsedDetail && (
         <DetailDesc detail={parsedDetail} />
       )}
     </Modal>
@@ -85,7 +85,7 @@ export const WarehousePatientDetailModal: FC<Props> = ({
 const DetailDesc: FC<{ detail?: Warehouse.PatientDetail | null }> = ({
   detail,
 }) => {
-  return detail ? (
+  return detail && detail.length > 0 ? (
     <div className="h-[calc(100%_-_64px)] overflow-y-auto overflow-x-hidden pr-[16px]">
       {detail.map((d) => (
         <Descriptions
