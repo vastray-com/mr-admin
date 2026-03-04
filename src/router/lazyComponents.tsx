@@ -58,6 +58,18 @@ const WarehouseDataPreview = lazy(
   () => import('@/pages/DatasetManagement/Warehouse/WarehouseDataPreview'),
 );
 
+// 下载管理
+const MyDownloadTask = lazy(
+  () =>
+    import('@/pages/DownloadTaskManagement/MyDownloadTask/MyDownloadTaskPage'),
+);
+const DownloadTaskList = lazy(
+  () =>
+    import(
+      '@/pages/DownloadTaskManagement/DownloadTaskList/DownloadTaskListPage'
+    ),
+);
+
 // 用户管理
 const UserList = lazy(
   () => import('@/pages/UserManagement/UserList/UserListPage'),
@@ -82,6 +94,8 @@ export default {
   DatasetList,
   DatasetDetail,
   WarehouseDataPreview,
+  MyDownloadTask,
+  DownloadTaskList,
   UserList,
   TokenList,
 };

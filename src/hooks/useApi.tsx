@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { noInterceptorsService, service } from '@/utils/service';
 import type { AxiosResponse } from 'axios';
 import type { Dataset } from '@/typing/dataset';
+import type { DownloadTask } from '@/typing/downloadTask';
 import type { PushRule } from '@/typing/pushRule';
 import type { StructuredRuleset } from '@/typing/structuredRuleset';
 import type { Task } from '@/typing/task';
@@ -82,6 +83,26 @@ export const useApi = () => {
         service.post('/dataset/gen_ai_filter', params) as Promise<
           APIRes<string>
         >,
+    }),
+    [],
+  );
+
+  const download_task = useMemo(
+    () => ({
+      getDownloadTaskList: (params: DownloadTask.ListParams) =>
+        service.get('/download_task/list', { params }) as Promise<
+          APIRes<PaginationData<DownloadTask.Item>>
+        >,
+      createDownloadTask: (params: DownloadTask.CreateParams) =>
+        service.post('/download_task/create', params) as Promise<
+          APIRes<string>
+        >,
+      updateDownloadTask: (params: DownloadTask.UpdateParams) =>
+        service.post('/download_task/update', params) as Promise<
+          APIRes<string>
+        >,
+      deleteDownloadTask: (uid: string) =>
+        service.post('/download_task/delete', { uid }) as Promise<APIRes<null>>,
     }),
     [],
   );
@@ -247,6 +268,7 @@ export const useApi = () => {
   return {
     taskApi: task,
     datasetApi: dataset,
+    downloadTaskApi: download_task,
     encodeApi: encode,
     ruleApi: rule,
     pushRuleApi: pushRule,

@@ -178,6 +178,37 @@ const privateBaseRoutes: BaseRoute = [
     ],
   },
   {
+    key: '/download_task_management',
+    element: <Outlet />,
+    label: '数据下载',
+    addToMenu: true,
+    roles: [UserRole.Admin, UserRole.User],
+    loader: ({ request }) => {
+      const url = new URL(request.url);
+      if (url.pathname === '/download_task_management') {
+        return redirect('/user_management/my_download_task_list');
+      }
+      return null;
+    },
+    icon: <i className="i-icon-park-outline:download-three" />,
+    children: [
+      {
+        key: '/download_task_management/my_download_task_list',
+        element: <LazyComponents.MyDownloadTask />,
+        label: '我的下载',
+        addToMenu: true,
+        roles: [UserRole.Admin, UserRole.User],
+      },
+      {
+        key: '/download_task_management/download_task_list',
+        element: <LazyComponents.DownloadTaskList />,
+        label: '我的审批',
+        addToMenu: true,
+        roles: [UserRole.Admin],
+      },
+    ],
+  },
+  {
     key: '/user_management',
     element: <Outlet />,
     label: '用户管理',

@@ -3,6 +3,7 @@ import {
   App,
   Button,
   Card,
+  DatePicker,
   Descriptions,
   Flex,
   Form,
@@ -11,7 +12,7 @@ import {
   Select,
   Spin,
 } from 'antd';
-import { useCallback, useMemo, useState } from 'react';
+import { type FC, useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
@@ -19,7 +20,9 @@ import { DatasetFilterDisplay } from '@/pages/DatasetManagement/components/Datas
 import { WarehouseDataTable } from '@/pages/DatasetManagement/components/WarehouseDataTable';
 import { useCacheStore } from '@/store/useCacheStore';
 import { ENUM_VARS } from '@/typing/enum';
+import { DatasetType } from '@/typing/enum/dataset';
 import type { Dataset } from '@/typing/dataset';
+import type { DownloadTask } from '@/typing/downloadTask';
 
 const DatasetDetailPage = () => {
   const { uid } = useParams<{ uid: string }>();
@@ -121,6 +124,9 @@ const DatasetDetailPage = () => {
     setCurFilterDisplayMode(filterDisplayMode[nextIdx].value);
   }, [curFilterDisplayMode, detail]);
 
+  // 下载数据集
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+
   if (!uid) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-y-4">
@@ -147,6 +153,12 @@ const DatasetDetailPage = () => {
           <>
             <Button type="primary" onClick={() => console.log('交互式分析')}>
               交互式分析
+            </Button>
+            <Button
+              className="ml-[8px]"
+              onClick={() => setShowDownloadModal(true)}
+            >
+              下载数据集
             </Button>
             <Button
               danger
@@ -379,8 +391,144 @@ const DatasetDetailPage = () => {
           </Form.Item>
         </Form>
       </Modal>
+
+      <DownloadModal
+        datasetUid={detail.uid}
+        datasetType={detail.dataset_type}
+        open={showDownloadModal}
+        onClose={() => setShowDownloadModal(false)}
+      />
     </>
   );
 };
 
 export default DatasetDetailPage;
+
+type DownloadModalProps = {
+  datasetUid: string;
+  datasetType: DatasetType;
+  open: boolean;
+  onClose: () => void;
+};
+const DownloadModal: FC<DownloadModalProps> = ({
+  datasetUid,
+  datasetType,
+  open,
+  onClose,
+}) => {
+  const { message } = App.useApp();
+  const { downloadTaskApi } = useApi();
+  const [form] = Form.useForm<DownloadTask.CreateParamsFE>();
+
+  const [loading, setLoading] = useState(false);
+
+  const onFinish = useCallback((v: DownloadTask.CreateParamsFE) => {
+    console.log('数据集下载申请', v);
+    const params: DownloadTask.CreateParams = {
+      dataset_uid: v.dataset_uid,
+      resource_list: v.resource_list,
+      archive_uid: v.archive_uid,
+    };
+    if (v.date_range) {
+      params.from_date = v.date_range[0].format('YYYY-MM-DD');
+      params.to_date = v.date_range[1].format('YYYY-MM-DD');
+    }
+
+    // 提交下载申请
+    setLoading(true);
+    downloadTaskApi
+      .createDownloadTask(params)
+      .then((res) => {
+        if (res.code === 200) {
+          message.success('数据集下载申请成功，请等待审核');
+          onClose();
+        } else {
+          message.error(`数据集下载申请失败：${res.message}`);
+        }
+      })
+      .catch((e) => {
+        console.error('数据集下载申请失败：', e);
+        message.error('数据集下载申请失败，请稍后重试');
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <Modal
+      centered
+      onCancel={onClose}
+      afterOpenChange={() => form.resetFields()}
+      open={open}
+      title="数据集下载"
+      width={830}
+      footer={null}
+    >
+      <Form<DownloadTask.CreateParamsFE>
+        className="mt-[36px]"
+        form={form}
+        name="create-download-task-form"
+        onFinish={onFinish}
+        onFinishFailed={(v) => {
+          console.log('表单提交失败：', v);
+        }}
+        initialValues={{
+          dataset_uid: datasetUid,
+          resource_list: [],
+        }}
+        autoComplete="off"
+        requiredMark={false}
+      >
+        <Form.Item<DownloadTask.CreateParamsFE> hidden name="dataset_uid">
+          <Input />
+        </Form.Item>
+
+        <Form.Item<DownloadTask.CreateParamsFE>
+          label="资源类型"
+          name="resource_list"
+          rules={[
+            {
+              required: true,
+              message: '请至少选择一个资源类型',
+            },
+          ]}
+        >
+          <Select
+            mode="multiple"
+            placeholder="选择要下载的资源类型"
+            options={ENUM_VARS.DATASET.RESOURCE_TYPE_OPT}
+            allowClear
+            showSearch={{
+              filterOption: (input, option) =>
+                (option?.label ?? '')
+                  .toLowerCase()
+                  .includes(input.toLowerCase()),
+            }}
+          />
+        </Form.Item>
+
+        {datasetType === DatasetType.Subscribe && (
+          <Form.Item<DownloadTask.CreateParamsFE>
+            label="下载范围"
+            name="date_range"
+            rules={[
+              {
+                required: true,
+                message: '订阅数据集必须选择时间范围',
+              },
+            ]}
+          >
+            <DatePicker.RangePicker />
+          </Form.Item>
+        )}
+
+        <Form.Item noStyle>
+          <div className="flex items-center justify-center mt-[36px]">
+            <Button type="primary" htmlType="submit" loading={loading}>
+              申请下载
+            </Button>
+          </div>
+        </Form.Item>
+      </Form>
+    </Modal>
+  );
+};
