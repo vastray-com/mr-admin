@@ -98,11 +98,13 @@ export const useApi = () => {
           APIRes<string>
         >,
       updateDownloadTask: (params: DownloadTask.UpdateParams) =>
-        service.post('/download_task/update', params) as Promise<
+        service.post('/admin/download_task/update', params) as Promise<
           APIRes<string>
         >,
       deleteDownloadTask: (uid: string) =>
-        service.post('/download_task/delete', { uid }) as Promise<APIRes<null>>,
+        service.post('/admin/download_task/delete', { uid }) as Promise<
+          APIRes<null>
+        >,
     }),
     [],
   );

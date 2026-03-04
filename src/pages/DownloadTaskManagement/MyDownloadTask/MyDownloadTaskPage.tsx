@@ -1,4 +1,4 @@
-import { App, Button, Card, Table, Tag } from 'antd';
+import { App, Button, Card, Table, Tag, Tooltip } from 'antd';
 import { useState } from 'react';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
@@ -6,6 +6,7 @@ import { usePaginationData } from '@/hooks/usePaginationData';
 import { ENUM_VARS } from '@/typing/enum';
 import { DownloadTaskStatus } from '@/typing/enum/downloadTask';
 import type { DownloadTask } from '@/typing/downloadTask';
+import type { DatasetResourceType } from '@/typing/enum/dataset';
 
 const MyDownloadTaskPage = () => {
   const { downloadTaskApi } = useApi();
@@ -33,18 +34,45 @@ const MyDownloadTaskPage = () => {
         >
           <Table.Column title="申请单 ID" dataIndex="uid" />
           <Table.Column
-            title="数据集 ID"
-            dataIndex="dataset_uid"
-            render={(uid: string) => (
+            title="数据集"
+            dataIndex="dataset_name"
+            render={(name: string, record: DownloadTask.Item) => (
               <Button
                 type="link"
                 target="_blank"
-                href={`/data/dataset/detail/${uid}`}
+                href={`/data/dataset/detail/${record.dataset_uid}`}
                 className="p-0 m-0"
               >
-                {uid}
+                {name}
               </Button>
             )}
+          />
+          <Table.Column
+            title="数据范围"
+            dataIndex="resource_list"
+            render={(list: DatasetResourceType[]) =>
+              list.length > 1 ? (
+                <Tooltip
+                  placement="top"
+                  title={list
+                    .map((r) => ENUM_VARS.DATASET.RESOURCE_TYPE_MAP[r])
+                    .join(', ')}
+                >
+                  {`${ENUM_VARS.DATASET.RESOURCE_TYPE_MAP[list[0]]}等${list.length}项`}
+                </Tooltip>
+              ) : (
+                ENUM_VARS.DATASET.RESOURCE_TYPE_MAP[list[0]]
+              )
+            }
+          />
+          <Table.Column
+            title="时间范围"
+            dataIndex="date_range"
+            render={(_, record: DownloadTask.Item) =>
+              record.from_date && record.to_date
+                ? `${record.from_date} ~ ${record.to_date}`
+                : '-'
+            }
           />
           <Table.Column
             title="状态"
@@ -71,7 +99,7 @@ const MyDownloadTaskPage = () => {
               );
             }}
           />
-          <Table.Column title="审批人" dataIndex="examiner_uid" />
+          <Table.Column title="审批人" dataIndex="examiner_name" />
           <Table.Column
             title="操作"
             key="action"

@@ -1,216 +1,170 @@
-import { App, Button, Card, Form, Input, Modal, Table, Tag } from 'antd';
-import { useCallback, useState } from 'react';
+import { App, Button, Card, Popconfirm, Table, Tag, Tooltip } from 'antd';
+import { useState } from 'react';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { usePaginationData } from '@/hooks/usePaginationData';
-import { UserRole } from '@/typing/enum';
-import type { AxiosError } from 'axios';
-import type { User } from '@/typing/user';
+import { ENUM_VARS } from '@/typing/enum';
+import { DownloadTaskStatus } from '@/typing/enum/downloadTask';
+import type { DownloadTask } from '@/typing/downloadTask';
+import type { DatasetResourceType } from '@/typing/enum/dataset';
 
 const DownloadTaskListPage = () => {
-  const { userApi } = useApi();
+  const { downloadTaskApi } = useApi();
   const { message } = App.useApp();
 
   // 拉取列表分页数据
-  const [data, setData] = useState<User.List>([]);
+  const [data, setData] = useState<DownloadTask.List>([]);
   const { PaginationComponent, refresh } = usePaginationData({
-    fetchData: userApi.getList,
+    fetchData: downloadTaskApi.getDownloadTaskList,
     setData: setData,
   });
 
-  // 新建用户
-  const [form] = Form.useForm<User.CreateParams>();
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const onCreate = () => {
-    form.resetFields();
-    setShowCreateModal(true);
+  const onUpdate = (record: DownloadTask.Item, status: DownloadTaskStatus) => {
+    console.log(`下载申请 ${record} 要更新为状态 ${status}`);
+    downloadTaskApi
+      .updateDownloadTask({ uid: record.uid, status })
+      .then((res) => {
+        if (res.code === 200) {
+          message.success('操作成功');
+        } else {
+          message.error(res.message || '操作失败，请稍后再试');
+        }
+      })
+      .catch((e) => {
+        message.error(e.message || '操作失败，请稍后再试');
+      })
+      .finally(() => {
+        refresh();
+      });
   };
 
-  // const onAction = useCallback(
-  //   (uid: string, action: Task.ActionParams['action']) => {
-  //     console.log(`执行操作：${action}，任务 ID：${uid}`);
-  //     taskApi
-  //       .actionTask({ uid, action })
-  //       .then((res) => {
-  //         if (res.code === 200) {
-  //           message.success(`操作成功`);
-  //           // 刷新任务列表
-  //           refresh();
-  //         } else {
-  //           message.error(`操作失败：${res.message}`);
-  //         }
-  //       })
-  //       .catch((err) => {
-  //         console.error(`操作任务失败：`, err);
-  //         message.error('操作任务失败，请稍后重试');
-  //       });
-  //   },
-  //   [taskApi, refresh, message.error, message.success],
-  // );
-
-  const onFinish = useCallback(
-    async (values: User.CreateParams) => {
-      console.log('提交的新用户数据：', values);
-      try {
-        const res = await userApi.create(values);
-        if (res.code === 200) {
-          message.success('用户创建成功');
-          setShowCreateModal(false);
-          form.resetFields();
-          // 刷新任务列表
-          refresh();
-        } else {
-          message.error(`创建用户失败：${res.message}`);
-        }
-      } catch (error) {
-        const e = error as AxiosError<APIRes<any>>;
-        console.error('创建用户失败：', e);
-        message.error(`创建用户失败: ${e.response?.data.message || e.message}`);
-      }
-    },
-    [userApi, refresh, form.resetFields, message],
-  );
-
   return (
-    <>
-      <ContentLayout
-        title="我的审批"
-        action={
-          <Button type="primary" className="ml-[8px]" onClick={onCreate}>
-            新建用户
-          </Button>
-        }
-      >
-        <Card>
-          <Table<User.User> dataSource={data} rowKey="uid" pagination={false}>
-            <Table.Column title="用户ID" dataIndex="uid" />
-            <Table.Column title="用户名" dataIndex="username" />
-            <Table.Column title="昵称" dataIndex="nickname" />
-            <Table.Column
-              title="角色"
-              dataIndex="role_name"
-              render={(_, r: User.User) => {
-                switch (r.role) {
-                  case UserRole.Admin:
-                    return <Tag color="blue">{r.role_name}</Tag>;
-                  case UserRole.User:
-                    return <Tag>{r.role_name}</Tag>;
-                  default:
-                    return <Tag>未知角色</Tag>;
-                }
-              }}
-            />
-            {/*<Table.Column*/}
-            {/*  title="操作"*/}
-            {/*  key="action"*/}
-            {/*  width={280}*/}
-            {/*  render={(_, record: Task.Item) => (*/}
-            {/*    <>*/}
-            {/*      <Button type="link" onClick={() => onCopy(record)}>*/}
-            {/*        复制*/}
-            {/*      </Button>*/}
-            {/*      <Link to={`/task_management/detail/${record.uid}`}>*/}
-            {/*        <Button type="link">详情</Button>*/}
-            {/*      </Link>{' '}*/}
-            {/*      {record.one_time_task_type !== OneTimeTaskType.Immediate &&*/}
-            {/*        (record.status === TaskStatus.Disabled ? (*/}
-            {/*          <Button*/}
-            {/*            type="link"*/}
-            {/*            onClick={() => onAction(record.uid, 'enable')}*/}
-            {/*          >*/}
-            {/*            启用*/}
-            {/*          </Button>*/}
-            {/*        ) : (*/}
-            {/*          <Button*/}
-            {/*            type="link"*/}
-            {/*            onClick={() => onAction(record.uid, 'disable')}*/}
-            {/*          >*/}
-            {/*            禁用*/}
-            {/*          </Button>*/}
-            {/*        ))}{' '}*/}
-            {/*      {(record.status === TaskStatus.Disabled ||*/}
-            {/*        record.one_time_task_type ===*/}
-            {/*          OneTimeTaskType.Immediate) && (*/}
-            {/*        <Button*/}
-            {/*          type="link"*/}
-            {/*          danger*/}
-            {/*          onClick={() => onAction(record.uid, 'delete')}*/}
-            {/*        >*/}
-            {/*          删除*/}
-            {/*        </Button>*/}
-            {/*      )}*/}
-            {/*    </>*/}
-            {/*  )}*/}
-            {/*/>*/}
-          </Table>
-
-          <div className="mt-[20px] flex justify-end">
-            <PaginationComponent />
-          </div>
-        </Card>
-      </ContentLayout>
-
-      <Modal
-        centered
-        onCancel={() => setShowCreateModal(false)}
-        open={showCreateModal}
-        title="新建用户"
-        width={830}
-        footer={null}
-      >
-        <Form<User.CreateParams>
-          className="mt-[36px]"
-          form={form}
-          name="new-task-form"
-          onFinish={onFinish}
-          onFinishFailed={(v) => {
-            console.log('表单提交失败：', v);
-          }}
-          autoComplete="off"
-          labelCol={{ span: 4 }}
+    <ContentLayout title="我的审批">
+      <Card>
+        <Table<DownloadTask.Item>
+          dataSource={data}
+          rowKey="uid"
+          pagination={false}
         >
-          <Form.Item<User.CreateParams>
-            label="用户名"
-            name="username"
-            rules={[
-              {
-                required: true,
-                whitespace: true,
-                message: '用户名不能为空',
-              },
-            ]}
-          >
-            <Input placeholder="输入用户名" />
-          </Form.Item>
-
-          <Form.Item<User.CreateParams> label="昵称" name="nickname">
-            <Input placeholder="输入昵称" />
-          </Form.Item>
-
-          <Form.Item<User.CreateParams>
-            label="密码"
-            name="password"
-            rules={[
-              {
-                required: true,
-                whitespace: true,
-                message: '密码不能为空',
-              },
-            ]}
-          >
-            <Input.Password placeholder="输入密码" />
-          </Form.Item>
-
-          <Form.Item noStyle>
-            <div className="flex items-center justify-center mt-[36px]">
-              <Button type="primary" htmlType="submit">
-                创建
+          <Table.Column title="申请单 ID" dataIndex="uid" />
+          <Table.Column
+            title="数据集"
+            dataIndex="dataset_name"
+            render={(name: string, record: DownloadTask.Item) => (
+              <Button
+                type="link"
+                target="_blank"
+                href={`/data/dataset/detail/${record.dataset_uid}`}
+                className="p-0 m-0"
+              >
+                {name}
               </Button>
-            </div>
-          </Form.Item>
-        </Form>
-      </Modal>
-    </>
+            )}
+          />
+          <Table.Column
+            title="数据范围"
+            dataIndex="resource_list"
+            render={(list: DatasetResourceType[]) =>
+              list.length > 1 ? (
+                <Tooltip
+                  placement="top"
+                  title={list
+                    .map((r) => ENUM_VARS.DATASET.RESOURCE_TYPE_MAP[r])
+                    .join(', ')}
+                >
+                  {`${ENUM_VARS.DATASET.RESOURCE_TYPE_MAP[list[0]]}等${list.length}项`}
+                </Tooltip>
+              ) : (
+                ENUM_VARS.DATASET.RESOURCE_TYPE_MAP[list[0]]
+              )
+            }
+          />
+          <Table.Column
+            title="时间范围"
+            dataIndex="date_range"
+            render={(_, record: DownloadTask.Item) =>
+              record.from_date && record.to_date
+                ? `${record.from_date} ~ ${record.to_date}`
+                : '-'
+            }
+          />
+          <Table.Column
+            title="状态"
+            dataIndex="status"
+            render={(s: DownloadTaskStatus) => {
+              let color: string | undefined;
+              switch (s) {
+                case DownloadTaskStatus.Approved:
+                case DownloadTaskStatus.Exporting:
+                  color = 'blue';
+                  break;
+                case DownloadTaskStatus.Finished:
+                  color = 'green';
+                  break;
+                case DownloadTaskStatus.Declined:
+                case DownloadTaskStatus.Failed:
+                  color = 'red';
+                  break;
+                case DownloadTaskStatus.PendingApproval:
+                  break;
+              }
+              return (
+                <Tag color={color}>{ENUM_VARS.DOWNLOAD_TASK.STATUS_MAP[s]}</Tag>
+              );
+            }}
+          />
+          <Table.Column title="申请人" dataIndex="applicant_name" />
+          <Table.Column
+            title="操作"
+            key="action"
+            width={280}
+            render={(_, record: DownloadTask.Item) => (
+              <>
+                {record.status === DownloadTaskStatus.PendingApproval && (
+                  <>
+                    <Button
+                      type="link"
+                      onClick={() =>
+                        onUpdate(record, DownloadTaskStatus.Approved)
+                      }
+                    >
+                      批准
+                    </Button>
+                    <Popconfirm
+                      title="拒绝下载申请"
+                      description="确定要拒绝该下载申请吗？"
+                      onConfirm={() =>
+                        onUpdate(record, DownloadTaskStatus.Declined)
+                      }
+                      okText="确定"
+                      cancelText="取消"
+                    >
+                      <Button type="link" danger>
+                        拒绝
+                      </Button>
+                    </Popconfirm>
+                  </>
+                )}{' '}
+                {record.status === DownloadTaskStatus.Failed && (
+                  <Button
+                    type="link"
+                    onClick={() =>
+                      onUpdate(record, DownloadTaskStatus.Approved)
+                    }
+                  >
+                    重新导出
+                  </Button>
+                )}
+              </>
+            )}
+          />
+        </Table>
+
+        <div className="mt-[20px] flex justify-end">
+          <PaginationComponent />
+        </div>
+      </Card>
+    </ContentLayout>
   );
 };
 

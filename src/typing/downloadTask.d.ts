@@ -5,8 +5,11 @@ export declare namespace DownloadTask {
   type BaseItem = {
     // 申请人
     applicant_uid: string;
+    applicant_name: string;
     // 审核人 uid，初始值为 null，表示未审核
     examiner_uid: string | null;
+    examiner_name: string | null;
+    failed_reason: string | null;
     deleted_at: string | null;
     created_at: string;
     updated_at: string;
