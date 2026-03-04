@@ -91,7 +91,7 @@ const DownloadTaskListPage = () => {
           <Table.Column
             title="状态"
             dataIndex="status"
-            render={(s: DownloadTaskStatus) => {
+            render={(s: DownloadTaskStatus, record: DownloadTask.Item) => {
               let color: string | undefined;
               switch (s) {
                 case DownloadTaskStatus.Approved:
@@ -108,7 +108,13 @@ const DownloadTaskListPage = () => {
                 case DownloadTaskStatus.PendingApproval:
                   break;
               }
-              return (
+              return record.failed_reason ? (
+                <Tooltip placement="top" title={record.failed_reason}>
+                  <Tag color={color}>
+                    {ENUM_VARS.DOWNLOAD_TASK.STATUS_MAP[s]}
+                  </Tag>
+                </Tooltip>
+              ) : (
                 <Tag color={color}>{ENUM_VARS.DOWNLOAD_TASK.STATUS_MAP[s]}</Tag>
               );
             }}
