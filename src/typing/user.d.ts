@@ -30,6 +30,16 @@ declare namespace User {
     nickname?: string;
   };
 
+  // 批量创建用户参数
+  type BatchCreateParamsFE = {
+    usernames: string;
+    password: string;
+  };
+  type BatchCreateParams = {
+    usernames: string[];
+    password: string;
+  };
+
   // 修改密码参数
   type ChangePwdParams = {
     opwd: string;

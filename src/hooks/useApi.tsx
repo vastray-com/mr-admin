@@ -215,6 +215,10 @@ export const useApi = () => {
         service.post('/user/login', params) as Promise<APIRes<User.LoginRes>>,
       create: (params: User.CreateParams) =>
         service.post('/admin/user/create', params) as Promise<APIRes<string>>,
+      batchCreate: (params: User.BatchCreateParams) =>
+        service.post('/admin/user/batch_create', params) as Promise<
+          APIRes<string>
+        >,
       getList: (params: PaginationParams) =>
         service.get('/admin/user/list', { params }) as Promise<
           APIRes<PaginationData<User.User>>
