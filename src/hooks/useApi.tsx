@@ -219,6 +219,8 @@ export const useApi = () => {
         service.get('/admin/user/list', { params }) as Promise<
           APIRes<PaginationData<User.User>>
         >,
+      changePwd: (params: User.ChangePwdParams) =>
+        service.post('/user/change_pwd', params) as Promise<APIRes<null>>,
     }),
     [],
   );

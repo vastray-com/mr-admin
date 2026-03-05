@@ -30,6 +30,13 @@ declare namespace User {
     nickname?: string;
   };
 
+  // 修改密码参数
+  type ChangePwdParams = {
+    opwd: string;
+    npwd: string;
+    re_npwd: string;
+  };
+
   // ls utils
   type LSUtil = {
     token: {
