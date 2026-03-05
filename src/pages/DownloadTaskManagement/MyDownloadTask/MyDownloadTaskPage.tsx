@@ -1,10 +1,11 @@
 import { App, Button, Card, Table, Tag, Tooltip } from 'antd';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { usePaginationData } from '@/hooks/usePaginationData';
 import { ENUM_VARS } from '@/typing/enum';
 import { DownloadTaskStatus } from '@/typing/enum/downloadTask';
+import { downloadFile } from '@/utils/helper';
 import type { DownloadTask } from '@/typing/downloadTask';
 import type { DatasetResourceType } from '@/typing/enum/dataset';
 
@@ -19,10 +20,17 @@ const MyDownloadTaskPage = () => {
     setData: setData,
   });
 
-  const onDownload = (record: DownloadTask.Item) => {
+  const onDownload = useCallback(async (record: DownloadTask.Item) => {
     console.log(`下载申请单：${record.uid}，数据集 ID：${record.dataset_uid}`);
-    message.success('下载成功');
-  };
+    try {
+      const res = await downloadTaskApi.downloadData({ uid: record.uid });
+      downloadFile(res);
+      message.success('下载成功');
+    } catch (e) {
+      message.error('下载失败');
+      console.error('下载失败:', e);
+    }
+  }, []);
 
   return (
     <ContentLayout title="我的下载">

@@ -105,6 +105,10 @@ export const useApi = () => {
         service.post('/admin/download_task/delete', { uid }) as Promise<
           APIRes<null>
         >,
+      downloadData: (params: { uid: string }) =>
+        noInterceptorsService.post('/download_task/download', params, {
+          responseType: 'blob', // 设置响应类型为 Blob
+        }) as Promise<AxiosResponse<Blob>>,
     }),
     [],
   );
