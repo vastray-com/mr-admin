@@ -221,6 +221,8 @@ export const useApi = () => {
         >,
       changePwd: (params: User.ChangePwdParams) =>
         service.post('/user/change_pwd', params) as Promise<APIRes<null>>,
+      resetPwd: (params: User.ResetPwdParams) =>
+        service.post('/admin/user/reset_pwd', params) as Promise<APIRes<null>>,
     }),
     [],
   );

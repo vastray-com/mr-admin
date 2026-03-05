@@ -37,6 +37,12 @@ declare namespace User {
     re_npwd: string;
   };
 
+  // 重置密码参数
+  type ResetPwdParams = {
+    username: string;
+    pwd: string;
+  };
+
   // ls utils
   type LSUtil = {
     token: {

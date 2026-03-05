@@ -25,29 +25,6 @@ const UserListPage = () => {
     form.resetFields();
     setShowCreateModal(true);
   };
-
-  // const onAction = useCallback(
-  //   (uid: string, action: Task.ActionParams['action']) => {
-  //     console.log(`执行操作：${action}，任务 ID：${uid}`);
-  //     taskApi
-  //       .actionTask({ uid, action })
-  //       .then((res) => {
-  //         if (res.code === 200) {
-  //           message.success(`操作成功`);
-  //           // 刷新任务列表
-  //           refresh();
-  //         } else {
-  //           message.error(`操作失败：${res.message}`);
-  //         }
-  //       })
-  //       .catch((err) => {
-  //         console.error(`操作任务失败：`, err);
-  //         message.error('操作任务失败，请稍后重试');
-  //       });
-  //   },
-  //   [taskApi, refresh, message.error, message.success],
-  // );
-
   const onFinish = useCallback(
     async (values: User.CreateParams) => {
       console.log('提交的新用户数据：', values);
@@ -70,6 +47,35 @@ const UserListPage = () => {
     },
     [userApi, refresh, form.resetFields, message],
   );
+
+  // 重置用户密码
+  const [resetPwdForm] = Form.useForm<User.ResetPwdParams>();
+  const [resetUserPwd, setResetUserPwd] = useState<User.User | null>(null);
+  const onResetPwd = (u: User.User) => {
+    setResetUserPwd(u);
+    resetPwdForm.setFieldsValue({ username: u.username, pwd: '' });
+  };
+  const onResetPwdFinish = useCallback(async (values: User.ResetPwdParams) => {
+    console.log('提交的重置密码数据：', values);
+    try {
+      const res = await userApi.resetPwd(values);
+      if (res.code === 200) {
+        message.success('用户密码重置成功');
+        setResetUserPwd(null);
+        form.resetFields();
+        // 刷新用户列表
+        refresh();
+      } else {
+        message.error(`用户密码重置失败：${res.message}`);
+      }
+    } catch (error) {
+      const e = error as AxiosError<APIRes<any>>;
+      console.error('用户密码重置失败：', e);
+      message.error(
+        `用户密码重置失败: ${e.response?.data.message || e.message}`,
+      );
+    }
+  }, []);
 
   return (
     <>
@@ -100,48 +106,18 @@ const UserListPage = () => {
                 }
               }}
             />
-            {/*<Table.Column*/}
-            {/*  title="操作"*/}
-            {/*  key="action"*/}
-            {/*  width={280}*/}
-            {/*  render={(_, record: Task.Item) => (*/}
-            {/*    <>*/}
-            {/*      <Button type="link" onClick={() => onCopy(record)}>*/}
-            {/*        复制*/}
-            {/*      </Button>*/}
-            {/*      <Link to={`/task_management/detail/${record.uid}`}>*/}
-            {/*        <Button type="link">详情</Button>*/}
-            {/*      </Link>{' '}*/}
-            {/*      {record.one_time_task_type !== OneTimeTaskType.Immediate &&*/}
-            {/*        (record.status === TaskStatus.Disabled ? (*/}
-            {/*          <Button*/}
-            {/*            type="link"*/}
-            {/*            onClick={() => onAction(record.uid, 'enable')}*/}
-            {/*          >*/}
-            {/*            启用*/}
-            {/*          </Button>*/}
-            {/*        ) : (*/}
-            {/*          <Button*/}
-            {/*            type="link"*/}
-            {/*            onClick={() => onAction(record.uid, 'disable')}*/}
-            {/*          >*/}
-            {/*            禁用*/}
-            {/*          </Button>*/}
-            {/*        ))}{' '}*/}
-            {/*      {(record.status === TaskStatus.Disabled ||*/}
-            {/*        record.one_time_task_type ===*/}
-            {/*          OneTimeTaskType.Immediate) && (*/}
-            {/*        <Button*/}
-            {/*          type="link"*/}
-            {/*          danger*/}
-            {/*          onClick={() => onAction(record.uid, 'delete')}*/}
-            {/*        >*/}
-            {/*          删除*/}
-            {/*        </Button>*/}
-            {/*      )}*/}
-            {/*    </>*/}
-            {/*  )}*/}
-            {/*/>*/}
+            <Table.Column
+              title="操作"
+              key="action"
+              width={280}
+              render={(_, record: User.User) => (
+                <>
+                  <Button type="link" onClick={() => onResetPwd(record)}>
+                    重置密码
+                  </Button>
+                </>
+              )}
+            />
           </Table>
 
           <div className="mt-[20px] flex justify-end">
@@ -205,6 +181,52 @@ const UserListPage = () => {
             <div className="flex items-center justify-center mt-[36px]">
               <Button type="primary" htmlType="submit">
                 创建
+              </Button>
+            </div>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        centered
+        onCancel={() => setResetUserPwd(null)}
+        open={!!resetUserPwd}
+        title="重置用户密码"
+        width={830}
+        footer={null}
+      >
+        <Form<User.ResetPwdParams>
+          className="mt-[36px]"
+          form={resetPwdForm}
+          name="reset-pwd-form"
+          onFinish={onResetPwdFinish}
+          onFinishFailed={(v) => {
+            console.log('表单提交失败：', v);
+          }}
+          autoComplete="off"
+        >
+          <Form.Item<User.ResetPwdParams> name="username" hidden>
+            <Input />
+          </Form.Item>
+
+          <Form.Item<User.ResetPwdParams>
+            label="新密码"
+            name="pwd"
+            rules={[
+              {
+                required: true,
+                whitespace: true,
+                message: '新密码不能为空',
+              },
+            ]}
+          >
+            <Input.Password placeholder="输入新密码" />
+          </Form.Item>
+
+          <Form.Item noStyle>
+            <div className="flex items-center justify-center mt-[36px]">
+              <Button type="primary" htmlType="submit">
+                重置
               </Button>
             </div>
           </Form.Item>
