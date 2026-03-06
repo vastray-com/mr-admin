@@ -221,7 +221,7 @@ const PushRulesPage: FC = () => {
               <Form.Item<FormValues>
                 label="规则名称"
                 name="name"
-                className="w-[256px]"
+                className="min-w-[256px]"
               >
                 <Input />
               </Form.Item>
@@ -229,7 +229,7 @@ const PushRulesPage: FC = () => {
               <Form.Item<FormValues>
                 label="更新时间"
                 name="range"
-                className="w-[360px]"
+                className="min-w-[360px]"
               >
                 <DatePicker.RangePicker disabledDate={disabledDate} />
               </Form.Item>

@@ -179,7 +179,7 @@ const DashboardPage: FC = () => {
           <Form.Item<TimeFilterForm>
             label="科室"
             name="dept"
-            className="w-[240px]"
+            className="min-w-[240px]"
           >
             <Select
               showSearch
@@ -190,7 +190,7 @@ const DashboardPage: FC = () => {
           <Form.Item<TimeFilterForm>
             label="过滤方式"
             name="timeType"
-            className="w-[240px]"
+            className="min-w-[240px]"
           >
             <Select options={ENUM_VARS.WAREHOUSE.OVERVIEW_TIME_TYPE_OPT} />
           </Form.Item>
@@ -198,7 +198,7 @@ const DashboardPage: FC = () => {
           <Form.Item<TimeFilterForm>
             label="时间范围"
             name="relative"
-            className="w-[380px]"
+            className="min-w-[380px]"
             hidden={timeType === WarehouseOverviewTimeType.Range}
             rules={[
               {
@@ -213,7 +213,7 @@ const DashboardPage: FC = () => {
           <Form.Item<TimeFilterForm>
             label="时间范围"
             name="range"
-            className="w-[380px]"
+            className="min-w-[380px]"
             hidden={timeType === WarehouseOverviewTimeType.Relative}
             rules={[
               {
