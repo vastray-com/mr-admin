@@ -214,6 +214,9 @@ const EditableTable = <T,>(props: Props<T>) => {
       pagination={{ onChange: () => props.onCancel?.() }}
       rowKey={props.rowKey ?? 'uid'}
       scroll={props.scroll}
+      onRow={(_, i) => ({
+        className: i && i % 2 === 1 ? 'bg-[#fafafa]' : '',
+      })}
     />
   );
 };

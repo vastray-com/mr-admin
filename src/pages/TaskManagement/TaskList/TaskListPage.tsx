@@ -200,7 +200,14 @@ const TaskListPage = () => {
     <>
       <ContentLayout title="任务列表">
         <Card>
-          <Table<Task.Item> dataSource={data} rowKey="uid" pagination={false}>
+          <Table<Task.Item>
+            dataSource={data}
+            rowKey="uid"
+            pagination={false}
+            onRow={(_, i) => ({
+              className: i && i % 2 === 1 ? 'bg-[#fafafa]' : '',
+            })}
+          >
             <Table.Column title="任务名称" dataIndex="name" />
             <Table.Column title="任务编号" dataIndex="uid" />
             <Table.Column title="关联数据集" dataIndex="dataset_name" />

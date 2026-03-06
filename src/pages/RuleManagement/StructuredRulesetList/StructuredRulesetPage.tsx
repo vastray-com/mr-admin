@@ -260,6 +260,9 @@ const StructuredRulesetPage: FC = () => {
               onChange: (uids) => setSelectedUids(uids as string[]),
             }}
             pagination={false}
+            onRow={(_, i) => ({
+              className: i && i % 2 === 1 ? 'bg-[#fafafa]' : '',
+            })}
           >
             <Table.Column title="规则名称" dataIndex="name_cn" />
             <Table.Column title="规则英文名" dataIndex="name_en" />

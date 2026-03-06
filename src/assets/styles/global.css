@@ -46,3 +46,8 @@ div.ant-app {
 .infinite-rotate {
   animation: rotate 2s linear infinite;
 }
+
+div.ant-card {
+  background: unset;
+  border: 1px solid #0001;
+}

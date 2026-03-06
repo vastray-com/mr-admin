@@ -45,6 +45,9 @@ const DownloadTaskListPage = () => {
           dataSource={data}
           rowKey="uid"
           pagination={false}
+          onRow={(_, i) => ({
+            className: i && i % 2 === 1 ? 'bg-[#fafafa]' : '',
+          })}
         >
           <Table.Column title="申请单 ID" dataIndex="uid" />
           <Table.Column

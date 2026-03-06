@@ -692,7 +692,7 @@ const Preview: FC<PreviewProps> = ({ fields }) => {
     return tree;
   }, [fields]);
 
-  return <Tree showLine treeData={treeData} />;
+  return <Tree showLine treeData={treeData} className="bg-[unset]" />;
 };
 
 export default StructuredRulesetDetailPage;

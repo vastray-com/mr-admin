@@ -16,7 +16,7 @@ export const ScrollableCard = ({
         header: {
           position: 'sticky',
           top: 0,
-          backgroundColor: 'white',
+          // backgroundColor: 'white',
           zIndex: 10,
         },
       }}

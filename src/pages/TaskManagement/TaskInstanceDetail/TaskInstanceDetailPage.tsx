@@ -135,6 +135,9 @@ const TaskInstanceDetailPage = () => {
           dataSource={currentList}
           rowKey="uid"
           pagination={false}
+          onRow={(_, i) => ({
+            className: i && i % 2 === 1 ? 'bg-[#fafafa]' : '',
+          })}
         >
           <Table.Column title="记录 ID" dataIndex="uid" />
           <Table.Column title="病历标识" dataIndex="op_em_no" />
@@ -209,6 +212,9 @@ const TaskInstanceDetailPage = () => {
                   dataIndex: '数据值',
                 },
               ]}
+              onRow={(_, i) => ({
+                className: i && i % 2 === 1 ? 'bg-[#fafafa]' : '',
+              })}
             />
           </ScrollableCard>
         </div>

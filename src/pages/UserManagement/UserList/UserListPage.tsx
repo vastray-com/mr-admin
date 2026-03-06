@@ -47,7 +47,14 @@ const UserListPage = () => {
         }
       >
         <Card>
-          <Table<User.User> dataSource={data} rowKey="uid" pagination={false}>
+          <Table<User.User>
+            dataSource={data}
+            rowKey="uid"
+            pagination={false}
+            onRow={(_, i) => ({
+              className: i && i % 2 === 1 ? 'bg-[#fafafa]' : '',
+            })}
+          >
             <Table.Column title="用户ID" dataIndex="uid" />
             <Table.Column title="用户名" dataIndex="username" />
             <Table.Column title="昵称" dataIndex="nickname" />

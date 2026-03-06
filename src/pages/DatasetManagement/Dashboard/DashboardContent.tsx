@@ -74,10 +74,7 @@ export const DashboardContent: FC<Props> = ({ data }) => {
       </Flex>
 
       <div className="mt-[16px] flex gap-[16px]">
-        <Card
-          className="basis-[calc(66%_-_16px_-_16px)] shrink-0 grow-0"
-          title="门诊量趋势"
-        >
+        <Card className="basis-[60%] shrink-0 grow-0" title="门诊量趋势">
           <LineChart
             axis={{
               x: 'date',
@@ -91,7 +88,7 @@ export const DashboardContent: FC<Props> = ({ data }) => {
         </Card>
 
         <Card
-          className="basis-[calc(33%_-_16px_-_16px)] shrink-0 grow-0"
+          className="basis-[calc(40%_-_16px)] shrink-0 grow-0"
           title="科室门诊 Top 20"
         >
           <BarChart
@@ -112,10 +109,7 @@ export const DashboardContent: FC<Props> = ({ data }) => {
       </div>
 
       <div className="mt-[16px] flex gap-[16px]">
-        <Card
-          className="basis-[calc(66%_-_16px_-_16px)] shrink-0 grow-0"
-          title="住院趋势"
-        >
+        <Card className="basis-[60%] shrink-0 grow-0" title="住院趋势">
           <LineChart
             axis={{
               x: 'date',
@@ -138,7 +132,7 @@ export const DashboardContent: FC<Props> = ({ data }) => {
         </Card>
 
         <Card
-          className="basis-[calc(33%_-_16px_-_16px)] shrink-0 grow-0"
+          className="basis-[calc(40%_-_16px)] shrink-0 grow-0"
           title="手术等级分布"
         >
           <PieChart

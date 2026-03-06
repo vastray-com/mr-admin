@@ -261,6 +261,9 @@ const EncodeTablePage: FC = () => {
               onChange: (uids) => setSelectedUids(uids as string[]),
             }}
             pagination={false}
+            onRow={(_, i) => ({
+              className: i && i % 2 === 1 ? 'bg-[#fafafa]' : '',
+            })}
           >
             <Table.Column title="码表 ID" dataIndex="uid" />
             <Table.Column title="码表名称" dataIndex="name" />

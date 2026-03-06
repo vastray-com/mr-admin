@@ -1,4 +1,5 @@
 import { App, Button, Form, Input } from 'antd';
+import { motion } from 'motion/react';
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { useApi } from '@/hooks/useApi';
@@ -38,7 +39,12 @@ const LoginPage = () => {
 
   return (
     <main className="flex justify-center items-center h-full w-full gradient-bg">
-      <div className="z-1 w-[80%] max-w-[1000px] h-[640px] bg-1 rounded-[2rem] shadow-2xl overflow-hidden flex items-center justify-center">
+      <motion.div
+        initial={{ y: -30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="z-1 w-[80%] max-w-[1000px] h-[640px] bg-1 rounded-[2rem] shadow-2xl overflow-hidden flex items-center justify-center"
+      >
         <div className="h-full basis-[50%] shrink-0 grow-0 p-[3em] flex flex-col">
           <div className="mt-[3em]">
             <img
@@ -101,7 +107,7 @@ const LoginPage = () => {
             <img src="/login_img.jpg" alt="" className="w-full aspect-ratio" />
           </div>
         </div>
-      </div>
+      </motion.div>
 
       <div className="pos-absolute top-0 left-0 w-full h-full mix-blend-overlay flex justify-center items-center opacity-100 bg-repeat bg-[url('/login_bg.jpg')]" />
     </main>

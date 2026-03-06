@@ -155,8 +155,9 @@ export const WarehouseDataTable: FC<Props> = ({
             />
           ),
         }}
-        onRow={(r) => ({
+        onRow={(r, i) => ({
           onClick: () => onClickPatient(r),
+          className: i && i % 2 === 1 ? 'bg-[#fafafa]' : '',
         })}
       >
         {data?.columns.map((c) => (

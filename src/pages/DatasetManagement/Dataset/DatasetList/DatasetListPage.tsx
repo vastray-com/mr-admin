@@ -80,6 +80,9 @@ const DatasetListPage = () => {
             dataSource={data}
             rowKey="uid"
             pagination={false}
+            onRow={(_, i) => ({
+              className: i && i % 2 === 1 ? 'bg-[#fafafa]' : '',
+            })}
           >
             <Table.Column title="数据集编号" dataIndex="uid" />
             <Table.Column title="数据集名称" dataIndex="name_cn" />

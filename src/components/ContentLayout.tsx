@@ -21,7 +21,7 @@ export const ContentLayout: FC<Props> = ({
       {showTitleBar && (
         <div
           className={clsx(
-            'bg-white px-[20px] flex flex-col justify-center',
+            'px-[20px] flex flex-col justify-center',
             breadcrumb ? 'h-[88px] ' : 'h-[64px]',
           )}
         >
@@ -44,7 +44,7 @@ export const ContentLayout: FC<Props> = ({
               ? 'h-[calc(100%_-_88px)]'
               : 'h-[calc(100%_-_64px)]'
             : 'h-full',
-          'p-[20px]',
+          'p-[20px] pt-0',
         )}
       >
         <div className="w-full h-full overflow-auto">{children}</div>
