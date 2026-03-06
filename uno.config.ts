@@ -1,13 +1,13 @@
 import {
   defineConfig,
   presetIcons,
-  presetWind4,
+  presetWind3,
   transformerVariantGroup,
 } from 'unocss';
 
 export default defineConfig({
   presets: [
-    presetWind4({ dark: 'class' }),
+    presetWind3({ dark: 'class' }),
     presetIcons({
       extraProperties: {
         display: 'inline-block',
@@ -33,11 +33,11 @@ export default defineConfig({
     'fg-secondary': 'text-fg-secondary',
     'fg-tertiary': 'text-fg-tertiary',
     'fg-comment': 'text-fg-comment',
-    'gradient-bg': 'bg-gradient-to-br from-blue-100 via-purple-50 to-pink-100',
+    'gradient-bg': 'bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100',
     'gradient-bg-2':
       'bg-gradient-to-br from-blue-200 via-purple-200 to-pink-200',
     'glass-bg':
-      'backdrop-blur-[6px] bg-white/30 border border-black/8 rounded-[16px] p-6',
+      'backdrop-blur-[6px] bg-white/30 border-1 border-black/8 rounded-[16px] p-6',
   },
   theme: {
     colors: {
