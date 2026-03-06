@@ -1,3 +1,4 @@
+import presetLegacyCompat from '@unocss/preset-legacy-compat';
 import {
   defineConfig,
   presetIcons,
@@ -14,6 +15,10 @@ export default defineConfig({
         'font-size': '14px',
         'vertical-align': 'middle',
       },
+    }),
+    presetLegacyCompat({
+      commaStyleColorFunction: true,
+      legacyColorSpace: true,
     }),
     // presetWebFonts({
     //   fonts: {
@@ -33,9 +38,10 @@ export default defineConfig({
     'fg-secondary': 'text-fg-secondary',
     'fg-tertiary': 'text-fg-tertiary',
     'fg-comment': 'text-fg-comment',
-    'gradient-bg': 'bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100',
+    'gradient-bg':
+      'bg-gradient-to-br shape-[to_bottom_right] from-blue-100 via-purple-100 to-pink-100',
     'gradient-bg-2':
-      'bg-gradient-to-br from-blue-200 via-purple-200 to-pink-200',
+      'bg-gradient-to-br shape-[to_bottom_right] from-blue-200 via-purple-200 to-pink-200',
     'glass-bg':
       'backdrop-blur-[6px] bg-white/30 border-1 border-black/8 rounded-[16px] p-6',
   },

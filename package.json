@@ -31,6 +31,7 @@
     "@types/node": "25.0.10",
     "@types/react": "19.2.9",
     "@types/react-dom": "19.2.3",
+    "@unocss/preset-legacy-compat": "66.6.6",
     "@vitejs/plugin-react": "5.1.2",
     "clsx": "2.1.1",
     "lefthook": "2.0.15",
