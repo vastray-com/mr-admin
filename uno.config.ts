@@ -33,6 +33,7 @@ export default defineConfig({
     'fg-secondary': 'text-fg-secondary',
     'fg-tertiary': 'text-fg-tertiary',
     'fg-comment': 'text-fg-comment',
+    'gradient-bg': 'bg-gradient-to-br from-blue-100 via-purple-50 to-pink-100',
   },
   theme: {
     colors: {
