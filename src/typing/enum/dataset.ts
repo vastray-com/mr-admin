@@ -94,6 +94,10 @@ export enum DatasetResourceType {
   PathologyReport = 'pathology_report',
   /// X光报告
   XRayReport = 'xray_report',
+  /// 心超检查报告
+  CUSReport = 'cus_report',
+  /// 支气管镜检查报告
+  CESReport = 'ces_report',
   /// 心电图报告
   ECGReport = 'ecg_report',
 }
@@ -110,6 +114,8 @@ const RESOURCE_TYPE_MAP: Record<DatasetResourceType, string> = {
   [DatasetResourceType.UltrasoundReport]: '超声报告',
   [DatasetResourceType.PathologyReport]: '病理报告',
   [DatasetResourceType.XRayReport]: 'X光报告',
+  [DatasetResourceType.CUSReport]: '心超检查报告',
+  [DatasetResourceType.CESReport]: '支气管镜检查报告',
   [DatasetResourceType.ECGReport]: '心电图报告',
 };
 
