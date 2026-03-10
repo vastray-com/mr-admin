@@ -50,11 +50,11 @@ export const DashboardContent: FC<Props> = ({ data }) => {
           <Card key={item.key} className="flex-1 py-[8px]">
             <div className="flex items-start justify-between">
               <div>
-                <h2>
+                <h2 className="text-[18px] font-normal text-fg-primary">
                   {data.core.columns.find((c) => c.value === item.key)?.label ??
                     '未知'}
                 </h2>
-                <p className="text-[28px] font-bold">
+                <p className="text-[28px] font-bold text-fg-title">
                   {formatCountToString(data.core.data[0][item.key])}
                 </p>
               </div>

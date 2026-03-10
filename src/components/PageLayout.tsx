@@ -35,7 +35,10 @@ export const PageLayout: FC = () => {
       <Layout className="h-full w-full p-[12px] gradient-bg">
         <Layout.Header className="z-1 glass-bg h-[64px] w-full flex items-center justify-between px-[24px]">
           <div className="flex items-center gap-x-[36px]">
-            <div className="h-[28px] flex items-center gap-x-[12px]">
+            <div
+              className="h-[28px] flex items-center gap-x-[12px] cursor-pointer"
+              onClick={() => nav('/')}
+            >
               <img
                 src="/ws_logo.svg"
                 alt=""

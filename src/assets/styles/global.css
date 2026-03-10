@@ -28,11 +28,6 @@ body {
   width: 100%;
 }
 
-div.ant-app {
-  height: 100%;
-  width: 100%;
-}
-
 @keyframes rotate {
   0% {
     transform: rotate(0);
@@ -45,9 +40,4 @@ div.ant-app {
 
 .infinite-rotate {
   animation: rotate 2s linear infinite;
-}
-
-div.ant-card {
-  background: unset;
-  border: 1px solid #0001;
 }

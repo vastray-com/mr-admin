@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import '@/assets/styles/global.css';
+import '@/assets/styles/antd-overwrite.css';
 import 'uno.css';
 import App from '@/App';
 

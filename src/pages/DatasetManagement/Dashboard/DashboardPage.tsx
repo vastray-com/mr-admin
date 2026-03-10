@@ -175,6 +175,7 @@ const DashboardPage: FC = () => {
             dept: deptList[0],
             range: null,
           }}
+          requiredMark={false}
         >
           <Form.Item<TimeFilterForm>
             label="科室"
@@ -239,16 +240,9 @@ const DashboardPage: FC = () => {
       </Card>
 
       <Spin spinning={loading} tip="查询数据中...">
-        <Card
-          styles={{
-            body: {
-              height: 'calc(100vh - 48px - 64px - 20px - 80px - 16px - 24px',
-            },
-          }}
-          className="mt-[16px]"
-        >
+        <div className="mt-[16px]">
           <DashboardContent data={data} />
-        </Card>
+        </div>
       </Spin>
     </ContentLayout>
   );
