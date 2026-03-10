@@ -3,6 +3,7 @@ import {
   App,
   Button,
   Card,
+  Collapse,
   DatePicker,
   Descriptions,
   Flex,
@@ -223,13 +224,26 @@ const DatasetDetailPage = () => {
                   </div>
                 ),
                 children: (
-                  <div className="max-h-[480px] overflow-auto">
-                    {curFilterDisplayMode === 'json' ? (
-                      <pre>{JSON.stringify(detail.filter, null, 2)}</pre>
-                    ) : curFilterDisplayMode === 'form' ? (
-                      <DatasetFilterDisplay filter={detail.filter} />
-                    ) : null}
-                  </div>
+                  <Collapse
+                    ghost
+                    items={[
+                      {
+                        key: '1',
+                        label: '查看详情',
+                        children: (
+                          <div className="max-h-[480px] overflow-auto">
+                            {curFilterDisplayMode === 'json' ? (
+                              <pre>
+                                {JSON.stringify(detail.filter, null, 2)}
+                              </pre>
+                            ) : curFilterDisplayMode === 'form' ? (
+                              <DatasetFilterDisplay filter={detail.filter} />
+                            ) : null}
+                          </div>
+                        ),
+                      },
+                    ]}
+                  />
                 ),
                 span: 4,
               },

@@ -243,7 +243,6 @@ const DashboardPage: FC = () => {
           styles={{
             body: {
               height: 'calc(100vh - 48px - 64px - 20px - 80px - 16px - 24px',
-              overflow: 'auto',
             },
           }}
           className="mt-[16px]"
