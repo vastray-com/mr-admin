@@ -1,23 +1,35 @@
-import { App, Button, Card, Form, Table } from 'antd';
+import {
+  Alert,
+  App,
+  Button,
+  Card,
+  Dropdown,
+  Flex,
+  Form,
+  type MenuProps,
+  Tag,
+  Typography,
+} from 'antd';
 import dayjs from 'dayjs';
 import { useCallback, useRef, useState } from 'react';
-import { Link } from 'react-router';
+import { useNavigate } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { usePaginationData } from '@/hooks/usePaginationData';
 import { CreateDatasetModal } from '@/pages/DatasetManagement/components/CreateDatasetModal';
 import { datasetFilterDB2FE } from '@/pages/DatasetManagement/helper';
 import { ENUM_VARS } from '@/typing/enum';
+import { DatasetSourceType, DatasetType } from '@/typing/enum/dataset';
 import type { Dataset } from '@/typing/dataset';
-import type { DatasetSourceType, DatasetType } from '@/typing/enum/dataset';
 
 const DatasetListPage = () => {
+  const nav = useNavigate();
   const { datasetApi } = useApi();
   const { message } = App.useApp();
 
   // 拉取列表分页数据
   const [data, setData] = useState<Dataset.List>([]);
-  const { PaginationComponent, refresh } = usePaginationData({
+  const { refresh } = usePaginationData({
     fetchData: datasetApi.getDatasetList,
     setData: setData,
   });
@@ -65,6 +77,41 @@ const DatasetListPage = () => {
     [datasetApi, refresh, message.error, message.success],
   );
 
+  const actions = useCallback(
+    (item: Dataset.Item): MenuProps['items'] => [
+      {
+        key: 'copy',
+        label: (
+          <Button
+            type="link"
+            onClick={(e) => {
+              e.stopPropagation();
+              onCopy(item);
+            }}
+          >
+            复制
+          </Button>
+        ),
+      },
+      {
+        key: 'delete',
+        label: (
+          <Button
+            type="link"
+            danger
+            onClick={(e) => {
+              e.stopPropagation();
+              onAction(item.uid, 'delete');
+            }}
+          >
+            删除
+          </Button>
+        ),
+      },
+    ],
+    [onAction, onCopy],
+  );
+
   return (
     <>
       <CreateDatasetModal
@@ -75,63 +122,82 @@ const DatasetListPage = () => {
       />
 
       <ContentLayout title="数据集列表">
-        <Card>
-          <Table<Dataset.Item>
-            dataSource={data}
-            rowKey="uid"
-            pagination={false}
-            onRow={(_, i) => ({
-              className: i && i % 2 === 1 ? 'bg-[#fafafa]' : '',
-            })}
-          >
-            <Table.Column title="数据集编号" dataIndex="uid" />
-            <Table.Column title="数据集名称" dataIndex="name_cn" />
-            <Table.Column
-              title="数据集类型"
-              dataIndex="dataset_type"
-              render={(type: DatasetType) => ENUM_VARS.DATASET.TYPE_MAP[type]}
-            />
-            <Table.Column
-              title="数据源类型"
-              dataIndex="source_type"
-              render={(type: DatasetSourceType) =>
-                ENUM_VARS.DATASET.SOURCE_TYPE_MAP[type]
-              }
-            />
-            <Table.Column title="警告信息" dataIndex="warning_msg" />
-            <Table.Column
-              title="创建时间"
-              dataIndex="created_at"
-              render={(time) => dayjs(time).format('YYYY-MM-DD HH:mm:ss')}
-            />
-            <Table.Column
-              title="操作"
-              key="action"
-              width={280}
-              render={(_, record: Dataset.Item) => (
-                <>
-                  <Button type="link" onClick={() => onCopy(record)}>
-                    复制
-                  </Button>
-                  <Link to={`/data/dataset/detail/${record.uid}`}>
-                    <Button type="link">详情</Button>
-                  </Link>
-                  <Button
-                    type="link"
-                    danger
-                    onClick={() => onAction(record.uid, 'delete')}
+        <Flex wrap="wrap" gap="20px" className="py-[5px]">
+          {data.map((item) => (
+            <Card
+              className="min-w-[360px] w-[calc((100%_-_20px_-_20px)_/_3)] shrink-0 grow-0 hover:bg-[#fffc] transition-all"
+              key={item.uid}
+            >
+              <div className="w-full">
+                <div className="flex items-center justify-between">
+                  <Typography.Text
+                    ellipsis={{ tooltip: item.name_cn }}
+                    className="text-[18px] font-medium grow-1 shrink-1 cursor-pointer hover:text-blue-500 hover:translate-x-[3px] transition-all"
+                    onClick={() => nav(`/data/dataset/detail/${item.uid}`)}
                   >
-                    删除
-                  </Button>
-                </>
-              )}
-            />
-          </Table>
+                    {item.name_cn}
+                  </Typography.Text>
 
-          <div className="mt-[20px] flex justify-end">
-            <PaginationComponent />
-          </div>
-        </Card>
+                  <Dropdown menu={{ items: actions(item) }}>
+                    <Button
+                      className="px-[4px] grow-0 shrink-0"
+                      type="text"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <i className="i-icon-park-outline:more-one text-[28px]" />
+                    </Button>
+                  </Dropdown>
+                </div>
+
+                <div className="mt-[8px] flex items-center gap-x-[8px]">
+                  <Tag
+                    variant="outlined"
+                    color={
+                      item.source_type === DatasetSourceType.Inpatient
+                        ? 'orange'
+                        : item.source_type === DatasetSourceType.Outpatient
+                          ? 'purple'
+                          : ''
+                    }
+                  >
+                    {ENUM_VARS.DATASET.SOURCE_TYPE_MAP[item.source_type]}
+                  </Tag>
+                  <Tag
+                    variant="outlined"
+                    color={
+                      item.dataset_type === DatasetType.Subscribe
+                        ? 'geekblue'
+                        : item.dataset_type === DatasetType.Review
+                          ? 'magenta'
+                          : ''
+                    }
+                  >
+                    {ENUM_VARS.DATASET.TYPE_MAP[item.dataset_type]}
+                  </Tag>
+                </div>
+
+                <p className="text-fg-tertiary mt-[16px] flex items-center gap-x-[8px]">
+                  <span className="w-[40px]">UID</span>
+                  <span className="text-fg-primary">{item.uid}</span>
+                </p>
+
+                <p className="text-fg-tertiary mt-[16px] flex items-center gap-x-[8px]">
+                  <span>创建于</span>
+                  <span className="text-fg-primary">
+                    {dayjs(item.created_at).format('YYYY-MM-DD HH:mm:ss')}
+                  </span>
+                </p>
+
+                <div className="mt-[16px]">
+                  {item.warning_msg ? (
+                    <Alert title={item.warning_msg} type="warning" showIcon />
+                  ) : // <Alert title="无异常" type="success" showIcon />
+                  null}
+                </div>
+              </div>
+            </Card>
+          ))}
+        </Flex>
       </ContentLayout>
     </>
   );
