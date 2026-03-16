@@ -1,4 +1,5 @@
 import { App, Button, Card, Table, Tag, Tooltip } from 'antd';
+import dayjs from 'dayjs';
 import { useCallback, useState } from 'react';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
@@ -118,9 +119,15 @@ const MyDownloadTaskPage = () => {
           />
           <Table.Column title="审批人" dataIndex="examiner_name" />
           <Table.Column
+            title="申请时间"
+            dataIndex="created_at"
+            width={240}
+            render={(v) => dayjs(v).format('YYYY-MM-DD HH:mm:ss')}
+          />
+          <Table.Column
             title="操作"
             key="action"
-            width={280}
+            width={160}
             render={(_, record: DownloadTask.Item) => (
               <>
                 {record.status === DownloadTaskStatus.Finished && (
