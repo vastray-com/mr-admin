@@ -269,9 +269,9 @@ const StructuredRulesetPage: FC = () => {
             <Table.Column title="规则 ID" dataIndex="uid" />
             <Table.Column
               title="更新时间"
-              dataIndex="update_time"
+              dataIndex="updated_at"
               sorter={(a, b) =>
-                dayjs(a.update_time).isBefore(dayjs(b.update_time)) ? -1 : 1
+                dayjs(a.updated_at).isBefore(dayjs(b.updated_at)) ? -1 : 1
               }
               render={(time: string) =>
                 dayjs(time).format('YYYY-MM-DD HH:mm:ss')

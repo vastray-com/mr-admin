@@ -64,7 +64,7 @@ export const usePaginationData: Hook = (opt) => {
       />
     ),
     refresh: useCallback(
-      () => onPaginationChange(pagination),
+      () => onPaginationChange({ ...pagination, page_num: 1 }),
       [onPaginationChange, pagination],
     ),
   };

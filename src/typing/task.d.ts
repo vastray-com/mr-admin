@@ -125,8 +125,8 @@ declare namespace Task {
     is_execute: 0 | 1 | 2;
     date_time_start: string;
     date_time_end: string;
-    create_time: string;
-    update_time: string;
+    created_at: string;
+    updated_at: string;
     input_summary: string;
   };
   type ResultList = ResultListItem[];

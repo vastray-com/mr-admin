@@ -5,8 +5,8 @@ declare namespace Tokens {
     name: string;
     description?: string;
     value: string;
-    create_time: string;
-    update_time: string;
+    created_at: string;
+    updated_at: string;
   };
   type List = Token[];
 
