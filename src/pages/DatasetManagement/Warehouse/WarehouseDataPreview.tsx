@@ -121,9 +121,11 @@ const WarehouseDataPreviewPage = () => {
   // 过滤数据
   const [filter, setFilter] = useState<Dataset.Filter | null>(null);
   const onFilterFinish = useCallback(() => {
+    console.log('开始验证过滤条件表单');
     filterForm
       .validateFields()
       .then((values) => {
+        console.log('过滤条件表单验证成功：', values);
         if (!values.filter || values.filter.length === 0) {
           message.warning('请至少设置一个过滤器');
           return;
@@ -160,6 +162,7 @@ const WarehouseDataPreviewPage = () => {
           message.success('生成成功');
           setShowAIModal(false);
           setShowDefaultPage(false);
+          setTimeout(onFilterFinish, 1);
         } else {
           message.error(`生成过滤条件失败: ${res.message}`);
         }
@@ -173,7 +176,7 @@ const WarehouseDataPreviewPage = () => {
         setGenerating(false);
       }
     },
-    [datasetApi, filterForm, message],
+    [datasetApi, filterForm, message, onFilterFinish],
   );
 
   if (showDefaultPage) {
