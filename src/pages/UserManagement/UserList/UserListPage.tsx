@@ -1,4 +1,5 @@
 import { App, Button, Card, Form, Input, Modal, Table, Tag } from 'antd';
+import dayjs from 'dayjs';
 import { type FC, useCallback, useEffect, useState } from 'react';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
@@ -71,6 +72,11 @@ const UserListPage = () => {
                     return <Tag>未知角色</Tag>;
                 }
               }}
+            />
+            <Table.Column
+              title="创建时间"
+              dataIndex="created_at"
+              render={(tm: string) => dayjs(tm).format('YYYY-MM-DD HH:mm:ss')}
             />
             <Table.Column
               title="操作"

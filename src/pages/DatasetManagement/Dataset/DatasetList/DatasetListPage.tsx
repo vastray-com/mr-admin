@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   Dropdown,
+  Empty,
   Flex,
   Form,
   type MenuProps,
@@ -18,13 +19,15 @@ import { useApi } from '@/hooks/useApi';
 import { usePaginationData } from '@/hooks/usePaginationData';
 import { CreateDatasetModal } from '@/pages/DatasetManagement/components/CreateDatasetModal';
 import { datasetFilterDB2FE } from '@/pages/DatasetManagement/helper';
-import { ENUM_VARS } from '@/typing/enum';
+import { useUserStore } from '@/store/useUserStore';
+import { ENUM_VARS, UserRole } from '@/typing/enum';
 import { DatasetSourceType, DatasetType } from '@/typing/enum/dataset';
 import type { Dataset } from '@/typing/dataset';
+import type { User } from '@/typing/user';
 
 const DatasetListPage = () => {
   const nav = useNavigate();
-  const { datasetApi } = useApi();
+  const { datasetApi, userApi } = useApi();
   const { message } = App.useApp();
 
   // 拉取列表分页数据
@@ -33,6 +36,14 @@ const DatasetListPage = () => {
     fetchData: datasetApi.getDatasetList,
     setData: setData,
   });
+
+  const user = useUserStore((s) => s.user);
+  const [userList, setUserList] = useState<User.List | null>(null);
+  if (user?.role === UserRole.Admin && !userList) {
+    userApi
+      .getList({ page_num: 1, page_size: 99999 })
+      .then((res) => setUserList(res.data.data));
+  }
 
   // 复制数据集
   const [form] = Form.useForm<Dataset.InputCreateParams>();
@@ -122,6 +133,20 @@ const DatasetListPage = () => {
       />
 
       <ContentLayout title="数据集列表">
+        {data.length < 1 && (
+          <div className="h-[300px] flex items-center justify-center">
+            <Empty
+              description={
+                <p className="flex flex-col gap-y-[4px]">
+                  <span>暂无数据集</span>
+                  <span>请先去数据查询进行创建</span>
+                </p>
+              }
+              className="mt-[50px]"
+            />
+          </div>
+        )}
+
         <Flex wrap="wrap" gap="20px" className="py-[5px]">
           {data.map((item) => (
             <Card
@@ -180,6 +205,16 @@ const DatasetListPage = () => {
                   <span className="w-[40px]">UID</span>
                   <span className="text-fg-primary">{item.uid}</span>
                 </p>
+
+                {user?.role === UserRole.Admin && (
+                  <p className="text-fg-tertiary mt-[16px] flex items-center gap-x-[8px]">
+                    <span>创建人</span>
+                    <span className="text-fg-primary">
+                      {userList?.find((u) => u.uid === item.creator)
+                        ?.username ?? '-'}
+                    </span>
+                  </p>
+                )}
 
                 <p className="text-fg-tertiary mt-[16px] flex items-center gap-x-[8px]">
                   <span>创建于</span>

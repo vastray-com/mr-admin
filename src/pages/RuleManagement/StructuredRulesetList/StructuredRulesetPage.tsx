@@ -16,10 +16,13 @@ import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { useFileImport } from '@/hooks/useFileImport';
 import { usePaginationData } from '@/hooks/usePaginationData';
+import { useUserStore } from '@/store/useUserStore';
+import { UserRole } from '@/typing/enum';
 import { downloadFile } from '@/utils/helper';
 import type { FormProps } from 'antd';
 import type { AxiosError } from 'axios';
 import type { StructuredRuleset } from '@/typing/structuredRuleset';
+import type { User } from '@/typing/user';
 
 type FormValues = {
   name?: string;
@@ -27,11 +30,19 @@ type FormValues = {
 };
 
 const StructuredRulesetPage: FC = () => {
-  const { ruleApi } = useApi();
+  const { ruleApi, userApi } = useApi();
   const { message, modal } = App.useApp();
   const nav = useNavigate();
 
   const [selectedUids, setSelectedUids] = useState<string[]>([]);
+
+  const user = useUserStore((s) => s.user);
+  const [userList, setUserList] = useState<User.List | null>(null);
+  if (user?.role === UserRole.Admin && !userList) {
+    userApi
+      .getList({ page_num: 1, page_size: 99999 })
+      .then((res) => setUserList(res.data.data));
+  }
 
   // 禁止选择超过今天的日期和 6 个月前的日期
   const disabledDate: GetProps<typeof DatePicker.RangePicker>['disabledDate'] =
@@ -278,6 +289,16 @@ const StructuredRulesetPage: FC = () => {
               }
             />
             <Table.Column title="备注" dataIndex="comment" />
+            {user?.role === UserRole.Admin && (
+              <Table.Column
+                title="创建人"
+                dataIndex="creator"
+                render={(uid: string) => {
+                  const creator = userList?.find((u) => u.uid === uid);
+                  return creator?.username ?? '-';
+                }}
+              />
+            )}
             <Table.Column
               title="操作"
               key="action"
