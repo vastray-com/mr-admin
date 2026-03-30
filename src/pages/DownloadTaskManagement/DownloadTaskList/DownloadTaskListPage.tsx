@@ -66,22 +66,35 @@ const DownloadTaskListPage = () => {
             )}
           />
           <Table.Column
-            title="数据范围"
-            dataIndex="resource_list"
-            render={(list: DatasetResourceType[]) =>
-              list.length > 1 ? (
-                <Tooltip
-                  placement="top"
-                  title={list
-                    .map((r) => ENUM_VARS.DATASET.RESOURCE_TYPE_MAP[r])
-                    .join(', ')}
-                >
-                  {`${ENUM_VARS.DATASET.RESOURCE_TYPE_MAP[list[0]]}等${list.length}项`}
-                </Tooltip>
-              ) : (
-                ENUM_VARS.DATASET.RESOURCE_TYPE_MAP[list[0]]
-              )
-            }
+            title="数据范围/质控模版"
+            dataIndex="r"
+            render={(_, record: DownloadTask.Item) => {
+              const t = record.template_name;
+              const rl = record.resource_list as
+                | DatasetResourceType[]
+                | undefined;
+              if (t) {
+                return (
+                  <Tooltip placement="top" title={t}>
+                    {`质控: ${t}`}
+                  </Tooltip>
+                );
+              }
+              if (rl && rl.length > 0) {
+                return rl.length > 1 ? (
+                  <Tooltip
+                    placement="top"
+                    title={rl
+                      .map((r) => ENUM_VARS.DATASET.RESOURCE_TYPE_MAP[r])
+                      .join(', ')}
+                  >
+                    {`${ENUM_VARS.DATASET.RESOURCE_TYPE_MAP[rl[0]]}等${rl.length}项`}
+                  </Tooltip>
+                ) : (
+                  ENUM_VARS.DATASET.RESOURCE_TYPE_MAP[rl[0]]
+                );
+              }
+            }}
           />
           <Table.Column
             title="时间范围"

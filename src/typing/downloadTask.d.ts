@@ -22,8 +22,10 @@ export declare namespace DownloadTask {
   type CreateParamsBase = {
     // 数据集 uid
     dataset_uid: string;
-    // 下载数据包含的 resource type 列表
-    resource_list: DatasetResourceType[];
+    // 下载数据包含的 resource type 列表，有值为下载原始数据
+    resource_list?: DatasetResourceType[];
+    // 模版名称，有值为下载为质控数据
+    template_name?: string;
     // 暂不使用
     archive_uid?: string;
   };
@@ -45,4 +47,10 @@ export declare namespace DownloadTask {
   // 列表项
   type Item = UpdateParams & CreateParams & BaseItem;
   type List = Item[];
+
+  // 模版项
+  type Template = {
+    name: string;
+  };
+  type Templates = Template[];
 }

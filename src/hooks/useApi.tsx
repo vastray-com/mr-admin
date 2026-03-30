@@ -93,6 +93,10 @@ export const useApi = () => {
         service.get('/download_task/list', { params }) as Promise<
           APIRes<PaginationData<DownloadTask.Item>>
         >,
+      getTemplateList: () =>
+        service.get('/download_task/template_list') as Promise<
+          APIRes<DownloadTask.Templates>
+        >,
       createDownloadTask: (params: DownloadTask.CreateParams) =>
         service.post('/download_task/create', params) as Promise<
           APIRes<string>
