@@ -53,7 +53,7 @@ const initialTestParams: Omit<StructuredRuleset.TestRuleParams, 'uid'> = {
   api_key: ls.apiKey.get(),
   is_thinking: false,
   is_check: false,
-  parallel: 10,
+  parallel: 5,
 };
 
 const StructuredRulesetDetailPage: FC = () => {
