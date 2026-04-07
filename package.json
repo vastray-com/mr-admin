@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
+    "build:test": "tsc -b && vite build --mode test",
     "build:changyi": "tsc -b && vite build --mode changyi",
     "build:suzhoushili": "tsc -b && vite build --mode suzhoushili",
     "lint": "biome check .",
