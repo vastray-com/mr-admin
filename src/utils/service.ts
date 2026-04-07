@@ -5,7 +5,7 @@ import { ls } from '@/utils/ls';
 const dontRedirect401Paths = ['/structured_ruleset/test'];
 
 export const service = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: '/api',
   timeout: 600000,
   headers: {
     'Content-Type': 'application/json',

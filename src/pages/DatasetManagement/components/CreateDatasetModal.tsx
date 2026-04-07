@@ -127,6 +127,10 @@ export const CreateDatasetModal: FC<Props> = ({
               required: true,
               message: '请输入数据集标识',
             },
+            {
+              pattern: /^[a-zA-Z0-9_]+$/,
+              message: '标识只能包含字母、数字和下划线',
+            },
           ]}
         >
           <Input placeholder="输入数据集标识" />

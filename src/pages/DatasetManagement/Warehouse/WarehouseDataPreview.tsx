@@ -15,7 +15,6 @@ import type { AxiosError } from 'axios';
 import type { Dataset } from '@/typing/dataset';
 import type { DatasetSourceType } from '@/typing/enum/dataset';
 
-const titleText = `👋 你好，我是常一数据管家，你想要查询什么数据？`;
 const aiGenPlaceholder = `你可以说帮我查询 2026 年入院的有吸烟史的肺癌患者...`;
 
 type Props = {
@@ -36,7 +35,9 @@ const DefaultPage: FC<Props> = ({
   const [title, setTitle] = useState('');
   useEffect(() => {
     const timer = setTimeout(() => {
-      setTitle(titleText.slice(0, title.length + 1));
+      setTitle(
+        import.meta.env.VITE_WAREHOUSE_GREETINGS.slice(0, title.length + 1),
+      );
     }, 60);
     return () => clearTimeout(timer);
   }, [title]);
