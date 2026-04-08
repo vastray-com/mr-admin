@@ -63,7 +63,7 @@ service.interceptors.response.use(
 );
 
 export const noInterceptorsService = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: '/api',
   timeout: 60000,
 });
 
