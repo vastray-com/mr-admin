@@ -1,5 +1,5 @@
 import { Descriptions, Empty, Modal, Segmented, Spin } from 'antd';
-import { type FC, useEffect, useState } from 'react';
+import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import type { Warehouse } from '@/typing/warehose';
 
 const segmentedOption: { label: string; value: string }[] = [
@@ -85,24 +85,113 @@ export const WarehousePatientDetailModal: FC<Props> = ({
 const DetailDesc: FC<{ detail?: Warehouse.PatientDetail | null }> = ({
   detail,
 }) => {
-  return detail && detail.length > 0 ? (
+  // 需要展示的数据
+  const displayData = useMemo(() => {
+    if (detail && detail.length > 0) {
+      const data = detail
+        .map((d) => {
+          const detail = d.data[0];
+          if (!detail) return null;
+
+          const cols = d.columns.filter(
+            (c) => ![undefined, null, 'NULL'].includes(detail[c.value]),
+          );
+          return {
+            ...d,
+            columns: cols,
+          };
+        })
+        .filter(Boolean) as Warehouse.PatientDetail;
+
+      console.log('展示的患者详情数据', data);
+
+      return data;
+    } else {
+      return [];
+    }
+  }, [detail]);
+
+  const renderRecord = useCallback((record: Record<string, string>) => {
+    return Object.keys(record).length === 0 ? (
+      <p>-</p>
+    ) : (
+      <div>
+        {Object.entries(record).map(([k, v]) => (
+          <p
+            className="leading-[20px] mt-[8px] first:mt-0"
+            key={k}
+          >{`${k}: ${v}`}</p>
+        ))}
+      </div>
+    );
+  }, []);
+
+  const renderValue = useCallback(
+    (
+      value:
+        | string
+        | number
+        | Record<string, string>[]
+        | string[]
+        | Record<string, string>,
+    ) => {
+      if (!value) return <p>-</p>;
+      switch (typeof value) {
+        case 'string':
+        case 'number':
+        case 'bigint':
+          return <p>{value}</p>;
+        case 'boolean':
+          return <p>{value ? '是' : '否'}</p>;
+        case 'object':
+          if (Array.isArray(value)) {
+            if (value.length === 0) {
+              return <p>-</p>;
+            } else if (typeof value[0] === 'string') {
+              return (
+                <div>
+                  {(value as string[]).map((v) => (
+                    <p key={v} className="flex mt-[8px] first:mt-0">
+                      <span className="w-[6px] h-[6px] rounded-full bg-blue mr-[8px] shrink-0 grow-0 basis-[6px] mt-[9px]" />
+                      <span className="leading-[24px]">{v}</span>
+                    </p>
+                  ))}
+                </div>
+              );
+            } else {
+              return (value as Record<string, string>[]).map((v) => (
+                <div
+                  key={JSON.stringify(v)}
+                  className="flex mt-[12px] first:mt-0"
+                >
+                  <span className="w-[6px] h-[6px] rounded-full bg-blue mr-[8px] shrink-0 grow-0 basis-[6px] mt-[7px]" />
+                  <div>{renderRecord(v)}</div>
+                </div>
+              ));
+            }
+          } else {
+            return renderRecord(value);
+          }
+        default:
+          return <p>{String(value)}</p>;
+      }
+    },
+    [],
+  );
+
+  return displayData.length > 0 ? (
     <div className="h-[calc(100%_-_64px)] overflow-y-auto overflow-x-hidden pr-[16px]">
-      {detail.map((d) => (
+      {displayData.map((d) => (
         <Descriptions
           className="mt-[48px] first:mt-[16px]"
           key={d.name}
           title={d.label}
-          items={d.columns
-            .filter((c) => {
-              // 仅展示有数据的字段
-              return ![undefined, null, 'NULL'].includes(d.data[0][c.value]);
-            })
-            .map((c) => ({
-              key: c.value,
-              label: c.label,
-              children: <p>{d.data[0][c.value] ?? '—'}</p>,
-              span: c.data_length > 100 ? 3 : 1,
-            }))}
+          items={d.columns.map((c) => ({
+            key: c.value,
+            label: c.label,
+            children: renderValue(d.data[0][c.value]),
+            span: c.data_length > 100 ? 3 : 1,
+          }))}
           column={3}
           bordered
           layout="vertical"
