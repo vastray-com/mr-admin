@@ -100,6 +100,8 @@ export enum DatasetResourceType {
   CESReport = 'ces_report',
   /// 心电图报告
   ECGReport = 'ecg_report',
+  /// 病案首页
+  HomePageRecord = 'home_page_record',
 }
 const RESOURCE_TYPE_MAP: Record<DatasetResourceType, string> = {
   [DatasetResourceType.EmergencyRecord]: '门/急诊病历',
@@ -117,6 +119,7 @@ const RESOURCE_TYPE_MAP: Record<DatasetResourceType, string> = {
   [DatasetResourceType.CUSReport]: '心超检查报告',
   [DatasetResourceType.CESReport]: '支气管镜检查报告',
   [DatasetResourceType.ECGReport]: '心电图报告',
+  [DatasetResourceType.HomePageRecord]: '病案首页',
 };
 
 export default {
