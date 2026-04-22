@@ -1,5 +1,4 @@
 import {
-  Alert,
   App,
   Button,
   Card,
@@ -9,6 +8,7 @@ import {
   Form,
   type MenuProps,
   Tag,
+  Tooltip,
   Typography,
 } from 'antd';
 import dayjs from 'dayjs';
@@ -16,6 +16,7 @@ import { useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
+import { useDownloadDataset } from '@/hooks/useDownloadDataset';
 import { usePaginationData } from '@/hooks/usePaginationData';
 import { CreateDatasetModal } from '@/pages/DatasetManagement/components/CreateDatasetModal';
 import { datasetFilterDB2FE } from '@/pages/DatasetManagement/helper';
@@ -29,6 +30,8 @@ const DatasetListPage = () => {
   const nav = useNavigate();
   const { datasetApi, userApi } = useApi();
   const { message } = App.useApp();
+
+  const { showDownloadModal, DownloadModal } = useDownloadDataset();
 
   // 拉取列表分页数据
   const [data, setData] = useState<Dataset.List>([]);
@@ -125,6 +128,8 @@ const DatasetListPage = () => {
 
   return (
     <>
+      <DownloadModal />
+
       <CreateDatasetModal
         form={form}
         open={showCopyModal}
@@ -152,9 +157,50 @@ const DatasetListPage = () => {
             <Card
               className="min-w-[360px] w-[calc((100%_-_20px_-_20px)_/_3)] shrink-0 grow-0 hover:bg-[#fffc] transition-all"
               key={item.uid}
+              actions={[
+                <Button
+                  key="task"
+                  type="link"
+                  disabled={!item.task_uid}
+                  onClick={() =>
+                    item.task_uid
+                      ? nav(`/task_management/detail/${item.task_uid}`)
+                      : console.log('没有关联任务')
+                  }
+                >
+                  {/*<i className="i-icon-park-outline:rotating-forward text-[18px]" />*/}
+                  <span>查看任务</span>
+                </Button>,
+                <Button
+                  key="download"
+                  type="link"
+                  onClick={() =>
+                    showDownloadModal({
+                      datasetUid: item.uid,
+                      datasetType: item.dataset_type,
+                    })
+                  }
+                >
+                  {/*<i className="i-icon-park-outline:database-download text-[20px]" />*/}
+                  <span>下载数据集</span>
+                </Button>,
+              ]}
             >
               <div className="w-full">
                 <div className="flex items-center justify-between">
+                  <Tooltip
+                    title={item.warning_msg ? item.warning_msg : '无异常'}
+                    color={item.warning_msg ? 'orange' : 'green'}
+                  >
+                    <div className="mr-[4px] flex justify-center items-center">
+                      {item.warning_msg ? (
+                        <i className="i-icon-park-solid:attention bg-[#faad14] text-[18px]" />
+                      ) : (
+                        <i className="i-icon-park-solid:check-one bg-[#52C41A] text-[18px]" />
+                      )}
+                    </div>
+                  </Tooltip>
+
                   <Typography.Text
                     ellipsis={{ tooltip: item.name_cn }}
                     className="text-[18px] font-medium grow-1 shrink-1 cursor-pointer hover:text-blue-500 hover:translate-x-[3px] transition-all"
@@ -207,7 +253,7 @@ const DatasetListPage = () => {
                 </p>
 
                 {user?.role === UserRole.Admin && (
-                  <p className="text-fg-tertiary mt-[16px] flex items-center gap-x-[8px]">
+                  <p className="text-fg-tertiary mt-[8px] flex items-center gap-x-[8px]">
                     <span>创建人</span>
                     <span className="text-fg-primary">
                       {userList?.find((u) => u.uid === item.creator)
@@ -216,19 +262,12 @@ const DatasetListPage = () => {
                   </p>
                 )}
 
-                <p className="text-fg-tertiary mt-[16px] flex items-center gap-x-[8px]">
+                <p className="text-fg-tertiary mt-[8px] flex items-center gap-x-[8px]">
                   <span>创建于</span>
                   <span className="text-fg-primary">
                     {dayjs(item.created_at).format('YYYY-MM-DD HH:mm:ss')}
                   </span>
                 </p>
-
-                <div className="mt-[16px]">
-                  {item.warning_msg ? (
-                    <Alert title={item.warning_msg} type="warning" showIcon />
-                  ) : // <Alert title="无异常" type="success" showIcon />
-                  null}
-                </div>
               </div>
             </Card>
           ))}

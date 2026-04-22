@@ -87,6 +87,8 @@ export declare namespace Dataset {
   type Item = {
     // 警告消息
     warning_msg: string;
+    // 关联任务 ID
+    task_uid: string | null;
     // 创建者
     creator: string;
     // 关联信息

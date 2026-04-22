@@ -20,6 +20,7 @@
       "devDependencies": {
         "@biomejs/biome": "2.4.10",
         "@iconify-json/icon-park-outline": "1.2.4",
+        "@iconify-json/icon-park-solid": "1.2.4",
         "@iconify-json/line-md": "1.2.16",
         "@types/node": "25.5.2",
         "@types/react": "19.2.14",
@@ -109,6 +110,8 @@
     "@emotion/unitless": ["@emotion/unitless@0.7.5", "", {}, "sha512-OWORNpfjMsSSUBVrRBVGECkhWcULOAJz9ZW8uK9qgxD+87M7jHRcvh/A96XXNhXTLmKcoYSQtBEX7lHMO7YRwg=="],
 
     "@iconify-json/icon-park-outline": ["@iconify-json/icon-park-outline@1.2.4", "", { "dependencies": { "@iconify/types": "*" } }, "sha512-NyZxXe2gD2TbTOyoRRMdtEJhr6i2KQCdDlYYoOn5oZLndQjwpIhw79hzeFhXvP38/o40D3gQ+l+IaSJgbB+0TQ=="],
+
+    "@iconify-json/icon-park-solid": ["@iconify-json/icon-park-solid@1.2.4", "", { "dependencies": { "@iconify/types": "*" } }, "sha512-030MChSP6lCY7N+U5J5R7YguHTGcm7qQEI/ivBjk77El/i8yJatoj568cwwXGM8c6HEU/kIxEE4m3O/6w0WBGg=="],
 
     "@iconify-json/line-md": ["@iconify-json/line-md@1.2.16", "", { "dependencies": { "@iconify/types": "*" } }, "sha512-esHPUQUp30NyqJWa7MNu6ExdG8z/aEFC5r56rVyRGhtJ7acOme6YtYPnDOgVu6p+kk24rM8602xkFuBC6g6x+w=="],
 

@@ -11,7 +11,7 @@ import {
 } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { type FC, useCallback, useRef, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { useFileImport } from '@/hooks/useFileImport';
@@ -170,14 +170,6 @@ const StructuredRulesetPage: FC = () => {
     [message, ruleApi],
   );
 
-  // 编辑项目
-  const onEdit = useCallback(
-    (record: StructuredRuleset.Item) => {
-      console.log('编辑项目:', record);
-      nav(`/rule_management/ruleset/${record.uid}`);
-    },
-    [nav],
-  );
   // 停用/启用/删除项目
   const onAction = useCallback(
     async (
@@ -305,12 +297,13 @@ const StructuredRulesetPage: FC = () => {
               width={180}
               render={(_, record: StructuredRuleset.Item) => (
                 <div className="flex">
-                  <Button
-                    size="small"
-                    type="link"
-                    onClick={() => onEdit(record)}
-                  >
-                    编辑
+                  <Button size="small" type="link">
+                    <Link
+                      to={`/rule_management/ruleset/${record.uid}`}
+                      target="_blank"
+                    >
+                      编辑
+                    </Link>
                   </Button>
                   <Popconfirm
                     title="删除结构化规则"

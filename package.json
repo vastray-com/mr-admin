@@ -27,6 +27,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.4.10",
     "@iconify-json/icon-park-outline": "1.2.4",
+    "@iconify-json/icon-park-solid": "1.2.4",
     "@iconify-json/line-md": "1.2.16",
     "@types/node": "25.5.2",
     "@types/react": "19.2.14",
