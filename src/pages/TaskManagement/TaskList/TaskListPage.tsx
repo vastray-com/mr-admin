@@ -1,4 +1,5 @@
 import {
+  Alert,
   App,
   Button,
   Card,
@@ -185,6 +186,33 @@ const TaskListPage = () => {
       } catch (error) {
         console.error('归档失败：', error);
         message.error('归档失败，请稍后重试');
+      }
+    },
+    [
+      datasetApi.archiveDataset,
+      message.error,
+      message.success,
+      refresh,
+      archiveForm.resetFields,
+    ],
+  );
+  const onDropDwdp = useCallback(
+    async (uid: string) => {
+      if (!uid) return;
+      try {
+        const res = await datasetApi.dropDwdp(uid);
+        if (res.code === 200) {
+          message.success('丢弃成功，请重新启动任务');
+          // 刷新任务列表
+          refresh();
+          setShowArchiveModal(false);
+          archiveForm.resetFields();
+        } else {
+          message.error(`丢弃失败：${res.message}`);
+        }
+      } catch (error) {
+        console.error('丢弃失败：', error);
+        message.error('丢弃失败，请稍后重试');
       }
     },
     [
@@ -502,6 +530,23 @@ const TaskListPage = () => {
         <p>
           由于任务关联的解析规则发生变动，需要归档此任务过去的数据后才可重新启动任务，如需启动任务请录入归档原因后重新在页面进行启动。
         </p>
+        <Alert
+          className="mt-[12px]"
+          type="info"
+          title={
+            <p>
+              如果不需要保留过去的解析数据，也可以点击
+              <Button
+                type="link"
+                danger
+                rootClassName="p-0 ml-[4px]"
+                onClick={() => onDropDwdp(archiveForm.getFieldValue('uid'))}
+              >
+                丢弃旧数据
+              </Button>
+            </p>
+          }
+        />
         <Form<Dataset.ArchiveParams>
           className="mt-[36px]"
           form={archiveForm}
@@ -527,7 +572,7 @@ const TaskListPage = () => {
               },
             ]}
           >
-            <Input placeholder="输入归档原因" />
+            <Input placeholder="输入归档原因" size="large" />
           </Form.Item>
 
           <Form.Item noStyle>

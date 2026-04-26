@@ -79,6 +79,8 @@ export const useApi = () => {
         service.post('/dataset/archive_and_create', params) as Promise<
           APIRes<null>
         >,
+      dropDwdp: (uid: string) =>
+        service.post('/dataset/drop_dwdp', { uid }) as Promise<APIRes<null>>,
       genAIFilter: (params: Dataset.GenAIFilterParams) =>
         service.post('/dataset/gen_ai_filter', params) as Promise<
           APIRes<string>
