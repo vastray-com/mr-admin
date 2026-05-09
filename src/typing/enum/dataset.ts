@@ -102,6 +102,8 @@ export enum DatasetResourceType {
   ECGReport = 'ecg_report',
   /// 病案首页
   HomePageRecord = 'home_page_record',
+  /// 住院营养记录
+  IpNutritionRecord = 'ip_nutrition_record',
 }
 const RESOURCE_TYPE_MAP: Record<DatasetResourceType, string> = {
   [DatasetResourceType.EmergencyRecord]: '门/急诊病历',
@@ -120,6 +122,7 @@ const RESOURCE_TYPE_MAP: Record<DatasetResourceType, string> = {
   [DatasetResourceType.CESReport]: '支气管镜检查报告',
   [DatasetResourceType.ECGReport]: '心电图报告',
   [DatasetResourceType.HomePageRecord]: '病案首页',
+  [DatasetResourceType.IpNutritionRecord]: '住院营养记录',
 };
 
 export default {
