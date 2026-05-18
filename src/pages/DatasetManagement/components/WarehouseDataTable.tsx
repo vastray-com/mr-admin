@@ -165,7 +165,14 @@ export const WarehouseDataTable: FC<Props> = ({
             title={c.label}
             dataIndex={c.value}
             key={c.value}
-            ellipsis
+            render={(v: string) => {
+              const text = v ? v.trim().replace(/　+/g, ' ') : '-';
+              const pre = text.substring(0, 16);
+              const suf = text.substring(text.length - 10);
+              const display = text.length > 40 ? `${pre} ...... ${suf}` : text;
+              return <p title={text}>{display}</p>;
+            }}
+            ellipsis={{ showTitle: false }}
             className="cursor-pointer"
           />
         ))}
