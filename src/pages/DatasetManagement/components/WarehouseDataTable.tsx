@@ -1,4 +1,4 @@
-import { App, Empty, Table } from 'antd';
+import { App, Empty, Input, Table } from 'antd';
 import { type FC, useCallback, useEffect, useState } from 'react';
 import { useApi } from '@/hooks/useApi';
 import { WarehousePatientDetailModal } from '@/pages/DatasetManagement/components/WarehousePatientDetailModal';
@@ -24,6 +24,9 @@ export const WarehouseDataTable: FC<Props> = ({
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<Warehouse.SourceData | null>(null);
 
+  const [searchKey, setSearchKey] = useState('');
+  const [showData, setShowData] = useState<Warehouse.SourceData | null>(null);
+
   const fetchData = async (params: Warehouse.GetSourceDataParams) => {
     setLoading(true);
     try {
@@ -32,6 +35,8 @@ export const WarehouseDataTable: FC<Props> = ({
         console.log('拉取明细数据成功:', res.data);
         showMessage && message.success('明细数据加载成功');
         setData(res.data);
+        setShowData(res.data);
+        setSearchKey('');
       } else {
         showMessage && message.error(res.message || '明细数据加载失败');
       }
@@ -48,6 +53,31 @@ export const WarehouseDataTable: FC<Props> = ({
   useEffect(() => {
     setIsFetched(false);
   }, [filter]);
+
+  // 搜索数据
+  const onSearch = useCallback(
+    (v: string) => {
+      const list = data?.data ?? [];
+      if (list.length === 0) {
+        setShowData(data);
+        return;
+      }
+      const key = v.trim();
+      if (!key) return;
+
+      const l = list.filter((r) => {
+        const text = Object.values(r).join(' ').trim().replace(/　+/g, ' ');
+        return text.includes(key);
+      });
+      const display: Warehouse.SourceData = {
+        columns: data?.columns ?? [],
+        total: l.length ?? 0,
+        data: l,
+      };
+      setShowData(display);
+    },
+    [data],
+  );
 
   // 明细数据
   const [openDetail, setOpenDetail] = useState(false);
@@ -137,10 +167,21 @@ export const WarehouseDataTable: FC<Props> = ({
         loading={getDetailLoading}
       />
 
+      <div className="flex gap-x-[8px] items-center mb-[24px]">
+        <span>查询数据</span>
+        <Input.Search
+          className="w-[360px]"
+          placeholder="输入关键字查询"
+          value={searchKey}
+          onChange={(e) => setSearchKey(e.target.value)}
+          onSearch={onSearch}
+        />
+      </div>
+
       <Table<Record<string, string>>
         loading={loading}
         scroll={{ x: true }}
-        dataSource={data?.data}
+        dataSource={showData?.data}
         rowKey={(r) => JSON.stringify(r).substring(0, 72)}
         pagination={{
           hideOnSinglePage: true,
@@ -166,7 +207,9 @@ export const WarehouseDataTable: FC<Props> = ({
             dataIndex={c.value}
             key={c.value}
             render={(v: string) => {
-              const text = v ? v.trim().replace(/　+/g, ' ') : '-';
+              const text = v
+                ? v.trim().replace(/　+/g, ' ').replace(/ +/g, ' ')
+                : '-';
               const pre = text.substring(0, 16);
               const suf = text.substring(text.length - 10);
               const display = text.length > 40 ? `${pre} ...... ${suf}` : text;
