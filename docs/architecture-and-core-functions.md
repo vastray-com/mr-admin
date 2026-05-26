@@ -138,6 +138,7 @@
   - 多层级过滤器构建（`DatasetFilterForm`）
   - AI 生成过滤条件（`datasetApi.genAIFilter`）
   - 过滤器 FE/DB 结构转换（`datasetFilterFE2DB`）
+  - ID 入组查询时透传 `source_type`，后端按门诊/住院切换 visit_no 总览源表
   - 数据预览与患者详情联动（`WarehouseDataTable` + `WarehousePatientDetailModal`）
 
 ### 数据集列表

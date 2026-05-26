@@ -1,19 +1,23 @@
 import { App, Empty, Input, Table } from 'antd';
 import { type FC, useCallback, useEffect, useState } from 'react';
 import { useApi } from '@/hooks/useApi';
+import { isVisitNoFilter } from '@/pages/DatasetManagement/helper';
 import { WarehousePatientDetailModal } from '@/pages/DatasetManagement/components/WarehousePatientDetailModal';
 import type { AxiosError } from 'axios';
 import type { Dataset } from '@/typing/dataset';
+import type { DatasetSourceType } from '@/typing/enum/dataset';
 import type { Warehouse } from '@/typing/warehose';
 
 type Props = {
   filter?: Dataset.FilterValue | null;
+  sourceType?: DatasetSourceType;
   showMessage?: boolean;
   datasetUid?: string;
 };
 
 export const WarehouseDataTable: FC<Props> = ({
   filter,
+  sourceType,
   showMessage = false,
   datasetUid,
 }) => {
@@ -52,7 +56,7 @@ export const WarehouseDataTable: FC<Props> = ({
 
   useEffect(() => {
     setIsFetched(false);
-  }, [filter]);
+  }, [filter, sourceType]);
 
   // 搜索数据
   const onSearch = useCallback(
@@ -153,7 +157,12 @@ export const WarehouseDataTable: FC<Props> = ({
   }
 
   if (!isFetched && !loading) {
-    fetchData({ filter });
+    if (isVisitNoFilter(filter) && !sourceType) {
+      showMessage && message.warning('ID 入组查询缺少数据源类型，请选择门诊或住院后重试');
+      setIsFetched(true);
+      return null;
+    }
+    fetchData({ filter, source_type: sourceType });
   }
 
   return (

@@ -297,6 +297,7 @@ const DatasetDetailPage = () => {
         <Card className="mt-[16px]" title="数据集患者列表（前 1000 条）">
           <WarehouseDataTable
             filter={detail.filter}
+            sourceType={detail.source_type}
             showMessage
             datasetUid={uid}
           />

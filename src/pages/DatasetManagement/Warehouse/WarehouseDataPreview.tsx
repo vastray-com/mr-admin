@@ -121,6 +121,7 @@ const WarehouseDataPreviewPage = () => {
 
   // 过滤数据
   const [filter, setFilter] = useState<Dataset.Filter | null>(null);
+  const [sourceType, setSourceType] = useState<DatasetSourceType>();
   const onFilterFinish = useCallback(() => {
     console.log('开始验证过滤条件表单');
     filterForm
@@ -135,6 +136,7 @@ const WarehouseDataPreviewPage = () => {
         const f = datasetFilterFE2DB(values.filter);
         console.log('转换后过滤条件：', f);
         setFilter(f);
+        setSourceType(values.source_type);
       })
       .catch((e) => {
         console.log('表单验证失败：', e);
@@ -273,7 +275,11 @@ const WarehouseDataPreviewPage = () => {
         </Card>
 
         <Card className="mt-[16px]">
-          <WarehouseDataTable showMessage filter={filter} />
+          <WarehouseDataTable
+            showMessage
+            filter={filter}
+            sourceType={sourceType}
+          />
         </Card>
       </ContentLayout>
     </>

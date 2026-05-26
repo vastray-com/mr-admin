@@ -59,6 +59,7 @@ export declare namespace Warehouse {
 
   type GetSourceDataParams = {
     filter: Dataset.FilterValue;
+    source_type?: DatasetSourceType;
   };
   type SourceData = {
     data: Record<string, string>[];
