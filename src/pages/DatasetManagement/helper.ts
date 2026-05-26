@@ -4,6 +4,21 @@ import type {
   DatasetFilterOperator,
 } from '@/typing/enum/dataset';
 
+export const isVisitNoFilter = (
+  filter: Dataset.FilterValue | null | undefined,
+): filter is Dataset.VisitNoFilter => {
+  if (!Array.isArray(filter)) return false;
+  return filter.length === 0 || typeof filter[0] === 'string';
+};
+
+export const normalizeVisitNos = (rawText: string): Dataset.VisitNoFilter => {
+  const values = rawText
+    .split(/\r?\n|,|，/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+  return Array.from(new Set(values));
+};
+
 export const datasetFilterFE2DB = (
   f: Dataset.FilterFEInput,
 ): Dataset.Filter => {

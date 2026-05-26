@@ -18,8 +18,12 @@ import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { useDownloadDataset } from '@/hooks/useDownloadDataset';
 import { usePaginationData } from '@/hooks/usePaginationData';
+import { CreateDatasetByVisitNoModal } from '@/pages/DatasetManagement/components/CreateDatasetByVisitNoModal';
 import { CreateDatasetModal } from '@/pages/DatasetManagement/components/CreateDatasetModal';
-import { datasetFilterDB2FE } from '@/pages/DatasetManagement/helper';
+import {
+  datasetFilterDB2FE,
+  isVisitNoFilter,
+} from '@/pages/DatasetManagement/helper';
 import { useUserStore } from '@/store/useUserStore';
 import { ENUM_VARS, UserRole } from '@/typing/enum';
 import { DatasetSourceType, DatasetType } from '@/typing/enum/dataset';
@@ -51,8 +55,15 @@ const DatasetListPage = () => {
   // 复制数据集
   const [form] = Form.useForm<Dataset.InputCreateParams>();
   const [showCopyModal, setShowCopyModal] = useState(false);
+  const [visitNoForm] = Form.useForm<Dataset.InputCreateByVisitNoParams>();
+  const [showVisitNoModal, setShowVisitNoModal] = useState(false);
   const newDatasetData = useRef<Dataset.InputCreateParams | null>(null);
   const onCopy = (record: Dataset.Item) => {
+    if (isVisitNoFilter(record.filter)) {
+      message.info('ID 入组数据集暂不支持复制');
+      return;
+    }
+
     newDatasetData.current = {
       name_cn: `${record.name_cn}_Copy`,
       name_en: '',
@@ -64,6 +75,21 @@ const DatasetListPage = () => {
     form.setFieldsValue(newDatasetData.current);
     // 打开新建任务模态框
     setShowCopyModal(true);
+  };
+
+  const createDatasetMenuItems: MenuProps['items'] = [
+    { key: 'condition', label: '条件入组' },
+    { key: 'id', label: 'ID 入组' },
+  ];
+  const onCreateDatasetMenuClick: MenuProps['onClick'] = ({ key }) => {
+    if (key === 'condition') {
+      nav('/data/warehouse/data_list');
+      return;
+    }
+    if (key === 'id') {
+      visitNoForm.resetFields();
+      setShowVisitNoModal(true);
+    }
   };
 
   // 数据集操作
@@ -137,14 +163,37 @@ const DatasetListPage = () => {
         onFinish={() => refresh()}
       />
 
-      <ContentLayout title="数据集列表">
+      <CreateDatasetByVisitNoModal
+        form={visitNoForm}
+        open={showVisitNoModal}
+        onClose={() => setShowVisitNoModal(false)}
+        onFinish={() => refresh()}
+      />
+
+      <ContentLayout
+        title="数据集列表"
+        action={
+          <Dropdown
+            trigger={['click']}
+            menu={{
+              items: createDatasetMenuItems,
+              onClick: onCreateDatasetMenuClick,
+            }}
+          >
+            <Button type="primary">
+              创建数据集
+              <i className="i-icon-park-outline:down text-[14px] ml-[4px]" />
+            </Button>
+          </Dropdown>
+        }
+      >
         {data.length < 1 && (
           <div className="h-[300px] flex items-center justify-center">
             <Empty
               description={
                 <p className="flex flex-col gap-y-[4px]">
                   <span>暂无数据集</span>
-                  <span>请先去数据查询进行创建</span>
+                  <span>请点击右上角创建数据集</span>
                 </p>
               }
               className="mt-[50px]"
@@ -245,6 +294,11 @@ const DatasetListPage = () => {
                   >
                     {ENUM_VARS.DATASET.TYPE_MAP[item.dataset_type]}
                   </Tag>
+                  {isVisitNoFilter(item.filter) && (
+                    <Tag variant="outlined" color="cyan">
+                      ID 入组
+                    </Tag>
+                  )}
                 </div>
 
                 <p className="text-fg-tertiary mt-[16px] flex items-center gap-x-[8px]">

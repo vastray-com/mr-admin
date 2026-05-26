@@ -28,6 +28,8 @@ export declare namespace Dataset {
   type FilterCondition = Record<DatasetFilterLogic, FilterCol[]>;
   type FilterTable = Record<string, FilterCondition[]>;
   type Filter = Partial<Record<DatasetFilterLogic, FilterTable[]>>[];
+  type VisitNoFilter = string[];
+  type FilterValue = Filter | VisitNoFilter;
 
   // 前端录入时 filter 结构
   type FilterFEInputConditionCol = {
@@ -52,6 +54,17 @@ export declare namespace Dataset {
     filter: FilterFEInput;
   };
 
+  type InputCreateByVisitNoParams = {
+    // 数据集名称
+    name_cn: string;
+    // 数据集英文标识
+    name_en: string;
+    // 数据源类型
+    source_type: DatasetSourceType;
+    // 每行一个 visit_no
+    visit_no_text: string;
+  };
+
   type GetDataParams = {
     // 数据集数据源类型
     source_type: DatasetSourceType;
@@ -66,7 +79,7 @@ export declare namespace Dataset {
   // 创建参数
   type CreateParams = CreateBaseParams & {
     // 过滤器
-    filter: Filter;
+    filter: FilterValue;
   };
   // 更新参数
   type UpdateParams = { uid: string } & CreateParams;

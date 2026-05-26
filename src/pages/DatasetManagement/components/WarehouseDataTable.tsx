@@ -7,7 +7,7 @@ import type { Dataset } from '@/typing/dataset';
 import type { Warehouse } from '@/typing/warehose';
 
 type Props = {
-  filter?: Dataset.Filter | null;
+  filter?: Dataset.FilterValue | null;
   showMessage?: boolean;
   datasetUid?: string;
 };

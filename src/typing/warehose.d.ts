@@ -58,7 +58,7 @@ export declare namespace Warehouse {
   type SourceSchemas = SourceSchema[];
 
   type GetSourceDataParams = {
-    filter: Dataset.Filter;
+    filter: Dataset.FilterValue;
   };
   type SourceData = {
     data: Record<string, string>[];

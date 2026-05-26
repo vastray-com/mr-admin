@@ -1,17 +1,37 @@
 import { Card, Flex, Tag } from 'antd';
 import { type FC, useCallback } from 'react';
-import { datasetFilterDB2FE } from '@/pages/DatasetManagement/helper';
+import {
+  datasetFilterDB2FE,
+  isVisitNoFilter,
+} from '@/pages/DatasetManagement/helper';
 import { useCacheStore } from '@/store/useCacheStore';
 import { ENUM_VARS } from '@/typing/enum';
 import type { Dataset } from '@/typing/dataset';
 
 type Props = {
-  filter: Dataset.Filter;
+  filter: Dataset.FilterValue;
 };
 
 export const DatasetFilterDisplay: FC<Props> = ({ filter }) => {
-  const feFilter = datasetFilterDB2FE(filter);
   const sourceSchema = useCacheStore((s) => s.sourceSchemaList);
+
+  if (isVisitNoFilter(filter)) {
+    return (
+      <Card className="w-full" styles={{ body: { padding: '12px' } }}>
+        <div className="flex items-center gap-[12px] mb-[12px]">
+          <Tag color="blue">ID 入组</Tag>
+          <span>按 visit_no 直接过滤</span>
+        </div>
+        <div className="flex flex-wrap gap-[8px] max-h-[320px] overflow-auto">
+          {filter.map((visitNo) => (
+            <Tag key={visitNo}>{visitNo}</Tag>
+          ))}
+        </div>
+      </Card>
+    );
+  }
+
+  const feFilter = datasetFilterDB2FE(filter);
 
   const getTableColumns = useCallback(
     (tableName: string) => {

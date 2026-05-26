@@ -144,6 +144,9 @@
 
 - 页面：`src/pages/DatasetManagement/Dataset/DatasetList/DatasetListPage.tsx`
 - 核心能力：
+  - 右上角“创建数据集”下拉按钮（`条件入组` / `ID入组`）
+  - `条件入组` 跳转 `数据查询` 页面复用条件过滤创建流程
+  - `ID入组` 弹窗录入（门诊/住院 + 多行 `visit_no`），创建回顾型数据集
   - 卡片化展示数据集
   - 复制数据集（复用创建弹窗）
   - 下载入口（普通下载 / 质控下载）
@@ -237,6 +240,7 @@
 
 - `Dataset`（`src/typing/dataset.d.ts`）
   - 描述数据集、过滤器结构、规则关联、归档、AI 过滤输入
+  - `filter` 支持条件表达式结构（`Filter`）与 `visit_no` 集合（`VisitNoFilter`）
 - `StructuredRuleset`（`src/typing/structuredRuleset.d.ts`）
   - 描述规则基础信息、字段模型、预设字段、规则测试参数
 - `PushRule`（`src/typing/pushRule.d.ts`）
