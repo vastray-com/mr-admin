@@ -32,6 +32,8 @@ const DatasetDetailPage = () => {
   const { showDownloadModal, DownloadModal } = useDownloadDataset();
 
   const rulesetOptions = useCacheStore((s) => s.structuredRulesetOptions);
+  const resourceTypeOptions = useCacheStore((s) => s.resourceTypeOptions);
+  const resourceTypeMap = useCacheStore((s) => s.resourceTypeMap);
 
   const [detail, setDetail] = useState<Dataset.Item | null>(null);
   const fetchDetail = useCallback(
@@ -270,11 +272,8 @@ const DatasetDetailPage = () => {
                           >
                             <span className="w-[4px] h-[4px] bg-[#666]" />
                             <span>
-                              {
-                                ENUM_VARS.DATASET.RESOURCE_TYPE_MAP[
-                                  l.resource_type
-                                ]
-                              }
+                              {resourceTypeMap[l.resource_type] ??
+                                l.resource_type}
                             </span>
                             <i className="i-icon-park-outline:arrow-right text-[16px] text-fg-tertiary" />
                             <span>
@@ -345,7 +344,7 @@ const DatasetDetailPage = () => {
                       >
                         <Select
                           placeholder="请选择资源类型"
-                          options={ENUM_VARS.DATASET.RESOURCE_TYPE_OPT}
+                          options={resourceTypeOptions}
                           showSearch={{
                             filterOption: (input, option) =>
                               (option?.label ?? '')

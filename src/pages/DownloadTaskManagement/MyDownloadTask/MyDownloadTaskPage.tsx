@@ -4,15 +4,16 @@ import { useCallback, useState } from 'react';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { usePaginationData } from '@/hooks/usePaginationData';
+import { useCacheStore } from '@/store/useCacheStore';
 import { ENUM_VARS } from '@/typing/enum';
 import { DownloadTaskStatus } from '@/typing/enum/downloadTask';
 import { downloadFile } from '@/utils/helper';
 import type { DownloadTask } from '@/typing/downloadTask';
-import type { DatasetResourceType } from '@/typing/enum/dataset';
 
 const MyDownloadTaskPage = () => {
   const { downloadTaskApi } = useApi();
   const { message } = App.useApp();
+  const resourceTypeMap = useCacheStore((s) => s.resourceTypeMap);
 
   // 拉取列表分页数据
   const [data, setData] = useState<DownloadTask.List>([]);
@@ -64,9 +65,7 @@ const MyDownloadTaskPage = () => {
             dataIndex="r"
             render={(_, record: DownloadTask.Item) => {
               const t = record.template_name;
-              const rl = record.resource_list as
-                | DatasetResourceType[]
-                | undefined;
+              const rl = record.resource_list as string[] | undefined;
               if (t) {
                 return (
                   <Tooltip placement="top" title={t}>
@@ -78,14 +77,12 @@ const MyDownloadTaskPage = () => {
                 return rl.length > 1 ? (
                   <Tooltip
                     placement="top"
-                    title={rl
-                      .map((r) => ENUM_VARS.DATASET.RESOURCE_TYPE_MAP[r])
-                      .join(', ')}
+                    title={rl.map((r) => resourceTypeMap[r] ?? r).join(', ')}
                   >
-                    {`${ENUM_VARS.DATASET.RESOURCE_TYPE_MAP[rl[0]]}等${rl.length}项`}
+                    {`${resourceTypeMap[rl[0]] ?? rl[0]}等${rl.length}项`}
                   </Tooltip>
                 ) : (
-                  ENUM_VARS.DATASET.RESOURCE_TYPE_MAP[rl[0]]
+                  (resourceTypeMap[rl[0]] ?? rl[0])
                 );
               }
             }}

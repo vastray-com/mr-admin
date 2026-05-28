@@ -5,6 +5,7 @@ export enum DatasetType {
   Review = 'review',
   Subscribe = 'subscribe',
 }
+
 const TYPE_MAP: Record<DatasetType, string> = {
   [DatasetType.Review]: '回顾数据集',
   [DatasetType.Subscribe]: '订阅数据集',
@@ -15,6 +16,7 @@ export enum DatasetSourceType {
   Outpatient = 'outpatient',
   Inpatient = 'inpatient',
 }
+
 const SOURCE_TYPE_MAP: Record<DatasetSourceType, string> = {
   [DatasetSourceType.Outpatient]: '门诊',
   [DatasetSourceType.Inpatient]: '住院',
@@ -28,6 +30,7 @@ export enum DatasetSourceColumnType {
   Float = 'float',
   Bool = 'bool',
 }
+
 const SOURCE_COLUMN_TYPE_MAP: Record<DatasetSourceColumnType, string> = {
   [DatasetSourceColumnType.String]: '字符串',
   [DatasetSourceColumnType.Date]: '日期',
@@ -41,6 +44,7 @@ export enum DatasetFilterLogic {
   And = '$AND',
   Or = '$OR',
 }
+
 const FILTER_LOGIC_MAP: Record<DatasetFilterLogic, string> = {
   [DatasetFilterLogic.And]: '且（AND）',
   [DatasetFilterLogic.Or]: '或（OR）',
@@ -69,62 +73,6 @@ const FILTER_OPERATOR_MAP: Record<DatasetFilterOperator, string> = {
   [DatasetFilterOperator.NotContains]: '不包含',
 };
 
-export enum DatasetResourceType {
-  /// 门/急诊病历
-  EmergencyRecord = 'emergency_record',
-  /// 入院记录
-  AdmissionRecord = 'admission_record',
-  /// 首次病程记录
-  FirstCourseRecord = 'first_course_record',
-  /// 出院记录
-  DischargeRecord = 'discharge_record',
-  /// 手术前小结
-  PreoperativeSummary = 'preoperative_summary',
-  /// 手术记录
-  SurgeryRecord = 'surgery_record',
-  /// 实验室检查
-  LaboratoryExamination = 'laboratory_examination',
-  /// CT 报告
-  CTReport = 'ct_report',
-  /// MRI 报告
-  MRIReport = 'mri_report',
-  /// 超声报告
-  UltrasoundReport = 'ultrasound_report',
-  /// 病理报告
-  PathologyReport = 'pathology_report',
-  /// X光报告
-  XRayReport = 'xray_report',
-  /// 心超检查报告
-  CUSReport = 'cus_report',
-  /// 支气管镜检查报告
-  CESReport = 'ces_report',
-  /// 心电图报告
-  ECGReport = 'ecg_report',
-  /// 病案首页
-  HomePageRecord = 'home_page_record',
-  /// 住院营养记录
-  IpNutritionRecord = 'ip_nutrition_record',
-}
-const RESOURCE_TYPE_MAP: Record<DatasetResourceType, string> = {
-  [DatasetResourceType.EmergencyRecord]: '门/急诊病历',
-  [DatasetResourceType.AdmissionRecord]: '入院记录',
-  [DatasetResourceType.FirstCourseRecord]: '首次病程记录',
-  [DatasetResourceType.DischargeRecord]: '出院记录',
-  [DatasetResourceType.PreoperativeSummary]: '手术前小结',
-  [DatasetResourceType.SurgeryRecord]: '手术记录',
-  [DatasetResourceType.LaboratoryExamination]: '实验室检查',
-  [DatasetResourceType.CTReport]: 'CT 报告',
-  [DatasetResourceType.MRIReport]: 'MRI 报告',
-  [DatasetResourceType.UltrasoundReport]: '超声报告',
-  [DatasetResourceType.PathologyReport]: '病理报告',
-  [DatasetResourceType.XRayReport]: 'X光报告',
-  [DatasetResourceType.CUSReport]: '心超检查报告',
-  [DatasetResourceType.CESReport]: '支气管镜检查报告',
-  [DatasetResourceType.ECGReport]: '心电图报告',
-  [DatasetResourceType.HomePageRecord]: '病案首页',
-  [DatasetResourceType.IpNutritionRecord]: '住院营养记录',
-};
-
 export default {
   TYPE_MAP,
   TYPE_OPT: enumMapToOptions(TYPE_MAP),
@@ -134,8 +82,6 @@ export default {
   FILTER_LOGIC_OPT: enumMapToOptions(FILTER_LOGIC_MAP),
   FILTER_OPERATOR_MAP,
   FILTER_OPERATOR_OPT: enumMapToOptions(FILTER_OPERATOR_MAP),
-  RESOURCE_TYPE_MAP,
-  RESOURCE_TYPE_OPT: enumMapToOptions(RESOURCE_TYPE_MAP),
   SOURCE_COLUMN_TYPE_MAP,
   SOURCE_COLUMN_TYPE_OPT: enumMapToOptions(SOURCE_COLUMN_TYPE_MAP),
 };

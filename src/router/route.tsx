@@ -45,6 +45,7 @@ const initApp = async () => {
     service.get('/structured_ruleset/get_preset_fields'),
     service.get('/admin/push_rule/list', { params: paginationParams }),
     service.get('/warehouse/get_source_schema'),
+    service.get('/warehouse/get_resource_types'),
   ]);
   const [
     encodeRes,
@@ -52,12 +53,14 @@ const initApp = async () => {
     presetFieldsRes,
     pushRuleRes,
     sourceSchemaRes,
+    resourceTypeRes,
   ] = res as unknown as [
     APIRes<PaginationData<EncodeTable.Item>>,
     APIRes<PaginationData<StructuredRuleset.Item>>,
     APIRes<StructuredRuleset.PresetFields>,
     APIRes<PaginationData<PushRule.Item>>,
     APIRes<Warehouse.SourceSchemas>,
+    APIRes<Warehouse.ResourceTypeOptions>,
   ];
 
   // 初始化码表列表
@@ -103,6 +106,14 @@ const initApp = async () => {
   } else {
     console.error('数据源表/字段列表初始化失败', sourceSchemaRes);
     throw new Error('数据源表/字段列表初始化失败');
+  }
+
+  // 初始化资源类型下拉
+  if (resourceTypeRes.code === 200) {
+    useCacheStore.getState().setResourceTypeOptions(resourceTypeRes.data);
+  } else {
+    console.error('资源类型初始化失败', resourceTypeRes);
+    throw new Error('资源类型初始化失败');
   }
 };
 

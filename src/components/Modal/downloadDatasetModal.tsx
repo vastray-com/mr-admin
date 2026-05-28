@@ -10,7 +10,7 @@ import {
 } from 'antd';
 import { type FC, useCallback, useState } from 'react';
 import { useApi } from '@/hooks/useApi';
-import { ENUM_VARS } from '@/typing/enum';
+import { useCacheStore } from '@/store/useCacheStore';
 import { DatasetType } from '@/typing/enum/dataset';
 import type { DownloadTask } from '@/typing/downloadTask';
 
@@ -30,6 +30,7 @@ export const DownloadDatasetModal: FC<DownloadDatasetModalProps> = ({
 }) => {
   const { message } = App.useApp();
   const { downloadTaskApi } = useApi();
+  const resourceTypeOptions = useCacheStore((s) => s.resourceTypeOptions);
   const [form] = Form.useForm<DownloadTask.CreateParamsFE>();
 
   const [downloadType, setDownloadType] = useState<'normal' | 'quality'>(
@@ -126,7 +127,7 @@ export const DownloadDatasetModal: FC<DownloadDatasetModalProps> = ({
             <Select
               mode="multiple"
               placeholder="选择要下载的资源类型"
-              options={ENUM_VARS.DATASET.RESOURCE_TYPE_OPT}
+              options={resourceTypeOptions}
               allowClear
               showSearch={{
                 filterOption: (input, option) =>

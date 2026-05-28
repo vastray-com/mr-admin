@@ -17,6 +17,8 @@ type State = {
   pushRuleList: PushRule.List;
   pushRuleOptions: Record<string, SelectOptions>;
   sourceSchemaList: Warehouse.SourceSchemas;
+  resourceTypeOptions: SelectOptions;
+  resourceTypeMap: Record<string, string>;
 };
 type Actions = {
   setPresetFields: (fields: StructuredRuleset.PresetFields) => void;
@@ -24,6 +26,7 @@ type Actions = {
   setStructuredRulesetList: (list: StructuredRuleset.List) => void;
   setPushRuleList: (list: PushRule.List) => void;
   setSourceSchema: (list: Warehouse.SourceSchemas) => void;
+  setResourceTypeOptions: (list: Warehouse.ResourceTypeOptions) => void;
   reset: () => void;
 };
 type Store = State & Actions;
@@ -37,6 +40,8 @@ const initialState: State = {
   pushRuleList: [],
   pushRuleOptions: {},
   sourceSchemaList: [],
+  resourceTypeOptions: [],
+  resourceTypeMap: {},
 };
 
 export const useCacheStore = createWithEqualityFn<Store>((set) => ({
@@ -72,5 +77,16 @@ export const useCacheStore = createWithEqualityFn<Store>((set) => ({
   },
   setSourceSchema: (list: Warehouse.SourceSchemas) =>
     set({ sourceSchemaList: list }),
+  setResourceTypeOptions: (list: Warehouse.ResourceTypeOptions) => {
+    const resourceTypeOptions = list.map((item) => ({
+      value: item.value,
+      label: item.label,
+    }));
+    const resourceTypeMap = list.reduce<Record<string, string>>((acc, item) => {
+      acc[item.value] = item.label;
+      return acc;
+    }, {});
+    set({ resourceTypeOptions, resourceTypeMap });
+  },
   reset: () => set({ ...initialState }),
 }));

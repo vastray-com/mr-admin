@@ -57,6 +57,12 @@ export declare namespace Warehouse {
   };
   type SourceSchemas = SourceSchema[];
 
+  type ResourceTypeOption = {
+    value: string;
+    label: string;
+  };
+  type ResourceTypeOptions = ResourceTypeOption[];
+
   type GetSourceDataParams = {
     filter: Dataset.FilterValue;
     source_type?: DatasetSourceType;

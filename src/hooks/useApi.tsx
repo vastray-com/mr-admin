@@ -263,6 +263,10 @@ export const useApi = () => {
         service.get('/warehouse/get_source_schema') as Promise<
           APIRes<Warehouse.SourceSchemas>
         >,
+      getResourceTypes: () =>
+        service.get('/warehouse/get_resource_types') as Promise<
+          APIRes<Warehouse.ResourceTypeOptions>
+        >,
       getSourceData: (params: Warehouse.GetSourceDataParams) =>
         service.post('/warehouse/get_source_data', params) as Promise<
           APIRes<Warehouse.SourceData>
