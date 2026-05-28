@@ -1,20 +1,52 @@
-import { App, Button, Card, Form, Input, Modal, Table, Tag } from 'antd';
+import {
+  App,
+  Button,
+  Card,
+  Form,
+  Input,
+  Modal,
+  Popconfirm,
+  Select,
+  Table,
+  Tag,
+} from 'antd';
 import dayjs from 'dayjs';
 import { type FC, useCallback, useEffect, useState } from 'react';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { usePaginationData } from '@/hooks/usePaginationData';
 import { UserRole } from '@/typing/enum';
+import { ls } from '@/utils/ls';
 import type { AxiosError } from 'axios';
 import type { User } from '@/typing/user';
 
+const USER_ROLE_OPTIONS = [
+  { label: '普通用户', value: UserRole.User },
+  { label: '管理员', value: UserRole.Admin },
+];
+
+const USER_STATUS_FILTER_OPTIONS = [
+  { label: '正常', value: 'active' },
+  { label: '已冻结', value: 'frozen' },
+  { label: '全部', value: 'all' },
+];
+
 const UserListPage = () => {
   const { userApi } = useApi();
+  const currentUser = ls.user.get();
+  const [statusFilter, setStatusFilter] =
+    useState<User.ListParams['status']>('active');
+
+  const fetchUserList = useCallback(
+    (params: PaginationParams) =>
+      userApi.getList({ ...params, status: statusFilter }),
+    [userApi, statusFilter],
+  );
 
   // 拉取列表分页数据
   const [data, setData] = useState<User.List>([]);
   const { PaginationComponent, refresh } = usePaginationData({
-    fetchData: userApi.getList,
+    fetchData: fetchUserList,
     setData: setData,
   });
 
@@ -25,12 +57,70 @@ const UserListPage = () => {
   // 重置用户密码
   const [resetUserPwd, setResetUserPwd] = useState<User.User | null>(null);
 
+  const { message } = App.useApp();
+  const onFreeze = useCallback(
+    async (record: User.User) => {
+      if (!record.can_freeze) {
+        message.warning('当前账号不允许被冻结');
+        return;
+      }
+      try {
+        const res = await userApi.freeze({ uid: record.uid });
+        if (res.code === 200) {
+          message.success('账号冻结成功');
+          refresh();
+        } else {
+          message.error(`账号冻结失败：${res.message}`);
+        }
+      } catch (error) {
+        const e = error as AxiosError<APIRes<any>>;
+        message.error(`账号冻结失败: ${e.response?.data.message || e.message}`);
+      }
+    },
+    [userApi, refresh, message],
+  );
+
+  const onUnfreeze = useCallback(
+    async (record: User.User) => {
+      if (!record.can_unfreeze) {
+        message.warning('当前账号不允许被解冻');
+        return;
+      }
+      try {
+        const res = await userApi.unfreeze({ uid: record.uid });
+        if (res.code === 200) {
+          message.success('账号解冻成功');
+          refresh();
+        } else {
+          message.error(`账号解冻失败：${res.message}`);
+        }
+      } catch (error) {
+        const e = error as AxiosError<APIRes<any>>;
+        message.error(`账号解冻失败: ${e.response?.data.message || e.message}`);
+      }
+    },
+    [userApi, refresh, message],
+  );
+
+  useEffect(() => {
+    refresh();
+  }, [statusFilter]);
+
   return (
     <>
       <ContentLayout
         title="用户列表"
         action={
           <>
+            <Button className="ml-[8px]" type="default" disabled>
+              当前账号: {currentUser?.username || '-'}
+            </Button>
+            <Select
+              className="ml-[8px] w-[160px]"
+              value={statusFilter}
+              onChange={(v) => setStatusFilter(v)}
+              options={USER_STATUS_FILTER_OPTIONS}
+            />
             <Button
               type="primary"
               className="ml-[8px]"
@@ -74,6 +164,17 @@ const UserListPage = () => {
               }}
             />
             <Table.Column
+              title="状态"
+              dataIndex="status_name"
+              render={(_, r: User.User) =>
+                r.status === 'active' ? (
+                  <Tag color="green">{r.status_name}</Tag>
+                ) : (
+                  <Tag color="red">{r.status_name}</Tag>
+                )
+              }
+            />
+            <Table.Column
               title="创建时间"
               dataIndex="created_at"
               render={(tm: string) => dayjs(tm).format('YYYY-MM-DD HH:mm:ss')}
@@ -87,6 +188,33 @@ const UserListPage = () => {
                   <Button type="link" onClick={() => setResetUserPwd(record)}>
                     重置密码
                   </Button>
+                  {record.status === 'active' ? (
+                    <Popconfirm
+                      title="冻结账号"
+                      description={`确定要冻结账号 ${record.username} 吗？`}
+                      onConfirm={() => onFreeze(record)}
+                      okText="确定"
+                      cancelText="取消"
+                      disabled={!record.can_freeze}
+                    >
+                      <Button danger type="link" disabled={!record.can_freeze}>
+                        冻结
+                      </Button>
+                    </Popconfirm>
+                  ) : (
+                    <Popconfirm
+                      title="解冻账号"
+                      description={`确定要解冻账号 ${record.username} 吗？`}
+                      onConfirm={() => onUnfreeze(record)}
+                      okText="确定"
+                      cancelText="取消"
+                      disabled={!record.can_unfreeze}
+                    >
+                      <Button type="link" disabled={!record.can_unfreeze}>
+                        解冻
+                      </Button>
+                    </Popconfirm>
+                  )}
                 </>
               )}
             />
@@ -182,6 +310,7 @@ const CreateUserModal: FC<CreateUserModalProps> = ({
         }}
         autoComplete="off"
         labelCol={{ span: 4 }}
+        initialValues={{ role: UserRole.User }}
       >
         <Form.Item<User.CreateParams>
           label="用户名"
@@ -199,6 +328,18 @@ const CreateUserModal: FC<CreateUserModalProps> = ({
 
         <Form.Item<User.CreateParams> label="昵称" name="nickname">
           <Input placeholder="输入昵称" />
+        </Form.Item>
+
+        <Form.Item<User.CreateParams>
+          label="用户角色"
+          name="role"
+          rules={[{ required: true, message: '请选择用户角色' }]}
+        >
+          <Select
+            placeholder="请选择用户角色"
+            options={USER_ROLE_OPTIONS}
+            allowClear={false}
+          />
         </Form.Item>
 
         <Form.Item<User.CreateParams>

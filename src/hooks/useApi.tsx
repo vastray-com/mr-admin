@@ -229,7 +229,7 @@ export const useApi = () => {
         service.post('/admin/user/batch_create', params) as Promise<
           APIRes<string>
         >,
-      getList: (params: PaginationParams) =>
+      getList: (params: User.ListParams) =>
         service.get('/admin/user/list', { params }) as Promise<
           APIRes<PaginationData<User.User>>
         >,
@@ -237,6 +237,10 @@ export const useApi = () => {
         service.post('/user/change_pwd', params) as Promise<APIRes<null>>,
       resetPwd: (params: User.ResetPwdParams) =>
         service.post('/admin/user/reset_pwd', params) as Promise<APIRes<null>>,
+      freeze: (params: User.FreezeParams) =>
+        service.post('/admin/user/freeze', params) as Promise<APIRes<null>>,
+      unfreeze: (params: User.UnfreezeParams) =>
+        service.post('/admin/user/unfreeze', params) as Promise<APIRes<null>>,
     }),
     [],
   );

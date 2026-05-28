@@ -8,8 +8,17 @@ declare namespace User {
     nickname: string;
     role: UserRole;
     role_name: string;
+    status: 'active' | 'frozen';
+    status_name: string;
+    can_freeze: boolean;
+    can_unfreeze: boolean;
+    created_at?: string;
+    updated_at?: string;
   };
   type List = User[];
+  type ListParams = PaginationParams & {
+    status?: 'all' | 'active' | 'frozen';
+  };
 
   // 登录参数
   type LoginParams = {
@@ -28,6 +37,7 @@ declare namespace User {
     username: string;
     password: string;
     nickname?: string;
+    role: UserRole;
   };
 
   // 批量创建用户参数
@@ -51,6 +61,16 @@ declare namespace User {
   type ResetPwdParams = {
     username: string;
     pwd: string;
+  };
+
+  // 冻结用户参数
+  type FreezeParams = {
+    uid: string;
+  };
+
+  // 解冻用户参数
+  type UnfreezeParams = {
+    uid: string;
   };
 
   // ls utils
