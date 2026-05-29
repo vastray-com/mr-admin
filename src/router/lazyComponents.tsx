@@ -79,6 +79,9 @@ const UserList = lazy(
 const TokenList = lazy(
   () => import('@/pages/SysManagement/TokenList/TokenListPage'),
 );
+const AuditLogList = lazy(
+  () => import('@/pages/SysManagement/AuditLog/AuditLogPage'),
+);
 
 export default {
   StructuredRulesetList,
@@ -98,4 +101,5 @@ export default {
   DownloadTaskList,
   UserList,
   TokenList,
+  AuditLogList,
 };

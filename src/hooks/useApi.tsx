@@ -257,6 +257,18 @@ export const useApi = () => {
         >,
       deleteToken: (params: Tokens.DeleteParams) =>
         service.get('/admin/token/delete', { params }) as Promise<APIRes<null>>,
+      getAuditList: (params: Audit.ListParams) =>
+        service.get('/admin/audit/list', { params }) as Promise<
+          APIRes<PaginationData<Audit.Log>>
+        >,
+      getAuditDetail: (params: Audit.DetailParams) =>
+        service.get('/admin/audit/detail', { params }) as Promise<
+          APIRes<Audit.Log>
+        >,
+      getAuditFilterOptions: () =>
+        service.get('/admin/audit/filter_options') as Promise<
+          APIRes<Audit.FilterOptions>
+        >,
     }),
     [],
   );

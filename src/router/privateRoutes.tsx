@@ -254,6 +254,13 @@ const privateBaseRoutes: BaseRoute = [
         addToMenu: true,
         roles: [UserRole.Admin],
       },
+      {
+        key: '/sys_management/audit',
+        element: <LazyComponents.AuditLogList />,
+        label: '审计日志',
+        addToMenu: true,
+        roles: [UserRole.Admin],
+      },
     ],
   },
 ];
