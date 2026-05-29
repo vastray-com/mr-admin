@@ -317,7 +317,8 @@ const AuditLogPage = () => {
                 {detail.action}
               </Descriptions.Item>
               <Descriptions.Item label="路径" span={2}>
-                {detail.path} {detail.query ? `?${detail.query}` : ''}
+                {detail.path}
+                {detail.query ? `?${detail.query}` : ''}
               </Descriptions.Item>
               <Descriptions.Item label="操作者" span={2}>
                 {detail.operator_username || detail.operator_uid || '-'}
