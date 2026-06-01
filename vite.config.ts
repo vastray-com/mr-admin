@@ -5,7 +5,7 @@ import { defineConfig, loadEnv } from 'vite';
 
 const BUILD_DIR = 'dist';
 const ENV_DIR = './env';
-const getOutDir = (mode: string) => `${BUILD_DIR}/${mode}`;
+// const getOutDir = (mode: string) => `${BUILD_DIR}/${mode}`;
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     build: {
-      outDir: getOutDir(mode ?? 'default'),
+      outDir: BUILD_DIR, // getOutDir(mode ?? 'default'),
     },
     envDir: ENV_DIR,
     plugins: [react(), UnoCSS()],
