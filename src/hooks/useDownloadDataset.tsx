@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { DownloadDatasetModal } from '@/components/Modal/downloadDatasetModal';
 import { useApi } from '@/hooks/useApi';
 import type { DownloadTask } from '@/typing/downloadTask';
@@ -10,7 +10,7 @@ type Params = {
 };
 
 export const useDownloadDataset = () => {
-  const { downloadTaskApi } = useApi();
+  const { downloadTemplateApi } = useApi();
 
   const [open, setOpen] = useState(false);
   const [params, setParams] = useState<Params | null>(null);
@@ -22,11 +22,30 @@ export const useDownloadDataset = () => {
   );
   const fetchTemplates = useCallback(async () => {
     setFetching(true);
-    const res = await downloadTaskApi.getTemplateList();
-    console.log('拉取下载模版成功:', res);
-    setTemplates(res.data);
-    setFetching(false);
-  }, [downloadTaskApi]);
+    try {
+      const res = await downloadTemplateApi.getTemplateList({
+        page_num: 1,
+        page_size: 200,
+      });
+      console.log('拉取下载模版成功:', res);
+      setTemplates(
+        (res.data.data ?? []).map((item) => ({
+          uid: item.uid,
+          name: item.name,
+          tag: item.tag,
+          creator_name: item.creator_name,
+        })),
+      );
+    } finally {
+      setFetching(false);
+    }
+  }, [downloadTemplateApi]);
+
+  useEffect(() => {
+    if (open) {
+      fetchTemplates();
+    }
+  }, [open, fetchTemplates]);
 
   // 打开弹窗
   const showDownloadModal = useCallback((params: Params) => {
@@ -41,7 +60,6 @@ export const useDownloadDataset = () => {
     }
 
     if (!templates) {
-      fetchTemplates();
       return null;
     }
 

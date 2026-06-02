@@ -7,8 +7,9 @@ import {
   Modal,
   Radio,
   Select,
+  Tag,
 } from 'antd';
-import { type FC, useCallback, useState } from 'react';
+import { type FC, useCallback, useMemo, useState } from 'react';
 import { useApi } from '@/hooks/useApi';
 import { useCacheStore } from '@/store/useCacheStore';
 import { DatasetType } from '@/typing/enum/dataset';
@@ -37,6 +38,26 @@ export const DownloadDatasetModal: FC<DownloadDatasetModalProps> = ({
     'normal',
   );
   const [loading, setLoading] = useState(false);
+  const [selectedTag, setSelectedTag] = useState<string>();
+
+  const templateTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    templates.forEach((template) => {
+      const val = template.tag?.trim();
+      if (val) {
+        tagSet.add(val);
+      }
+    });
+    return Array.from(tagSet).sort();
+  }, [templates]);
+
+  const filteredTemplates = useMemo(
+    () =>
+      selectedTag
+        ? templates.filter((template) => template.tag === selectedTag)
+        : templates,
+    [templates, selectedTag],
+  );
 
   const onFinish = useCallback(
     (v: DownloadTask.CreateParamsFE) => {
@@ -70,14 +91,17 @@ export const DownloadDatasetModal: FC<DownloadDatasetModalProps> = ({
         })
         .finally(() => setLoading(false));
     },
-    [downloadType],
+    [downloadType, downloadTaskApi, message, onClose],
   );
 
   return (
     <Modal
       centered
       onCancel={onClose}
-      afterOpenChange={() => form.resetFields()}
+      afterOpenChange={() => {
+        form.resetFields();
+        setSelectedTag(undefined);
+      }}
       open={open}
       title="数据集下载"
       width={830}
@@ -140,28 +164,57 @@ export const DownloadDatasetModal: FC<DownloadDatasetModalProps> = ({
         )}
 
         {downloadType === 'quality' && (
-          <Form.Item<DownloadTask.CreateParamsFE>
-            label="质控模版"
-            name="template_name"
-            rules={[
-              {
-                required: true,
-                message: '请选择一个质控模版',
-              },
-            ]}
-          >
-            <Select
-              placeholder="选择质控模版"
-              options={templates.map((t) => ({ label: t.name, value: t.name }))}
-              allowClear
-              showSearch={{
-                filterOption: (input, option) =>
-                  (option?.label ?? '')
-                    .toLowerCase()
-                    .includes(input.toLowerCase()),
-              }}
-            />
-          </Form.Item>
+          <>
+            <Form.Item label="标签过滤">
+              <Select
+                placeholder="按标签筛选模板"
+                value={selectedTag}
+                options={templateTags.map((tag) => ({
+                  label: tag,
+                  value: tag,
+                }))}
+                allowClear
+                onChange={(val) => setSelectedTag(val)}
+              />
+            </Form.Item>
+
+            <Form.Item<DownloadTask.CreateParamsFE>
+              label="质控模版"
+              name="template_name"
+              rules={[
+                {
+                  required: true,
+                  message: '请选择一个质控模版',
+                },
+              ]}
+            >
+              <Select
+                placeholder="选择质控模版"
+                options={filteredTemplates.map((t) => ({
+                  label: (
+                    <div className="flex items-center gap-[8px]">
+                      <span>{t.name}</span>{' '}
+                      {t.creator_name ? (
+                        <Tag color="blue">{`创建人: ${t.creator_name}`}</Tag>
+                      ) : null}{' '}
+                      {t.tag ? (
+                        <Tag key={`${t.uid}-${t.tag}`}>{t.tag}</Tag>
+                      ) : null}
+                    </div>
+                  ),
+                  value: t.uid,
+                  searchLabel: `${t.name} ${t.creator_name ?? ''} ${t.tag ?? ''}`,
+                }))}
+                allowClear
+                showSearch={{
+                  filterOption: (input, option) =>
+                    ((option?.searchLabel as string) ?? '')
+                      .toLowerCase()
+                      .includes(input.toLowerCase()),
+                }}
+              />
+            </Form.Item>
+          </>
         )}
 
         {datasetType === DatasetType.Subscribe && (

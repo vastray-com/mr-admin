@@ -69,6 +69,12 @@ const DownloadTaskList = lazy(
       '@/pages/DownloadTaskManagement/DownloadTaskList/DownloadTaskListPage'
     ),
 );
+const DownloadTemplateList = lazy(
+  () =>
+    import(
+      '@/pages/DownloadTaskManagement/DownloadTemplate/DownloadTemplatePage'
+    ),
+);
 
 // 用户管理
 const UserList = lazy(
@@ -99,6 +105,7 @@ export default {
   WarehouseDataPreview,
   MyDownloadTask,
   DownloadTaskList,
+  DownloadTemplateList,
   UserList,
   TokenList,
   AuditLogList,

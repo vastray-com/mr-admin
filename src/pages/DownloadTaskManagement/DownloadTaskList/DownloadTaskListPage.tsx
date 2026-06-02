@@ -1,6 +1,6 @@
 import { App, Button, Card, Popconfirm, Table, Tag, Tooltip } from 'antd';
 import dayjs from 'dayjs';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { usePaginationData } from '@/hooks/usePaginationData';
@@ -13,6 +13,29 @@ const DownloadTaskListPage = () => {
   const { downloadTaskApi } = useApi();
   const { message } = App.useApp();
   const resourceTypeMap = useCacheStore((s) => s.resourceTypeMap);
+  const [templates, setTemplates] = useState<DownloadTask.Templates>([]);
+
+  useEffect(() => {
+    downloadTaskApi
+      .getTemplateList()
+      .then((res) => {
+        if (res.code === 200) {
+          setTemplates(res.data);
+        }
+      })
+      .catch((e) => {
+        console.error('拉取下载模版失败:', e);
+      });
+  }, [downloadTaskApi]);
+
+  const templateNameMap = useMemo(
+    () =>
+      templates.reduce<Record<string, string>>((acc, item) => {
+        acc[item.uid] = item.name;
+        return acc;
+      }, {}),
+    [templates],
+  );
 
   // 拉取列表分页数据
   const [data, setData] = useState<DownloadTask.List>([]);
@@ -73,9 +96,10 @@ const DownloadTaskListPage = () => {
               const t = record.template_name;
               const rl = record.resource_list as string[] | undefined;
               if (t) {
+                const templateLabel = templateNameMap[t] ?? t;
                 return (
-                  <Tooltip placement="top" title={t}>
-                    {`质控: ${t}`}
+                  <Tooltip placement="top" title={templateLabel}>
+                    {`质控: ${templateLabel}`}
                   </Tooltip>
                 );
               }

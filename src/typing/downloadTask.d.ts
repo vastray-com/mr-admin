@@ -50,7 +50,10 @@ export declare namespace DownloadTask {
 
   // 模版项
   type Template = {
+    uid: string;
     name: string;
+    tag?: string;
+    creator_name?: string;
   };
   type Templates = Template[];
 }

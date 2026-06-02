@@ -206,6 +206,13 @@ const privateBaseRoutes: BaseRoute = [
         addToMenu: true,
         roles: [UserRole.Admin],
       },
+      {
+        key: '/download_task_management/download_template_list',
+        element: <LazyComponents.DownloadTemplateList />,
+        label: '模板管理',
+        addToMenu: true,
+        roles: [UserRole.Admin, UserRole.User],
+      },
     ],
   },
   {

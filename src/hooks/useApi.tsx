@@ -3,6 +3,7 @@ import { noInterceptorsService, service } from '@/utils/service';
 import type { AxiosResponse } from 'axios';
 import type { Dataset } from '@/typing/dataset';
 import type { DownloadTask } from '@/typing/downloadTask';
+import type { DownloadTemplate } from '@/typing/downloadTemplate';
 import type { PushRule } from '@/typing/pushRule';
 import type { StructuredRuleset } from '@/typing/structuredRuleset';
 import type { Task } from '@/typing/task';
@@ -115,6 +116,35 @@ export const useApi = () => {
         noInterceptorsService.post('/download_task/download', params, {
           responseType: 'blob', // 设置响应类型为 Blob
         }) as Promise<AxiosResponse<Blob>>,
+    }),
+    [],
+  );
+
+  const download_template = useMemo(
+    () => ({
+      getTemplateList: (params: DownloadTemplate.ListParams) =>
+        service.get('/download_template/list', { params }) as Promise<
+          APIRes<PaginationData<DownloadTemplate.Item>>
+        >,
+      getTemplateDetail: (uid: string) =>
+        service.get('/download_template/detail', {
+          params: { uid },
+        }) as Promise<APIRes<DownloadTemplate.Item>>,
+      createTemplate: (params: DownloadTemplate.CreateParams) =>
+        service.post('/download_template/create', params) as Promise<
+          APIRes<string>
+        >,
+      updateTemplate: (params: DownloadTemplate.UpdateParams) =>
+        service.post('/download_template/update', params) as Promise<
+          APIRes<string>
+        >,
+      deleteTemplate: (uid: string) =>
+        service.post('/download_template/action', {
+          uid,
+          action: 'delete',
+        } as DownloadTemplate.ActionParams) as Promise<APIRes<string>>,
+      getTags: () =>
+        service.get('/download_template/tags') as Promise<APIRes<string[]>>,
     }),
     [],
   );
@@ -309,6 +339,7 @@ export const useApi = () => {
     taskApi: task,
     datasetApi: dataset,
     downloadTaskApi: download_task,
+    downloadTemplateApi: download_template,
     encodeApi: encode,
     ruleApi: rule,
     pushRuleApi: pushRule,
