@@ -15,6 +15,7 @@ import {
 } from 'antd';
 import {
   type FC,
+  type Key,
   useCallback,
   useEffect,
   useMemo,
@@ -251,12 +252,13 @@ const StructuredRulesetDetailPage: FC = () => {
         console.log('更新病历模板成功:', res);
         if (res.code === 200) {
           message.success('更新病历模板成功');
+          fetchDetail(detail.uid);
         } else {
           message.error(res.message || '更新病历模板失败');
         }
       }
     },
-    [ruleApi, message, nav, encodeOptions, isNewRule],
+    [ruleApi, message, nav, encodeOptions, isNewRule, detail.uid],
   );
 
   // 测试结构化规则
@@ -316,6 +318,59 @@ const StructuredRulesetDetailPage: FC = () => {
       ),
     }));
   }, [testModelForm, uid]);
+
+  // 多选操作
+  const structuredRulesetOptions = useCacheStore(
+    (s) => s.structuredRulesetOptions,
+  );
+  const [selectedRows, setSelectedRows] = useState<Key[]>([]);
+  const [moveModalMode, setMoveModalMode] = useState<'move' | 'copy' | ''>('');
+  const [openMoveToOtherRuleset, setOpenMoveToOtherRuleset] = useState(false);
+  const [moveTargetRuleset, setMoveTargetRuleset] = useState<string | null>(
+    null,
+  );
+  const onMoveRows = useCallback(
+    (rows: Key[], target: string | null, is_copy = false) => {
+      console.log('移动字段:', rows, '目标规则集:', target);
+      if (isNewRule) {
+        return message.error('请先保存当前规则');
+      }
+      if (!target || rows.length < 1 || !detail.uid || detail.uid === target) {
+        return message.error('移动参数不合法');
+      }
+
+      // 调用移动接口
+      ruleApi
+        .moveFields({
+          original: detail.uid,
+          target: target,
+          fields: rows as unknown as string[],
+          is_copy,
+        })
+        .then((r) => {
+          console.log('移动字段接口调用成功:', r);
+          if (r.code === 200) {
+            message.success('移动字段成功');
+            // 完成后更新
+            fetchDetail(detail.uid);
+            onCloseMoveModal(true);
+          } else {
+            message.error(r.message || '移动字段失败');
+          }
+        })
+        .catch((e) => {
+          console.error('移动字段接口调用失败:', e);
+          message.error(e.message || '移动字段失败');
+        });
+    },
+    [detail.uid, isNewRule, fetchDetail],
+  );
+  const onCloseMoveModal = useCallback((clear = false) => {
+    clear && setSelectedRows([]);
+    setMoveModalMode('');
+    setMoveTargetRuleset(null);
+    setOpenMoveToOtherRuleset(false);
+  }, []);
 
   if (!isInit.current && !isNewRule && uid) {
     fetchDetail(uid);
@@ -560,6 +615,42 @@ const StructuredRulesetDetailPage: FC = () => {
         </Form>
       </Modal>
 
+      <Modal
+        title={
+          moveModalMode === 'copy'
+            ? '复制字段到其他规则集'
+            : '移动字段到其他规则集'
+        }
+        width="48vw"
+        open={openMoveToOtherRuleset && !!moveModalMode}
+        onOk={() =>
+          onMoveRows(selectedRows, moveTargetRuleset, moveModalMode === 'copy')
+        }
+        okText={moveModalMode === 'copy' ? '确认复制' : '确认移动'}
+        cancelText="取消"
+        centered
+        onCancel={() => onCloseMoveModal()}
+      >
+        <p className="text-[14px] text-red my-[8px]">
+          注意！移动到目标规则集时，如果目标规则集已经存在同中文名/同英文名的字段时将会覆盖，如果移动的字段包含父子关系，则父子关系的所有字段将会整体被移动，请确认后再进行操作！
+        </p>
+        <Select
+          options={structuredRulesetOptions.filter(
+            (o) => o.value !== detail.uid,
+          )}
+          size="large"
+          style={{ width: '100%' }}
+          allowClear
+          showSearch={{
+            filterOption: (input, option) =>
+              (option?.label ?? '').toLowerCase().includes(input.toLowerCase()),
+          }}
+          placeholder="请选择或搜索目标规则集"
+          value={moveTargetRuleset}
+          onChange={setMoveTargetRuleset}
+        />
+      </Modal>
+
       <div className="flex h-full">
         <div className="flex-1 w-[calc(100%_-_200px_-_200px_-_24px)] overflow-auto">
           <Card className="h-[220px]" title="基本信息">
@@ -614,14 +705,38 @@ const StructuredRulesetDetailPage: FC = () => {
             title="明细字段"
             className="mt-[12px]"
             extra={
-              <Button onClick={() => setOpenPresetModal(true)} type="primary">
-                添加字段
-              </Button>
+              <Space align="center">
+                {selectedRows.length > 0 && (
+                  <>
+                    <Button
+                      onClick={() => {
+                        setMoveModalMode('move');
+                        setOpenMoveToOtherRuleset(true);
+                      }}
+                    >
+                      移动到...
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setMoveModalMode('copy');
+                        setOpenMoveToOtherRuleset(true);
+                      }}
+                    >
+                      复制到...
+                    </Button>
+                  </>
+                )}
+                <Button onClick={() => setOpenPresetModal(true)} type="primary">
+                  添加字段
+                </Button>
+              </Space>
             }
           >
             <FieldTable
               form={fieldForm}
               detail={detail}
+              selectedRowKeys={selectedRows}
+              onRowSelected={setSelectedRows}
               onChange={(fields) => setDetail((prev) => ({ ...prev, fields }))}
             />
           </Card>

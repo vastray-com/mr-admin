@@ -209,6 +209,10 @@ export const useApi = () => {
         service.get('/structured_ruleset/get_preset_fields') as Promise<
           APIRes<StructuredRuleset.PresetFields>
         >,
+      moveFields: (params: StructuredRuleset.MoveFieldsParams) =>
+        service.post('/structured_ruleset/move_fields', params) as Promise<
+          APIRes<string>
+        >,
       testRule: (params: StructuredRuleset.TestRuleParams) => {
         const { api_key, ...rest } = params;
         return service.post('/structured_ruleset/test', rest, {

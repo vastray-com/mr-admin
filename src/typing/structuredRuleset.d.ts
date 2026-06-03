@@ -106,4 +106,11 @@ export declare namespace StructuredRuleset {
     // 并行数量
     parallel: number;
   };
+
+  type MoveFieldsParams = {
+    original: string;
+    target: string;
+    fields: string[];
+    is_copy: boolean;
+  };
 }

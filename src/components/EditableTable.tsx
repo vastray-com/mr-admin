@@ -9,6 +9,7 @@ import {
   Space,
   Table,
   type TableColumnType,
+  type TableProps,
   Tooltip,
 } from 'antd';
 import {
@@ -52,15 +53,15 @@ const EditableCell = <T,>({
       case 'select':
         return (
           <Select
-            showSearch
+            showSearch={{
+              filterOption: (input, option) =>
+                ((option?.label ?? '') as string)
+                  .toLowerCase()
+                  .includes(input.toLowerCase()),
+            }}
             allowClear
             placeholder="请选择"
             options={options}
-            filterOption={(input, option) =>
-              ((option?.label ?? '') as string)
-                .toLowerCase()
-                .includes(input.toLowerCase())
-            }
           />
         );
     }
@@ -86,6 +87,7 @@ const EditableCell = <T,>({
 
 type Props<T> = {
   rowKey?: string;
+  rowSelection?: TableProps<T>['rowSelection'];
   dataSource: T[];
   columns: Record<string, any>[];
   onCancel?: () => void;
@@ -163,7 +165,7 @@ const EditableTable = <T,>(props: Props<T>) => {
     filterIcon: (filtered: boolean) => (
       <i
         className="i-icon-park-outline:search"
-        style={{ color: filtered ? '#1677ff' : undefined }}
+        style={{ color: filtered ? '#1677FF' : undefined }}
       />
     ),
     onFilter: (value, record) => {
@@ -198,6 +200,7 @@ const EditableTable = <T,>(props: Props<T>) => {
 
   return (
     <Table<T>
+      rowSelection={props.rowSelection}
       components={{ body: { cell: EditableCell<T> } }}
       bordered
       dataSource={props.dataSource}

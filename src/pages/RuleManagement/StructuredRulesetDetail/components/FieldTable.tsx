@@ -9,7 +9,7 @@ import {
   type TableProps,
   Typography,
 } from 'antd';
-import { type FC, useMemo, useState } from 'react';
+import { type FC, type Key, useMemo, useState } from 'react';
 import EditableTable from '@/components/EditableTable';
 import { useCacheStore } from '@/store/useCacheStore';
 import { ENUM_VARS } from '@/typing/enum';
@@ -24,8 +24,16 @@ type Props = {
   form: FormInstance;
   detail: StructuredRuleset.Item;
   onChange: (data: StructuredRuleset.Fields) => void;
+  onRowSelected: (rows: Key[]) => void;
+  selectedRowKeys: Key[];
 };
-const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
+const FieldTable: FC<Props> = ({
+  form,
+  detail,
+  onChange,
+  onRowSelected,
+  selectedRowKeys,
+}) => {
   const [editingKey, setEditingKey] = useState('');
   const isEditing = (key: string) => key === editingKey;
   // const resultFieldOptions = useMemo(
@@ -475,6 +483,12 @@ const FieldTable: FC<Props> = ({ form, detail, onChange }) => {
   return (
     <Form form={form} component={false}>
       <EditableTable<StructuredRuleset.Field>
+        rowSelection={{
+          selectedRowKeys,
+          onChange: (selectedRowKeys: Key[], _: StructuredRuleset.Fields) => {
+            onRowSelected(selectedRowKeys);
+          },
+        }}
         dataSource={detail.fields}
         columns={columnsMerged}
         scroll={{ x: '2200px' }}
