@@ -50,7 +50,7 @@ export const PieChart: FC<Props> = ({ data }) => {
             items: [
               (data) => ({
                 name: '占比',
-                value: `${data.percent * 100}%`,
+                value: `${(data.percent * 100).toFixed(2)}%`,
               }),
               (data) => ({
                 name: '数量',

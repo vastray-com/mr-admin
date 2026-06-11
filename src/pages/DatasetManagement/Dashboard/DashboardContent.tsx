@@ -10,29 +10,46 @@ import type { Warehouse } from '@/typing/warehose';
 const DataCardList = [
   {
     key: 'op_register_count',
-    title: '挂号人数',
     icon: 'i-icon-park-outline:user-to-user-transmission',
     color: ['#4FAEE4', '#4FAEE433'],
   },
   {
     key: 'ip_admission_count',
-    title: '入院人数',
     icon: 'i-icon-park-outline:hospital',
     color: ['#D09332', '#D0933233'],
   },
   {
     key: 'ip_discharge_count',
-    title: '出院人数',
     icon: 'i-icon-park-outline:logout',
     color: ['#469D78', '#469D7833'],
   },
   {
     key: 'operation_count',
-    title: '手术台数',
     icon: 'i-icon-park-outline:scissors',
     color: ['#DE4D47', '#DE4D4733'],
   },
 ];
+
+const SurgeryLevels = [
+  { key: 'level1_cnt', label: '一级手术' },
+  { key: 'level2_cnt', label: '二级手术' },
+  { key: 'level3_cnt', label: '三级手术' },
+  { key: 'level4_cnt', label: '四级手术' },
+] as const;
+
+function buildSurgeryPieData(coreRow: Record<string, number>) {
+  const total =
+    coreRow.level1_cnt +
+    coreRow.level2_cnt +
+    coreRow.level3_cnt +
+    coreRow.level4_cnt;
+
+  return SurgeryLevels.map((level) => ({
+    item: level.label,
+    count: coreRow[level.key],
+    percent: total > 0 ? coreRow[level.key] / total : 0,
+  }));
+}
 
 type Props = {
   data?: Warehouse.DashboardData | null;
@@ -43,6 +60,13 @@ export const DashboardContent: FC<Props> = ({ data }) => {
     return <Empty />;
   }
 
+  const coreRow = data.core.data[0];
+  const pieData = buildSurgeryPieData(coreRow);
+
+  const columnLabelMap = Object.fromEntries(
+    data.core.columns.map((c) => [c.value, c.label]),
+  );
+
   return (
     <div>
       <Flex gap={16}>
@@ -51,11 +75,10 @@ export const DashboardContent: FC<Props> = ({ data }) => {
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="text-[18px] font-normal text-fg-primary">
-                  {data.core.columns.find((c) => c.value === item.key)?.label ??
-                    '未知'}
+                  {columnLabelMap[item.key] ?? '未知'}
                 </h2>
                 <p className="text-[28px] font-bold text-fg-title">
-                  {formatCountToString(data.core.data[0][item.key])}
+                  {formatCountToString(coreRow[item.key])}
                 </p>
               </div>
 
@@ -97,13 +120,13 @@ export const DashboardContent: FC<Props> = ({ data }) => {
               x: 'dept_name',
               y: '门诊人数',
             }}
-            data={data.distribution.data
+            data={[...data.distribution.data]
+              .sort((a, b) => b.op_visit_count - a.op_visit_count)
+              .slice(0, 20)
               .map((i) => ({
                 dept_name: i.dept_name,
                 门诊人数: i.op_visit_count,
-              }))
-              .sort((a, b) => b.门诊人数 - a.门诊人数)
-              .slice(0, 20)}
+              }))}
           />
         </Card>
       </div>
@@ -116,18 +139,10 @@ export const DashboardContent: FC<Props> = ({ data }) => {
               y: 'count',
               color: 'type',
             }}
-            data={[
-              ...data.time_serial.data.map((i) => ({
-                date: i.date,
-                count: i.ip_admission_count,
-                type: '入院人数',
-              })),
-              ...data.time_serial.data.map((i) => ({
-                date: i.date,
-                count: i.ip_discharge_count,
-                type: '出院人数',
-              })),
-            ]}
+            data={data.time_serial.data.flatMap((i) => [
+              { date: i.date, count: i.ip_admission_count, type: '入院人数' },
+              { date: i.date, count: i.ip_discharge_count, type: '出院人数' },
+            ])}
           />
         </Card>
 
@@ -135,25 +150,7 @@ export const DashboardContent: FC<Props> = ({ data }) => {
           className="basis-[calc(40%_-_16px)] shrink-0 grow-0"
           title="手术等级分布"
         >
-          <PieChart
-            data={[
-              {
-                item: '一级手术',
-                count: 100,
-                percent: 0.5,
-              },
-              {
-                item: '二级手术',
-                count: 50,
-                percent: 0.25,
-              },
-              {
-                item: '三级手术',
-                count: 50,
-                percent: 0.25,
-              },
-            ]}
-          />
+          <PieChart data={pieData} />
         </Card>
       </div>
     </div>
