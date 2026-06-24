@@ -40,12 +40,12 @@ export const PageLayout: FC = () => {
               onClick={() => nav('/')}
             >
               <img
-                src="/ws_logo.svg"
+                src={import.meta.env.VITE_APP_LOGO}
                 alt=""
                 className="h-full aspect-ratio-square"
               />
               <h1 className="text-title text-[20px] font-bold">
-                临床数据资产平台
+                {import.meta.env.VITE_APP_NAME}
               </h1>
             </div>
           </div>

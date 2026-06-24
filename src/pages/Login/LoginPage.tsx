@@ -48,12 +48,12 @@ const LoginPage = () => {
         <div className="h-full basis-[50%] shrink-0 grow-0 p-[3em] flex flex-col">
           <div className="mt-[3em]">
             <img
-              src="/ws_logo.svg"
+              src={import.meta.env.VITE_APP_LOGO}
               alt=""
               className="w-[64px] aspect-ratio-square"
             />
             <h2 className="text-[28px] fg-primary mt-[0.4em]">
-              临床数据资产平台
+              {import.meta.env.VITE_APP_NAME}
             </h2>
           </div>
 
