@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { noInterceptorsService, service } from '@/utils/service';
 import type { AxiosResponse } from 'axios';
+import type { Annotation } from '@/typing/annotation';
 import type { Dataset } from '@/typing/dataset';
 import type { DownloadTask } from '@/typing/downloadTask';
 import type { DownloadTemplate } from '@/typing/downloadTemplate';
@@ -339,6 +340,68 @@ export const useApi = () => {
     [],
   );
 
+  const annotation = useMemo(
+    () => ({
+      getProjectList: (params: Annotation.ListParams) =>
+        service.get('/annotation/project/list', { params }) as Promise<
+          APIRes<PaginationData<Annotation.Project>>
+        >,
+      getProjectDetail: (uid: string) =>
+        service.get('/annotation/project/detail', {
+          params: { uid },
+        }) as Promise<APIRes<Annotation.Project>>,
+      createProject: (params: Annotation.CreateProjectParams) =>
+        service.post('/annotation/project/create', params) as Promise<
+          APIRes<string>
+        >,
+      updateProject: (params: Annotation.UpdateProjectParams) =>
+        service.post('/annotation/project/update', params) as Promise<
+          APIRes<string>
+        >,
+      deleteProject: (uid: string) =>
+        service.post('/annotation/project/delete', { uid }) as Promise<
+          APIRes<string>
+        >,
+      getImportableDatasets: () =>
+        service.get('/annotation/library/importable_datasets') as Promise<
+          APIRes<Annotation.ImportableDatasetOption[]>
+        >,
+      importLibrary: (params: Annotation.ImportLibraryParams) =>
+        service.post('/annotation/library/import', params) as Promise<
+          APIRes<string>
+        >,
+      updateLibrary: (params: Annotation.UpdateLibraryParams) =>
+        service.post('/annotation/library/update', params) as Promise<
+          APIRes<string>
+        >,
+      deleteLibrary: (params: Annotation.DeleteLibraryParams) =>
+        service.post('/annotation/library/delete', params) as Promise<
+          APIRes<string>
+        >,
+      getLibraryDetail: (params: {
+        project_uid: string;
+        library_uid: string;
+      }) =>
+        service.get('/annotation/library/detail', { params }) as Promise<
+          APIRes<Annotation.LibraryDetail>
+        >,
+      getLibraryDataPage: (params: Annotation.LibraryDataPageParams) =>
+        service.get('/annotation/library/data_page', { params }) as Promise<
+          APIRes<Annotation.LibraryDataPage>
+        >,
+      saveLibraryRow: (params: Annotation.SaveLibraryRowParams) =>
+        service.post('/annotation/library/save_row', params) as Promise<
+          APIRes<string>
+        >,
+      exportLibrary: (params: { project_uid: string; library_uid: string }) =>
+        noInterceptorsService.get('/annotation/library/export', {
+          params,
+          responseType: 'blob',
+        }) as Promise<AxiosResponse<Blob>>,
+    }),
+    [],
+  );
+
   return {
     taskApi: task,
     datasetApi: dataset,
@@ -350,5 +413,6 @@ export const useApi = () => {
     userApi: user,
     sysApi: sys,
     warehouseApi: warehouse,
+    annotationApi: annotation,
   };
 };
