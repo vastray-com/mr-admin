@@ -24,6 +24,15 @@ type ProjectForm = {
   description?: string;
 };
 
+const getApiErrorMessage = (error: unknown, fallback: string): string => {
+  const err = error as {
+    response?: { data?: { message?: string } };
+    message?: string;
+  };
+  const msg = err.response?.data?.message || err.message;
+  return typeof msg === 'string' && msg.trim() ? msg : fallback;
+};
+
 const AnnotationProjectListPage: FC = () => {
   const { annotationApi } = useApi();
   const { message, modal } = App.useApp();
@@ -84,12 +93,16 @@ const AnnotationProjectListPage: FC = () => {
         title: '确认删除项目',
         content: `确认删除项目「${record.name}」吗？`,
         onOk: async () => {
-          const res = await annotationApi.deleteProject(record.uid);
-          if (res.code === 200) {
-            message.success('删除成功');
-            refresh();
-          } else {
-            message.error(res.message || '删除失败');
+          try {
+            const res = await annotationApi.deleteProject(record.uid);
+            if (res.code === 200) {
+              message.success('删除成功');
+              refresh();
+            } else {
+              message.error(res.message || '删除失败');
+            }
+          } catch (error) {
+            message.error(getApiErrorMessage(error, '删除失败，请稍后重试'));
           }
         },
       });
@@ -119,6 +132,8 @@ const AnnotationProjectListPage: FC = () => {
         } else {
           message.error(res.message || '保存失败');
         }
+      } catch (error) {
+        message.error(getApiErrorMessage(error, '保存失败，请稍后重试'));
       } finally {
         setSaving(false);
       }

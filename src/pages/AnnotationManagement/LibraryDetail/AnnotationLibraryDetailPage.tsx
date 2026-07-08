@@ -25,6 +25,15 @@ type RowItem = {
   value: string;
 };
 
+const getApiErrorMessage = (error: unknown, fallback: string): string => {
+  const err = error as {
+    response?: { data?: { message?: string } };
+    message?: string;
+  };
+  const msg = err.response?.data?.message || err.message;
+  return typeof msg === 'string' && msg.trim() ? msg : fallback;
+};
+
 const AnnotationLibraryDetailPage: FC = () => {
   const { annotationApi } = useApi();
   const { message } = App.useApp();
@@ -47,18 +56,23 @@ const AnnotationLibraryDetailPage: FC = () => {
   );
   const [values, setValues] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState(false);
+  const [completing, setCompleting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchDetail = useCallback(async () => {
     if (!projectUid || !libraryUid) return;
-    const res = await annotationApi.getLibraryDetail({
-      project_uid: projectUid,
-      library_uid: libraryUid,
-    });
-    if (res.code === 200) {
-      setDetail(res.data);
-    } else {
-      message.error(res.message || '获取详情失败');
+    try {
+      const res = await annotationApi.getLibraryDetail({
+        project_uid: projectUid,
+        library_uid: libraryUid,
+      });
+      if (res.code === 200) {
+        setDetail(res.data);
+      } else {
+        message.error(res.message || '获取详情失败');
+      }
+    } catch (error) {
+      message.error(getApiErrorMessage(error, '获取详情失败，请稍后重试'));
     }
   }, [annotationApi, libraryUid, message, projectUid]);
 
@@ -83,6 +97,8 @@ const AnnotationLibraryDetailPage: FC = () => {
         } else {
           message.error(res.message || '加载数据失败');
         }
+      } catch (error) {
+        message.error(getApiErrorMessage(error, '加载数据失败，请稍后重试'));
       } finally {
         setLoading(false);
       }
@@ -134,6 +150,8 @@ const AnnotationLibraryDetailPage: FC = () => {
       } else {
         message.error(res.message || '保存失败');
       }
+    } catch (error) {
+      message.error(getApiErrorMessage(error, '保存失败，请稍后重试'));
     } finally {
       setSaving(false);
     }
@@ -148,6 +166,39 @@ const AnnotationLibraryDetailPage: FC = () => {
     projectUid,
     queryKeyword,
     values,
+  ]);
+
+  const onComplete = useCallback(async () => {
+    if (!projectUid || !libraryUid || !currentRow?.visit_no) {
+      return;
+    }
+    setCompleting(true);
+    try {
+      const res = await annotationApi.completeLibraryRow({
+        project_uid: projectUid,
+        library_uid: libraryUid,
+        row_id: String(currentRow.visit_no),
+      });
+      if (res.code === 200) {
+        message.success(res.message || '当前记录已完成标注');
+        fetchPage(pageNum, queryKeyword);
+      } else {
+        message.error(res.message || '完成标注失败');
+      }
+    } catch (error) {
+      message.error(getApiErrorMessage(error, '完成标注失败，请稍后重试'));
+    } finally {
+      setCompleting(false);
+    }
+  }, [
+    annotationApi,
+    currentRow?.visit_no,
+    fetchPage,
+    libraryUid,
+    message,
+    pageNum,
+    projectUid,
+    queryKeyword,
   ]);
 
   const onExport = useCallback(async () => {
@@ -168,8 +219,11 @@ const AnnotationLibraryDetailPage: FC = () => {
       URL.revokeObjectURL(url);
       a.remove();
       message.success({ key: loadingKey, content: '导出成功' });
-    } catch {
-      message.error({ key: loadingKey, content: '导出失败' });
+    } catch (error) {
+      message.error({
+        key: loadingKey,
+        content: getApiErrorMessage(error, '导出失败'),
+      });
     }
   }, [annotationApi, detail, libraryUid, message, projectUid]);
 
@@ -179,16 +233,20 @@ const AnnotationLibraryDetailPage: FC = () => {
       message.warning('普通用户不允许删除数据集');
       return;
     }
-    const res = await annotationApi.deleteLibrary({
-      project_uid: projectUid,
-      library_uid: libraryUid,
-    });
-    if (res.code === 200) {
-      message.success('删除成功');
-      nav(`/annotation/project/detail/${projectUid}`);
-      return;
+    try {
+      const res = await annotationApi.deleteLibrary({
+        project_uid: projectUid,
+        library_uid: libraryUid,
+      });
+      if (res.code === 200) {
+        message.success('删除成功');
+        nav(`/annotation/project/detail/${projectUid}`);
+        return;
+      }
+      message.error(res.message || '删除失败');
+    } catch (error) {
+      message.error(getApiErrorMessage(error, '删除失败，请稍后重试'));
     }
-    message.error(res.message || '删除失败');
   }, [annotationApi, isAdmin, libraryUid, message, nav, projectUid]);
 
   const onRefresh = useCallback(async () => {
@@ -206,6 +264,8 @@ const AnnotationLibraryDetailPage: FC = () => {
       } else {
         message.error(res.message || '更新失败');
       }
+    } catch (error) {
+      message.error(getApiErrorMessage(error, '更新失败，请稍后重试'));
     } finally {
       setRefreshing(false);
     }
@@ -287,9 +347,14 @@ const AnnotationLibraryDetailPage: FC = () => {
         className="mt-[16px]"
         title="数据编辑（每页 1 条）"
         extra={
-          <Button type="primary" loading={saving} onClick={onSave}>
-            保存当前记录
-          </Button>
+          <div className="flex items-center gap-[8px]">
+            <Button type="primary" loading={saving} onClick={onSave}>
+              保存当前记录
+            </Button>
+            <Button loading={completing} onClick={onComplete}>
+              完成当前记录标注
+            </Button>
+          </div>
         }
       >
         <div className="flex items-center justify-between gap-[12px] mb-[16px]">

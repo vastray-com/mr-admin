@@ -34,6 +34,15 @@ type EditLibraryForm = {
   description?: string;
 };
 
+const getApiErrorMessage = (error: unknown, fallback: string): string => {
+  const err = error as {
+    response?: { data?: { message?: string } };
+    message?: string;
+  };
+  const msg = err.response?.data?.message || err.message;
+  return typeof msg === 'string' && msg.trim() ? msg : fallback;
+};
+
 const AnnotationProjectDetailPage: FC = () => {
   const { uid } = useParams<{ uid: string }>();
   const nav = useNavigate();
@@ -54,6 +63,8 @@ const AnnotationProjectDetailPage: FC = () => {
       } else {
         message.error(res.message || '获取详情失败');
       }
+    } catch (error) {
+      message.error(getApiErrorMessage(error, '获取详情失败，请稍后重试'));
     } finally {
       setLoading(false);
     }
@@ -77,12 +88,16 @@ const AnnotationProjectDetailPage: FC = () => {
       title: '确认删除项目',
       content: `确认删除项目「${detail.name}」吗？`,
       onOk: async () => {
-        const res = await annotationApi.deleteProject(detail.uid);
-        if (res.code === 200) {
-          message.success('删除成功');
-          nav('/annotation/project/list');
-        } else {
-          message.error(res.message || '删除失败');
+        try {
+          const res = await annotationApi.deleteProject(detail.uid);
+          if (res.code === 200) {
+            message.success('删除成功');
+            nav('/annotation/project/list');
+          } else {
+            message.error(res.message || '删除失败');
+          }
+        } catch (error) {
+          message.error(getApiErrorMessage(error, '删除失败，请稍后重试'));
         }
       },
     });
@@ -96,11 +111,19 @@ const AnnotationProjectDetailPage: FC = () => {
   const [importForm] = Form.useForm<LibraryForm>();
 
   const loadDatasetOptions = useCallback(async () => {
-    const res = await annotationApi.getImportableDatasets();
-    if (res.code === 200) {
-      setImportOptions(res.data);
+    try {
+      const res = await annotationApi.getImportableDatasets();
+      if (res.code === 200) {
+        setImportOptions(res.data);
+      } else {
+        message.error(res.message || '获取可导入数据集失败');
+      }
+    } catch (error) {
+      message.error(
+        getApiErrorMessage(error, '获取可导入数据集失败，请稍后重试'),
+      );
     }
-  }, [annotationApi]);
+  }, [annotationApi, message]);
 
   const openImport = useCallback(async () => {
     importForm.resetFields();
@@ -126,6 +149,8 @@ const AnnotationProjectDetailPage: FC = () => {
         } else {
           message.error(res.message || '导入失败');
         }
+      } catch (error) {
+        message.error(getApiErrorMessage(error, '导入失败，请稍后重试'));
       } finally {
         setImportSaving(false);
       }
@@ -170,6 +195,8 @@ const AnnotationProjectDetailPage: FC = () => {
         } else {
           message.error(res.message || '更新失败');
         }
+      } catch (error) {
+        message.error(getApiErrorMessage(error, '更新失败，请稍后重试'));
       } finally {
         setEditSaving(false);
       }
@@ -188,15 +215,19 @@ const AnnotationProjectDetailPage: FC = () => {
         content: `确认删除「${lib.name}」吗？`,
         onOk: async () => {
           if (!uid) return;
-          const res = await annotationApi.deleteLibrary({
-            project_uid: uid,
-            library_uid: lib.uid,
-          });
-          if (res.code === 200) {
-            message.success('删除成功');
-            fetchDetail();
-          } else {
-            message.error(res.message || '删除失败');
+          try {
+            const res = await annotationApi.deleteLibrary({
+              project_uid: uid,
+              library_uid: lib.uid,
+            });
+            if (res.code === 200) {
+              message.success('删除成功');
+              fetchDetail();
+            } else {
+              message.error(res.message || '删除失败');
+            }
+          } catch (error) {
+            message.error(getApiErrorMessage(error, '删除失败，请稍后重试'));
           }
         },
       });
@@ -223,8 +254,11 @@ const AnnotationProjectDetailPage: FC = () => {
         URL.revokeObjectURL(url);
         a.remove();
         message.success({ key: loadingKey, content: '导出成功' });
-      } catch {
-        message.error({ key: loadingKey, content: '导出失败' });
+      } catch (error) {
+        message.error({
+          key: loadingKey,
+          content: getApiErrorMessage(error, '导出失败'),
+        });
       }
     },
     [annotationApi, message, uid],
@@ -245,6 +279,8 @@ const AnnotationProjectDetailPage: FC = () => {
         } else {
           message.error(res.message || '更新失败');
         }
+      } catch (error) {
+        message.error(getApiErrorMessage(error, '更新失败，请稍后重试'));
       } finally {
         setRefreshingMap((prev) => ({ ...prev, [lib.uid]: false }));
       }

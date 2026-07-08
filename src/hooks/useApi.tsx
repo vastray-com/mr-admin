@@ -397,6 +397,10 @@ export const useApi = () => {
         service.post('/annotation/library/save_row', params) as Promise<
           APIRes<string>
         >,
+      completeLibraryRow: (params: Annotation.CompleteLibraryRowParams) =>
+        service.post('/annotation/library/complete_row', params) as Promise<
+          APIRes<string>
+        >,
       exportLibrary: (params: { project_uid: string; library_uid: string }) =>
         noInterceptorsService.get('/annotation/library/export', {
           params,

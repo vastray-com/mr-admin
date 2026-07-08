@@ -105,4 +105,10 @@ export declare namespace Annotation {
     row_id: string;
     values: Record<string, any>;
   };
+
+  type CompleteLibraryRowParams = {
+    project_uid: string;
+    library_uid: string;
+    row_id: string;
+  };
 }
