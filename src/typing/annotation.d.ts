@@ -1,3 +1,5 @@
+import type { DatasetType } from '@/typing/enum/dataset';
+
 export declare namespace Annotation {
   type Project = {
     uid: string;
@@ -23,6 +25,8 @@ export declare namespace Annotation {
     description?: string;
     project_uid: string;
     source_dataset_uid: string;
+    source_dataset_type?: DatasetType;
+    source_unique_key?: string;
     doris_table_name: string;
     row_count: number;
     table_schema: ColumnSchema[];
@@ -60,6 +64,11 @@ export declare namespace Annotation {
   };
 
   type DeleteLibraryParams = {
+    project_uid: string;
+    library_uid: string;
+  };
+
+  type RefreshLibraryParams = {
     project_uid: string;
     library_uid: string;
   };

@@ -370,6 +370,10 @@ export const useApi = () => {
         service.post('/annotation/library/import', params) as Promise<
           APIRes<string>
         >,
+      refreshLibrary: (params: Annotation.RefreshLibraryParams) =>
+        service.post('/annotation/library/refresh', params) as Promise<
+          APIRes<number>
+        >,
       updateLibrary: (params: Annotation.UpdateLibraryParams) =>
         service.post('/annotation/library/update', params) as Promise<
           APIRes<string>

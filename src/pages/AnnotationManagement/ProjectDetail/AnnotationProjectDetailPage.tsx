@@ -10,6 +10,7 @@ import {
   Modal,
   Select,
   Spin,
+  Tag,
   Typography,
 } from 'antd';
 import dayjs from 'dayjs';
@@ -18,7 +19,8 @@ import { useNavigate, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { useUserStore } from '@/store/useUserStore';
-import { UserRole } from '@/typing/enum';
+import { ENUM_VARS, UserRole } from '@/typing/enum';
+import { DatasetType } from '@/typing/enum/dataset';
 import type { Annotation } from '@/typing/annotation';
 
 type LibraryForm = {
@@ -134,6 +136,9 @@ const AnnotationProjectDetailPage: FC = () => {
   const [editingLibrary, setEditingLibrary] = useState<Annotation.Library>();
   const [editOpen, setEditOpen] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
+  const [refreshingMap, setRefreshingMap] = useState<Record<string, boolean>>(
+    {},
+  );
   const [editForm] = Form.useForm<EditLibraryForm>();
   const openEditLibrary = useCallback(
     (lib: Annotation.Library) => {
@@ -225,6 +230,28 @@ const AnnotationProjectDetailPage: FC = () => {
     [annotationApi, message, uid],
   );
 
+  const onRefreshLibrary = useCallback(
+    async (lib: Annotation.Library) => {
+      if (!uid) return;
+      setRefreshingMap((prev) => ({ ...prev, [lib.uid]: true }));
+      try {
+        const res = await annotationApi.refreshLibrary({
+          project_uid: uid,
+          library_uid: lib.uid,
+        });
+        if (res.code === 200) {
+          message.success(`更新成功，本次新增 ${res.data} 条`);
+          fetchDetail();
+        } else {
+          message.error(res.message || '更新失败');
+        }
+      } finally {
+        setRefreshingMap((prev) => ({ ...prev, [lib.uid]: false }));
+      }
+    },
+    [annotationApi, fetchDetail, message, uid],
+  );
+
   const projectInfo = useMemo(() => {
     if (!detail) return null;
     return [
@@ -286,57 +313,76 @@ const AnnotationProjectDetailPage: FC = () => {
           <Empty description="暂无专病库，请先导入数据集" />
         ) : (
           <Flex wrap="wrap" gap="16px">
-            {detail.libraries.map((lib) => (
-              <Card
-                key={lib.uid}
-                className="min-w-[320px] w-[calc((100%_-_16px_-_16px)_/_3)]"
-                actions={[
-                  <Button
-                    key="detail"
-                    type="link"
-                    onClick={() =>
-                      nav(`/annotation/library/detail/${detail.uid}/${lib.uid}`)
-                    }
-                  >
-                    打开标注
-                  </Button>,
-                  <Button
-                    key="edit"
-                    type="link"
-                    onClick={() => openEditLibrary(lib)}
-                  >
-                    编辑
-                  </Button>,
-                  <Button
-                    key="export"
-                    type="link"
-                    onClick={() => onExportLibrary(lib)}
-                  >
-                    导出 CSV
-                  </Button>,
-                  <Button
-                    key="delete"
-                    type="link"
-                    danger
-                    disabled={!isAdmin}
-                    onClick={() => onDeleteLibrary(lib)}
-                  >
-                    删除
-                  </Button>,
-                ]}
-              >
-                <Typography.Title level={5} className="!mb-[8px]">
-                  {lib.name}
-                </Typography.Title>
-                <p className="text-fg-tertiary min-h-[44px]">
-                  {lib.description || '暂无描述'}
-                </p>
-                <p className="text-fg-tertiary mt-[8px]">
-                  数据条数：
-                  <span className="text-fg-primary">{lib.row_count}</span>
-                </p>
-              </Card>
-            ))}
+            {detail.libraries.map((lib) => {
+              const isSubscribe =
+                lib.source_dataset_type === DatasetType.Subscribe;
+              const actions = [
+                <Button
+                  key="detail"
+                  type="link"
+                  onClick={() =>
+                    nav(`/annotation/library/detail/${detail.uid}/${lib.uid}`)
+                  }
+                >
+                  打开标注
+                </Button>,
+                <Button
+                  key="edit"
+                  type="link"
+                  onClick={() => openEditLibrary(lib)}
+                >
+                  编辑
+                </Button>,
+                <Button
+                  key="export"
+                  type="link"
+                  onClick={() => onExportLibrary(lib)}
+                >
+                  导出 CSV
+                </Button>,
+                <Button
+                  key="refresh"
+                  type="link"
+                  disabled={!isSubscribe}
+                  loading={refreshingMap[lib.uid]}
+                  onClick={() => onRefreshLibrary(lib)}
+                >
+                  更新专病库
+                </Button>,
+                <Button
+                  key="delete"
+                  type="link"
+                  danger
+                  disabled={!isAdmin}
+                  onClick={() => onDeleteLibrary(lib)}
+                >
+                  删除
+                </Button>,
+              ];
+              return (
+                <Card
+                  key={lib.uid}
+                  className="min-w-[320px] w-[calc((100%_-_16px_-_16px)_/_3)]"
+                  actions={actions}
+                >
+                  <Typography.Title level={5} className="!mb-[8px]">
+                    {lib.name}
+                  </Typography.Title>
+                  <Tag color={isSubscribe ? 'blue' : 'default'}>
+                    {lib.source_dataset_type
+                      ? ENUM_VARS.DATASET.TYPE_MAP[lib.source_dataset_type]
+                      : '未知类型'}
+                  </Tag>
+                  <p className="text-fg-tertiary min-h-[44px]">
+                    {lib.description || '暂无描述'}
+                  </p>
+                  <p className="text-fg-tertiary mt-[8px]">
+                    数据条数：
+                    <span className="text-fg-primary">{lib.row_count}</span>
+                  </p>
+                </Card>
+              );
+            })}
           </Flex>
         )}
       </Card>

@@ -14,7 +14,8 @@ import { useNavigate, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { useUserStore } from '@/store/useUserStore';
-import { UserRole } from '@/typing/enum';
+import { ENUM_VARS, UserRole } from '@/typing/enum';
+import { DatasetType } from '@/typing/enum/dataset';
 import type { Annotation } from '@/typing/annotation';
 
 type RowItem = {
@@ -46,6 +47,7 @@ const AnnotationLibraryDetailPage: FC = () => {
   );
   const [values, setValues] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchDetail = useCallback(async () => {
     if (!projectUid || !libraryUid) return;
@@ -110,7 +112,7 @@ const AnnotationLibraryDetailPage: FC = () => {
   }, [currentRow, detail, values]);
 
   const onSave = useCallback(async () => {
-    if (!projectUid || !libraryUid || !currentRow?._annotation_row_id) {
+    if (!projectUid || !libraryUid || !currentRow?.visit_no) {
       return;
     }
     setSaving(true);
@@ -123,7 +125,7 @@ const AnnotationLibraryDetailPage: FC = () => {
       const res = await annotationApi.saveLibraryRow({
         project_uid: projectUid,
         library_uid: libraryUid,
-        row_id: String(currentRow._annotation_row_id),
+        row_id: String(currentRow.visit_no),
         values: payloadValues,
       });
       if (res.code === 200) {
@@ -189,6 +191,35 @@ const AnnotationLibraryDetailPage: FC = () => {
     message.error(res.message || '删除失败');
   }, [annotationApi, isAdmin, libraryUid, message, nav, projectUid]);
 
+  const onRefresh = useCallback(async () => {
+    if (!projectUid || !libraryUid) return;
+    setRefreshing(true);
+    try {
+      const res = await annotationApi.refreshLibrary({
+        project_uid: projectUid,
+        library_uid: libraryUid,
+      });
+      if (res.code === 200) {
+        message.success(`更新成功，本次新增 ${res.data} 条`);
+        fetchDetail();
+        fetchPage(pageNum, queryKeyword);
+      } else {
+        message.error(res.message || '更新失败');
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  }, [
+    annotationApi,
+    fetchDetail,
+    fetchPage,
+    libraryUid,
+    message,
+    pageNum,
+    projectUid,
+    queryKeyword,
+  ]);
+
   if (!projectUid || !libraryUid) {
     return <div className="p-[20px]">缺少路由参数</div>;
   }
@@ -208,18 +239,13 @@ const AnnotationLibraryDetailPage: FC = () => {
       action={
         <div className="flex items-center gap-[8px]">
           <Button onClick={onExport}>导出 CSV</Button>
+          {detail.library.source_dataset_type === DatasetType.Subscribe && (
+            <Button loading={refreshing} onClick={onRefresh}>
+              更新专病库
+            </Button>
+          )}
           <Button danger disabled={!isAdmin} onClick={onDeleteLibrary}>
             删除数据集
-          </Button>
-          <Button
-            onClick={() => {
-              setQueryKeyword(keyword.trim());
-            }}
-          >
-            搜索
-          </Button>
-          <Button type="primary" loading={saving} onClick={onSave}>
-            保存当前记录
           </Button>
         </div>
       }
@@ -231,6 +257,13 @@ const AnnotationLibraryDetailPage: FC = () => {
           column={4}
           items={[
             { key: 'name', label: '名称', children: detail.library.name },
+            {
+              key: 'type',
+              label: '类型',
+              children: detail.library.source_dataset_type
+                ? ENUM_VARS.DATASET.TYPE_MAP[detail.library.source_dataset_type]
+                : '-',
+            },
             {
               key: 'desc',
               label: '描述',
@@ -250,7 +283,15 @@ const AnnotationLibraryDetailPage: FC = () => {
         />
       </Card>
 
-      <Card className="mt-[16px]" title="数据编辑（每页 1 条）">
+      <Card
+        className="mt-[16px]"
+        title="数据编辑（每页 1 条）"
+        extra={
+          <Button type="primary" loading={saving} onClick={onSave}>
+            保存当前记录
+          </Button>
+        }
+      >
         <div className="flex items-center justify-between gap-[12px] mb-[16px]">
           <Input.Search
             className="max-w-[420px]"
@@ -277,7 +318,7 @@ const AnnotationLibraryDetailPage: FC = () => {
         ) : (
           <>
             <p className="text-fg-tertiary mb-[12px]">
-              当前行 ID：{String(currentRow._annotation_row_id)}
+              当前病案号：{String(currentRow.visit_no)}
             </p>
             <Table<RowItem>
               rowKey="key"
