@@ -11,9 +11,9 @@ import { DatasetFilterForm } from '@/pages/DatasetManagement/components/DatasetF
 import { WarehouseDataTable } from '@/pages/DatasetManagement/components/WarehouseDataTable';
 import { datasetFilterFE2DB } from '@/pages/DatasetManagement/helper';
 import { ENUM_VARS } from '@/typing/enum';
+import { DatasetSourceType } from '@/typing/enum/dataset';
 import type { AxiosError } from 'axios';
 import type { Dataset } from '@/typing/dataset';
-import type { DatasetSourceType } from '@/typing/enum/dataset';
 
 const aiGenPlaceholder = `你可以说帮我查询 2026 年入院的有吸烟史的肺癌患者...`;
 
@@ -56,10 +56,10 @@ const DefaultPage: FC<Props> = ({
             <Input
               className="text-[16px] bg-[#fff8] h-full"
               style={{
-                '--ant-input-active-border-color': '#c621e5',
-                '--ant-input-hover-border-color': '#c621e599',
-                '--ant-input-hover-bg': '#ffffffaa',
-                '--ant-input-active-bg': '#ffffffee',
+                '--ant-input-active-border-color': '#C621E5',
+                '--ant-input-hover-border-color': '#C621E599',
+                '--ant-input-hover-bg': '#FFFFFFAA',
+                '--ant-input-active-bg': '#FFFFFFEE',
               }}
               value={value}
               onChange={(v) => onChange(v.target.value)}
@@ -247,6 +247,9 @@ const WarehouseDataPreviewPage = () => {
               }}
               autoComplete="off"
               requiredMark={false}
+              initialValues={{
+                source_type: DatasetSourceType.Inpatient,
+              }}
             >
               <Form.Item<Dataset.GetDataParams>
                 label="数据源类型"
