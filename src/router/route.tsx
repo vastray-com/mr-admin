@@ -13,7 +13,7 @@ import { _initHighlighter } from '@/utils/highlighter';
 import { ls } from '@/utils/ls';
 import { service } from '@/utils/service';
 import type { LoaderFunction } from 'react-router-dom';
-import type { PushRule } from '@/typing/pushRule';
+// import type { PushRule } from '@/typing/pushRule';
 import type { StructuredRuleset } from '@/typing/structuredRuleset';
 import type { Warehouse } from '@/typing/warehose';
 
@@ -43,7 +43,7 @@ const initApp = async () => {
     service.get('/encode_table/list', { params: paginationParams }),
     service.get('/structured_ruleset/list', { params: paginationParams }),
     service.get('/structured_ruleset/get_preset_fields'),
-    service.get('/admin/push_rule/list', { params: paginationParams }),
+    // service.get('/admin/push_rule/list', { params: paginationParams }),
     service.get('/warehouse/get_source_schema'),
     service.get('/warehouse/get_resource_types'),
   ]);
@@ -51,14 +51,14 @@ const initApp = async () => {
     encodeRes,
     structRuleRes,
     presetFieldsRes,
-    pushRuleRes,
+    // pushRuleRes,
     sourceSchemaRes,
     resourceTypeRes,
   ] = res as unknown as [
     APIRes<PaginationData<EncodeTable.Item>>,
     APIRes<PaginationData<StructuredRuleset.Item>>,
     APIRes<StructuredRuleset.PresetFields>,
-    APIRes<PaginationData<PushRule.Item>>,
+    // APIRes<PaginationData<PushRule.Item>>,
     APIRes<Warehouse.SourceSchemas>,
     APIRes<Warehouse.ResourceTypeOptions>,
   ];
@@ -91,13 +91,13 @@ const initApp = async () => {
   }
 
   // 初始化推送规则列表
-  if (pushRuleRes.code === 200) {
-    // console.log('结构化规则列表初始化成功', res.data.data);
-    useCacheStore.getState().setPushRuleList(pushRuleRes.data.data);
-  } else {
-    console.error('推送规则列表初始化失败', pushRuleRes);
-    throw new Error('推送规则列表初始化失败');
-  }
+  // if (pushRuleRes.code === 200) {
+  //   // console.log('结构化规则列表初始化成功', res.data.data);
+  //   useCacheStore.getState().setPushRuleList(pushRuleRes.data.data);
+  // } else {
+  //   console.error('推送规则列表初始化失败', pushRuleRes);
+  //   throw new Error('推送规则列表初始化失败');
+  // }
 
   // 初始化数据源表/字段列表
   if (sourceSchemaRes.code === 200) {
