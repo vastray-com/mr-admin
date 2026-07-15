@@ -12,6 +12,7 @@ import { useApi } from '@/hooks/useApi';
 import { DatasetFilterForm } from '@/pages/DatasetManagement/components/DatasetFilterForm';
 import { datasetFilterFE2DB } from '@/pages/DatasetManagement/helper';
 import { ENUM_VARS } from '@/typing/enum';
+import { DatasetSourceType } from '@/typing/enum/dataset';
 import type { Dataset } from '@/typing/dataset';
 
 type Props = {
@@ -73,6 +74,9 @@ export const CreateDatasetModal: FC<Props> = ({
         }}
         autoComplete="off"
         labelCol={{ span: 4 }}
+        initialValues={{
+          source_type: DatasetSourceType.Inpatient,
+        }}
       >
         <Form.Item<Dataset.InputCreateParams>
           label="数据集类型"

@@ -76,6 +76,46 @@ const privateBaseRoutes: BaseRoute = [
     ],
   },
   {
+    key: '/annotation',
+    element: <Outlet />,
+    label: '数据标注',
+    addToMenu: true,
+    roles: [UserRole.Admin, UserRole.User],
+    loader: ({ request }) => {
+      const url = new URL(request.url);
+      if (url.pathname === '/annotation') {
+        return redirect('/annotation/project/list');
+      }
+      return null;
+    },
+    icon: <i className="i-icon-park-outline:edit-name" />,
+    children: [
+      {
+        key: '/annotation/project/list',
+        element: <LazyComponents.AnnotationProjectList />,
+        label: '标注项目',
+        addToMenu: true,
+        roles: [UserRole.Admin, UserRole.User],
+      },
+      {
+        key: '/annotation/project/detail/:uid',
+        selectedKeys: ['/annotation/project/list'],
+        element: <LazyComponents.AnnotationProjectDetail />,
+        label: '项目详情',
+        addToMenu: false,
+        roles: [UserRole.Admin, UserRole.User],
+      },
+      {
+        key: '/annotation/library/detail/:projectUid/:libraryUid',
+        selectedKeys: ['/annotation/project/list'],
+        element: <LazyComponents.AnnotationLibraryDetail />,
+        label: '专病库详情',
+        addToMenu: false,
+        roles: [UserRole.Admin, UserRole.User],
+      },
+    ],
+  },
+  {
     key: '/rule_management',
     element: <Outlet />,
     label: '结构化规则',

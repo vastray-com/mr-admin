@@ -58,6 +58,26 @@ const WarehouseDataPreview = lazy(
   () => import('@/pages/DatasetManagement/Warehouse/WarehouseDataPreview'),
 );
 
+// 数据标注
+const AnnotationProjectList = lazy(
+  () =>
+    import(
+      '@/pages/AnnotationManagement/ProjectList/AnnotationProjectListPage'
+    ),
+);
+const AnnotationProjectDetail = lazy(
+  () =>
+    import(
+      '@/pages/AnnotationManagement/ProjectDetail/AnnotationProjectDetailPage'
+    ),
+);
+const AnnotationLibraryDetail = lazy(
+  () =>
+    import(
+      '@/pages/AnnotationManagement/LibraryDetail/AnnotationLibraryDetailPage'
+    ),
+);
+
 // 下载管理
 const MyDownloadTask = lazy(
   () =>
@@ -103,6 +123,9 @@ export default {
   DatasetList,
   DatasetDetail,
   WarehouseDataPreview,
+  AnnotationProjectList,
+  AnnotationProjectDetail,
+  AnnotationLibraryDetail,
   MyDownloadTask,
   DownloadTaskList,
   DownloadTemplateList,
