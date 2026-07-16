@@ -745,6 +745,10 @@ const AnnotationLibraryDetailPage: FC = () => {
     queryKeyword,
   ]);
 
+  const onBackToProjectDetail = useCallback(() => {
+    nav(`/annotation/project/detail/${projectUid}`);
+  }, [nav, projectUid]);
+
   if (!projectUid || !libraryUid) {
     return <div className="p-[20px]">缺少路由参数</div>;
   }
@@ -760,7 +764,20 @@ const AnnotationLibraryDetailPage: FC = () => {
 
   return (
     <ContentLayout
-      title={`专病库标注 - ${detail.library.name}`}
+      title={
+        <div className="flex items-center gap-x-[16px]">
+          <Button
+            className="p-0 m-0"
+            type="link"
+            onClick={onBackToProjectDetail}
+          >
+            <p className="flex items-center">
+              <i className="i-icon-park-outline:left text-[20px]" />
+              <span>返回项目详情</span>
+            </p>
+          </Button>
+        </div>
+      }
       action={
         <div className="flex items-center gap-[8px]">
           <Button onClick={onExport}>导出 CSV</Button>{' '}
@@ -989,7 +1006,7 @@ const AnnotationLibraryDetailPage: FC = () => {
                                                 删除
                                               </Button>
                                             </div>
-                                          ))}
+                                          ))}{' '}
                                           <Button
                                             onClick={() =>
                                               updateChildValue(
@@ -1070,7 +1087,7 @@ const AnnotationLibraryDetailPage: FC = () => {
                                       删除
                                     </Button>
                                   </div>
-                                ))}
+                                ))}{' '}
                                 <Button
                                   onClick={() =>
                                     updateFieldValue(field.column_name, [
