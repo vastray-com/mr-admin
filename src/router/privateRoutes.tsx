@@ -358,12 +358,6 @@ export const privateRoutes = () => {
 };
 
 // menu 列表
-const allFirstLevelKeys = () => {
-  const role = useUserStore.getState().user?.role;
-  return privateBaseRoutes
-    .filter((r) => r.addToMenu && (role ? r.roles.includes(role) : true))
-    .map((r) => r.key);
-};
 const menuPathMap: Record<
   string,
   { openKeys: string[]; selectedKeys: string[] }
@@ -395,7 +389,7 @@ export const menuItems = () =>
         item.children.forEach((child) => {
           menuPathMap[child.key] = {
             // 二级菜单展开对应一级菜单
-            openKeys: allFirstLevelKeys(),
+            openKeys: [cur.key],
             selectedKeys: !child.addToMenu
               ? child.selectedKeys
                 ? child.selectedKeys
@@ -406,7 +400,7 @@ export const menuItems = () =>
       } else {
         menuPathMap[cur.key] = {
           // 一级菜单
-          openKeys: allFirstLevelKeys(),
+          openKeys: [],
           selectedKeys: [cur.key],
         };
       }

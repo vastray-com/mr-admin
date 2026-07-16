@@ -1,6 +1,6 @@
 import { Avatar, Dropdown, Layout, Menu } from 'antd';
 import { AnimatePresence, motion } from 'motion/react';
-import { type FC, useCallback, useState } from 'react';
+import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useOutlet } from 'react-router';
 import { ChangePwdModal } from '@/components/Modal/ChangePwdModal';
 import { getMenuStatus, menuItems } from '@/router/privateRoutes';
@@ -12,8 +12,10 @@ export const PageLayout: FC = () => {
   const nav = useNavigate();
   const { pathname } = useLocation();
   const currentOutlet = useOutlet();
+  const menuStatus = useMemo(() => getMenuStatus(pathname), [pathname]);
 
   const [user, reset] = useUserStore((s) => [s.user, s.reset]);
+  const [openKeys, setOpenKeys] = useState<string[]>(menuStatus.openKeys);
 
   const [showChangePwdModal, setShowChangePwdModal] = useState(false);
 
@@ -23,6 +25,13 @@ export const PageLayout: FC = () => {
     ls.user.clear();
     setTimeout(() => nav(DEFAULT_PUBLIC_PATH), 200);
   }, [nav, reset]);
+
+  useEffect(() => {
+    if (!menuStatus.openKeys || menuStatus.openKeys.length < 1) return;
+    setOpenKeys((prev) =>
+      Array.from(new Set([...prev, ...menuStatus.openKeys])),
+    );
+  }, [menuStatus.openKeys]);
 
   return (
     <>
@@ -89,8 +98,9 @@ export const PageLayout: FC = () => {
           <Layout.Sider width={200} className="glass-bg h-full p-0">
             <Menu
               mode="inline"
-              selectedKeys={getMenuStatus(pathname).selectedKeys}
-              openKeys={getMenuStatus(pathname).openKeys}
+              selectedKeys={menuStatus.selectedKeys}
+              openKeys={openKeys}
+              onOpenChange={(keys) => setOpenKeys(keys)}
               onClick={(e) => {
                 // console.log(e);
                 nav(e.key);
