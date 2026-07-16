@@ -901,10 +901,6 @@ const AnnotationLibraryDetailPage: FC = () => {
     refreshTabTotals,
   ]);
 
-  const onBackToProjectDetail = useCallback(() => {
-    nav(`/annotation/project/detail/${projectUid}`);
-  }, [nav, projectUid]);
-
   if (!projectUid || !libraryUid) {
     return <div className="p-[20px]">缺少路由参数</div>;
   }
