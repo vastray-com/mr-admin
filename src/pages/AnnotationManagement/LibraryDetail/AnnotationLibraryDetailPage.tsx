@@ -13,7 +13,7 @@ import {
 } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { useCacheStore } from '@/store/useCacheStore';
@@ -920,20 +920,17 @@ const AnnotationLibraryDetailPage: FC = () => {
 
   return (
     <ContentLayout
-      title={
-        <div className="flex items-center gap-x-[16px]">
-          <Button
-            className="p-0 m-0"
-            type="link"
-            onClick={onBackToProjectDetail}
-          >
-            <p className="flex items-center">
-              <i className="i-icon-park-outline:left text-[20px]" />
-              <span>返回项目详情</span>
-            </p>
-          </Button>
-        </div>
-      }
+      title="数据标注"
+      breadcrumb={[
+        {
+          title: (
+            <Link to={`/annotation/project/detail/${projectUid}`}>
+              项目详情
+            </Link>
+          ),
+        },
+        { title: '数据标注' },
+      ]}
       action={
         <div className="flex items-center gap-[8px]">
           <Button onClick={onExport}>导出 CSV</Button>{' '}
@@ -993,7 +990,47 @@ const AnnotationLibraryDetailPage: FC = () => {
           ]}
           className="mb-[12px]"
         />
-        <div className="flex items-center justify-end gap-[8px] mb-[12px]">
+        <div className="flex items-center justify-end gap-[8px] mb-[20px]">
+          <div className="flex items-center justify-between gap-[12px]">
+            <div className="flex items-center gap-[8px]">
+              <Button
+                type="text"
+                size="small"
+                onClick={() => goToPage(pageNum - 1)}
+                disabled={loading || pageNum <= 1 || total < 1}
+              >
+                <i className="i-icon-park-outline:left text-[20px]" />
+              </Button>
+              <Input
+                size="small"
+                className="w-[56px] text-center"
+                value={pageInput}
+                onChange={(e) =>
+                  setPageInput(e.target.value.replace(/\D/g, ''))
+                }
+                onPressEnter={submitPageInput}
+                onBlur={submitPageInput}
+              />
+              <span>/ {total}</span>
+              <Button
+                type="text"
+                size="small"
+                onClick={() => goToPage(pageNum + 1)}
+                disabled={loading || total < 1 || pageNum >= total}
+              >
+                <i className="i-icon-park-outline:right text-[20px]" />
+              </Button>
+            </div>
+          </div>
+          <Input.Search
+            className="max-w-[420px] ml-auto"
+            placeholder="按所有值模糊搜索"
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            onSearch={() => {
+              setQueryKeyword(keyword.trim());
+            }}
+          />
           <Button type="primary" loading={saving} onClick={onSave}>
             保存当前记录
           </Button>{' '}
@@ -1003,50 +1040,12 @@ const AnnotationLibraryDetailPage: FC = () => {
             </Button>
           )}
         </div>
-        <div className="flex items-center justify-between gap-[12px] mb-[16px]">
-          <Input.Search
-            className="max-w-[420px]"
-            placeholder="按所有值模糊搜索"
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            onSearch={() => {
-              setQueryKeyword(keyword.trim());
-            }}
-          />
-          <div className="flex items-center gap-[8px]">
-            <Button
-              type="text"
-              size="small"
-              onClick={() => goToPage(pageNum - 1)}
-              disabled={loading || pageNum <= 1 || total < 1}
-            >
-              <i className="i-icon-park-outline:left text-[20px]" />
-            </Button>
-            <Input
-              size="small"
-              className="w-[56px] text-center"
-              value={pageInput}
-              onChange={(e) => setPageInput(e.target.value.replace(/\D/g, ''))}
-              onPressEnter={submitPageInput}
-              onBlur={submitPageInput}
-            />
-            <span>/ {total}</span>
-            <Button
-              type="text"
-              size="small"
-              onClick={() => goToPage(pageNum + 1)}
-              disabled={loading || total < 1 || pageNum >= total}
-            >
-              <i className="i-icon-park-outline:right text-[20px]" />
-            </Button>
-          </div>
-        </div>
 
         {!currentRow ? (
           <Empty description="当前条件无数据" />
         ) : (
           <div className="max-h-[64vh] overflow-y-auto pr-[4px]">
-            <div className="grid grid-cols-[minmax(0,1fr)_minmax(420px,46%)] gap-[12px] items-start">
+            <div className="grid grid-cols-[minmax(0,1fr)_minmax(460px,56%)] gap-[12px] items-start">
               <Card
                 size="small"
                 title={`原始病历（病案号：${String(currentRow.visit_no)}）`}
@@ -1067,7 +1066,7 @@ const AnnotationLibraryDetailPage: FC = () => {
                       }))}
                       onChange={(val) => setSelectedOriginalType(String(val))}
                     />
-                    <div className="max-h-[56vh] overflow-y-auto pr-[8px]">
+                    <div className="max-h-[calc(64vh_-_56px_-_24px_-_62px_-_32px)] overflow-y-auto pr-[8px]">
                       {selectedOriginalRecord && (
                         <Descriptions
                           key={selectedOriginalRecord.name}
@@ -1097,7 +1096,7 @@ const AnnotationLibraryDetailPage: FC = () => {
                 className="sticky top-0"
                 title={`标注编辑（病案号：${String(currentRow.visit_no)}）`}
               >
-                <div className="max-h-[56vh] overflow-y-auto pr-[8px]">
+                <div className="max-h-[calc(64vh_-_56px_-_24px_-_50px)] overflow-y-auto pr-[8px]">
                   {formFields.length < 1 ? (
                     <Empty description="暂无可编辑字段" />
                   ) : (
