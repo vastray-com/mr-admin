@@ -1,10 +1,5 @@
 import { lazy } from 'react';
-import {
-  createBrowserRouter,
-  Outlet,
-  type RouteObject,
-  redirect,
-} from 'react-router';
+import { createBrowserRouter, Outlet, redirect } from 'react-router';
 import { FullLoading } from '@/components/FullLoading';
 import { PageLayout } from '@/components/PageLayout';
 import { DEFAULT_PRIVATE_PATH, privateRoutes } from '@/router/privateRoutes';
@@ -20,14 +15,6 @@ import type { Warehouse } from '@/typing/warehose';
 const LoginPageLazy = lazy(() => import('@/pages/Login/LoginPage'));
 
 export const DEFAULT_PUBLIC_PATH = '/login';
-
-// 公开的路由
-const publicRoutes = (): RouteObject[] => [
-  {
-    path: DEFAULT_PUBLIC_PATH,
-    element: <LoginPageLazy />,
-  },
-];
 
 // 鉴权 Loader
 let isInitialized = false;
@@ -164,8 +151,13 @@ export const routes = () =>
         },
         {
           element: <Outlet />,
-          children: publicRoutes(),
           loader: publicLoader,
+          children: [
+            {
+              path: DEFAULT_PUBLIC_PATH,
+              element: <LoginPageLazy />,
+            },
+          ],
         },
         {
           element: <PageLayout />,

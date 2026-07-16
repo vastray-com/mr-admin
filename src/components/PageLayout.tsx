@@ -21,7 +21,7 @@ export const PageLayout: FC = () => {
     reset();
     ls.token.clear();
     ls.user.clear();
-    nav(DEFAULT_PUBLIC_PATH);
+    setTimeout(() => nav(DEFAULT_PUBLIC_PATH), 200);
   }, [nav, reset]);
 
   return (
