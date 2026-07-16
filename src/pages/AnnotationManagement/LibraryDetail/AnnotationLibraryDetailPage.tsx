@@ -8,6 +8,7 @@ import {
   Pagination,
   Spin,
   Table,
+  Tabs,
 } from 'antd';
 import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
@@ -51,6 +52,9 @@ const AnnotationLibraryDetailPage: FC = () => {
   const [total, setTotal] = useState(0);
   const [keyword, setKeyword] = useState('');
   const [queryKeyword, setQueryKeyword] = useState('');
+  const [annotationStatus, setAnnotationStatus] = useState<
+    'pending' | 'completed'
+  >('pending');
   const [currentRow, setCurrentRow] = useState<Record<string, any> | null>(
     null,
   );
@@ -87,6 +91,7 @@ const AnnotationLibraryDetailPage: FC = () => {
           page_num: targetPage,
           page_size: 1,
           keyword: q || undefined,
+          annotation_status: annotationStatus,
         });
         if (res.code === 200) {
           setTotal(res.data.total);
@@ -103,7 +108,7 @@ const AnnotationLibraryDetailPage: FC = () => {
         setLoading(false);
       }
     },
-    [annotationApi, libraryUid, message, projectUid],
+    [annotationApi, annotationStatus, libraryUid, message, projectUid],
   );
 
   useEffect(() => {
@@ -112,7 +117,7 @@ const AnnotationLibraryDetailPage: FC = () => {
 
   useEffect(() => {
     fetchPage(1, queryKeyword);
-  }, [fetchPage, queryKeyword]);
+  }, [annotationStatus, fetchPage, queryKeyword]);
 
   const rows = useMemo<RowItem[]>(() => {
     const schema = detail?.library.table_schema ?? [];
@@ -127,12 +132,11 @@ const AnnotationLibraryDetailPage: FC = () => {
     }));
   }, [currentRow, detail, values]);
 
-  const onSave = useCallback(async () => {
-    if (!projectUid || !libraryUid || !currentRow?.visit_no) {
-      return;
-    }
-    setSaving(true);
-    try {
+  const saveCurrentRow = useCallback(
+    async (showSuccessMessage: boolean) => {
+      if (!projectUid || !libraryUid || !currentRow?.visit_no) {
+        return false;
+      }
       const schema = detail?.library.table_schema ?? [];
       const payloadValues = schema.reduce<Record<string, any>>((acc, col) => {
         acc[col.name] = values[col.name] ?? '';
@@ -145,10 +149,34 @@ const AnnotationLibraryDetailPage: FC = () => {
         values: payloadValues,
       });
       if (res.code === 200) {
-        message.success('保存成功');
+        if (showSuccessMessage) {
+          message.success(res.message || '保存成功');
+        }
+        return true;
+      }
+      message.error(res.message || '保存失败');
+      return false;
+    },
+    [
+      annotationApi,
+      currentRow?.visit_no,
+      detail?.library.table_schema,
+      libraryUid,
+      message,
+      projectUid,
+      values,
+    ],
+  );
+
+  const onSave = useCallback(async () => {
+    if (!projectUid || !libraryUid || !currentRow?.visit_no) {
+      return;
+    }
+    setSaving(true);
+    try {
+      const ok = await saveCurrentRow(true);
+      if (ok) {
         fetchPage(pageNum, queryKeyword);
-      } else {
-        message.error(res.message || '保存失败');
       }
     } catch (error) {
       message.error(getApiErrorMessage(error, '保存失败，请稍后重试'));
@@ -156,16 +184,14 @@ const AnnotationLibraryDetailPage: FC = () => {
       setSaving(false);
     }
   }, [
-    annotationApi,
     currentRow,
-    detail,
     fetchPage,
     libraryUid,
     message,
     pageNum,
     projectUid,
     queryKeyword,
-    values,
+    saveCurrentRow,
   ]);
 
   const onComplete = useCallback(async () => {
@@ -174,6 +200,10 @@ const AnnotationLibraryDetailPage: FC = () => {
     }
     setCompleting(true);
     try {
+      const saveOk = await saveCurrentRow(false);
+      if (!saveOk) {
+        return;
+      }
       const res = await annotationApi.completeLibraryRow({
         project_uid: projectUid,
         library_uid: libraryUid,
@@ -199,6 +229,7 @@ const AnnotationLibraryDetailPage: FC = () => {
     pageNum,
     projectUid,
     queryKeyword,
+    saveCurrentRow,
   ]);
 
   const onExport = useCallback(async () => {
@@ -343,20 +374,28 @@ const AnnotationLibraryDetailPage: FC = () => {
         />
       </Card>
 
-      <Card
-        className="mt-[16px]"
-        title="数据编辑（每页 1 条）"
-        extra={
-          <div className="flex items-center gap-[8px]">
-            <Button type="primary" loading={saving} onClick={onSave}>
-              保存当前记录
-            </Button>
+      <Card className="mt-[16px]" title="数据编辑（每页 1 条）">
+        <Tabs
+          activeKey={annotationStatus}
+          onChange={(key) =>
+            setAnnotationStatus(key as 'pending' | 'completed')
+          }
+          items={[
+            { key: 'pending', label: '未标注数据' },
+            { key: 'completed', label: '已标注数据' },
+          ]}
+          className="mb-[12px]"
+        />
+        <div className="flex items-center justify-end gap-[8px] mb-[12px]">
+          <Button type="primary" loading={saving} onClick={onSave}>
+            保存当前记录
+          </Button>
+          {annotationStatus === 'pending' && (
             <Button loading={completing} onClick={onComplete}>
               完成当前记录标注
             </Button>
-          </div>
-        }
-      >
+          )}
+        </div>
         <div className="flex items-center justify-between gap-[12px] mb-[16px]">
           <Input.Search
             className="max-w-[420px]"

@@ -90,6 +90,7 @@ export declare namespace Annotation {
     page_num: number;
     page_size?: number;
     keyword?: string;
+    annotation_status?: 'pending' | 'completed';
   };
 
   type LibraryDataPage = {
