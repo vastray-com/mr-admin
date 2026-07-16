@@ -50,6 +50,7 @@ const AnnotationLibraryDetailPage: FC = () => {
   const [pageInput, setPageInput] = useState('1');
   const [keyword, setKeyword] = useState('');
   const [queryKeyword, setQueryKeyword] = useState('');
+  const [tabTotals, setTabTotals] = useState({ pending: 0, completed: 0 });
   const [annotationStatus, setAnnotationStatus] = useState<
     'pending' | 'completed'
   >('pending');
@@ -113,6 +114,39 @@ const AnnotationLibraryDetailPage: FC = () => {
     [annotationApi, annotationStatus, libraryUid, message, projectUid],
   );
 
+  const refreshTabTotals = useCallback(
+    async (q: string) => {
+      if (!projectUid || !libraryUid) return;
+      try {
+        const [pendingRes, completedRes] = await Promise.all([
+          annotationApi.getLibraryDataPage({
+            project_uid: projectUid,
+            library_uid: libraryUid,
+            page_num: 1,
+            page_size: 1,
+            keyword: q || undefined,
+            annotation_status: 'pending',
+          }),
+          annotationApi.getLibraryDataPage({
+            project_uid: projectUid,
+            library_uid: libraryUid,
+            page_num: 1,
+            page_size: 1,
+            keyword: q || undefined,
+            annotation_status: 'completed',
+          }),
+        ]);
+        setTabTotals({
+          pending: pendingRes.code === 200 ? pendingRes.data.total : 0,
+          completed: completedRes.code === 200 ? completedRes.data.total : 0,
+        });
+      } catch {
+        setTabTotals({ pending: 0, completed: 0 });
+      }
+    },
+    [annotationApi, libraryUid, projectUid],
+  );
+
   useEffect(() => {
     fetchDetail();
   }, [fetchDetail]);
@@ -120,6 +154,10 @@ const AnnotationLibraryDetailPage: FC = () => {
   useEffect(() => {
     fetchPage(1, queryKeyword);
   }, [annotationStatus, fetchPage, queryKeyword]);
+
+  useEffect(() => {
+    refreshTabTotals(queryKeyword);
+  }, [queryKeyword, refreshTabTotals]);
 
   useEffect(() => {
     const visitNo = currentRow?.visit_no ? String(currentRow.visit_no) : '';
@@ -170,10 +208,102 @@ const AnnotationLibraryDetailPage: FC = () => {
   }, [goToPage, pageInput, pageNum]);
 
   const encodeTableList = useCacheStore((s) => s.encodeTableList);
-  const formFields = useMemo(
-    () => detail?.form_fields ?? [],
-    [detail?.form_fields],
-  );
+  const formFields = useMemo(() => {
+    const source = detail?.form_fields ?? [];
+    const mergeOptions = (
+      options: Annotation.FieldOption[],
+    ): Annotation.FieldOption[] => {
+      const optionMap = new Map<string, Annotation.FieldOption>();
+      for (const opt of options) {
+        const key = String(opt.value ?? '').trim();
+        if (!key) continue;
+        if (!optionMap.has(key)) {
+          optionMap.set(key, { value: key, label: opt.label });
+        }
+      }
+      return Array.from(optionMap.values());
+    };
+
+    const mergeChildren = (
+      children: Annotation.FormChildField[],
+    ): Annotation.FormChildField[] => {
+      const childMap = new Map<string, Annotation.FormChildField>();
+      for (const child of children) {
+        const childKey = String(child.key ?? '')
+          .trim()
+          .toLowerCase();
+        if (!childKey) continue;
+        const existing = childMap.get(childKey);
+        if (!existing) {
+          childMap.set(childKey, {
+            ...child,
+            key: childKey,
+            mapping_options: mergeOptions(child.mapping_options ?? []),
+          });
+          continue;
+        }
+        existing.label = existing.label || child.label;
+        existing.value_type =
+          existing.value_type === 'text'
+            ? child.value_type
+            : existing.value_type;
+        existing.is_array = existing.is_array || child.is_array;
+        existing.mapping_type = existing.mapping_type || child.mapping_type;
+        existing.mapping_content =
+          existing.mapping_content || child.mapping_content;
+        existing.mapping_options = mergeOptions([
+          ...(existing.mapping_options ?? []),
+          ...(child.mapping_options ?? []),
+        ]);
+      }
+      return Array.from(childMap.values());
+    };
+
+    const fieldMap = new Map<string, Annotation.FormField>();
+    for (const field of source) {
+      const fieldKey = String(field.key ?? field.column_name ?? '')
+        .trim()
+        .toLowerCase();
+      if (!fieldKey) continue;
+      const normalized: Annotation.FormField = {
+        ...field,
+        key: fieldKey,
+        children: mergeChildren(field.children ?? []),
+        mapping_options: mergeOptions(field.mapping_options ?? []),
+      };
+      const existing = fieldMap.get(fieldKey);
+      if (!existing) {
+        fieldMap.set(fieldKey, normalized);
+        continue;
+      }
+      existing.label = existing.label || normalized.label;
+      existing.column_name = existing.column_name || normalized.column_name;
+      existing.is_array = existing.is_array || normalized.is_array;
+      existing.mapping_type = existing.mapping_type || normalized.mapping_type;
+      existing.mapping_content =
+        existing.mapping_content || normalized.mapping_content;
+      existing.mapping_options = mergeOptions([
+        ...(existing.mapping_options ?? []),
+        ...(normalized.mapping_options ?? []),
+      ]);
+      if (existing.children.length < 1 && normalized.children.length > 0) {
+        existing.children = normalized.children;
+        existing.value_type = 'object';
+      } else if (
+        existing.children.length > 0 &&
+        normalized.children.length > 0
+      ) {
+        existing.children = mergeChildren([
+          ...existing.children,
+          ...normalized.children,
+        ]);
+        existing.value_type = 'object';
+      } else if (existing.value_type === 'text') {
+        existing.value_type = normalized.value_type;
+      }
+    }
+    return Array.from(fieldMap.values());
+  }, [detail?.form_fields]);
 
   const getMappingOptions = useCallback(
     (
@@ -668,6 +798,7 @@ const AnnotationLibraryDetailPage: FC = () => {
       if (res.code === 200) {
         message.success(res.message || '当前记录已完成标注');
         fetchPage(pageNum, queryKeyword);
+        refreshTabTotals(queryKeyword);
       } else {
         message.error(res.message || '完成标注失败');
       }
@@ -685,6 +816,7 @@ const AnnotationLibraryDetailPage: FC = () => {
     pageNum,
     projectUid,
     queryKeyword,
+    refreshTabTotals,
     saveCurrentRow,
   ]);
 
@@ -748,6 +880,7 @@ const AnnotationLibraryDetailPage: FC = () => {
         message.success(`更新成功，本次新增 ${res.data} 条`);
         fetchDetail();
         fetchPage(pageNum, queryKeyword);
+        refreshTabTotals(queryKeyword);
       } else {
         message.error(res.message || '更新失败');
       }
@@ -765,6 +898,7 @@ const AnnotationLibraryDetailPage: FC = () => {
     pageNum,
     projectUid,
     queryKeyword,
+    refreshTabTotals,
   ]);
 
   const onBackToProjectDetail = useCallback(() => {
@@ -854,8 +988,8 @@ const AnnotationLibraryDetailPage: FC = () => {
             setAnnotationStatus(key as 'pending' | 'completed')
           }
           items={[
-            { key: 'pending', label: '未标注数据' },
-            { key: 'completed', label: '已标注数据' },
+            { key: 'pending', label: `未标注数据（${tabTotals.pending}）` },
+            { key: 'completed', label: `已标注数据（${tabTotals.completed}）` },
           ]}
           className="mb-[12px]"
         />
