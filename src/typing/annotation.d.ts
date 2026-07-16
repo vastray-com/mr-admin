@@ -82,6 +82,34 @@ export declare namespace Annotation {
     project_uid: string;
     project_name: string;
     library: Library;
+    form_fields: FormField[];
+  };
+
+  type FieldOption = {
+    value: string;
+    label: string;
+  };
+
+  type FormChildField = {
+    key: string;
+    label: string;
+    value_type: 'text' | 'date' | 'number' | 'bool';
+    is_array: boolean;
+    mapping_type?: 'enum_mapping' | 'encode_table';
+    mapping_content?: string;
+    mapping_options: FieldOption[];
+  };
+
+  type FormField = {
+    key: string;
+    label: string;
+    column_name: string;
+    value_type: 'text' | 'date' | 'number' | 'bool' | 'object';
+    is_array: boolean;
+    mapping_type?: 'enum_mapping' | 'encode_table';
+    mapping_content?: string;
+    mapping_options: FieldOption[];
+    children: FormChildField[];
   };
 
   type LibraryDataPageParams = {

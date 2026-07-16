@@ -2,29 +2,26 @@ import {
   App,
   Button,
   Card,
+  DatePicker,
   Descriptions,
   Empty,
   Input,
+  InputNumber,
+  Select,
   Spin,
-  Table,
   Tabs,
 } from 'antd';
+import dayjs, { type Dayjs } from 'dayjs';
 import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
+import { useCacheStore } from '@/store/useCacheStore';
 import { useUserStore } from '@/store/useUserStore';
 import { ENUM_VARS, UserRole } from '@/typing/enum';
 import { DatasetType } from '@/typing/enum/dataset';
 import type { Annotation } from '@/typing/annotation';
 import type { Warehouse } from '@/typing/warehose';
-
-type RowItem = {
-  key: string;
-  name: string;
-  data_type: string;
-  value: string;
-};
 
 const getApiErrorMessage = (error: unknown, fallback: string): string => {
   const err = error as {
@@ -171,18 +168,111 @@ const AnnotationLibraryDetailPage: FC = () => {
     goToPage(parsed);
   }, [goToPage, pageInput, pageNum]);
 
-  const rows = useMemo<RowItem[]>(() => {
-    const schema = detail?.library.table_schema ?? [];
-    if (!currentRow) {
+  const encodeTableList = useCacheStore((s) => s.encodeTableList);
+  const formFields = useMemo(
+    () => detail?.form_fields ?? [],
+    [detail?.form_fields],
+  );
+
+  const getMappingOptions = useCallback(
+    (
+      field: Annotation.FormField | Annotation.FormChildField,
+    ): Array<{ value: string; label: string }> => {
+      if (field.mapping_options?.length) {
+        return field.mapping_options.map((x) => ({
+          value: x.value,
+          label: x.label,
+        }));
+      }
+      if (field.mapping_type === 'encode_table' && field.mapping_content) {
+        const encode = (encodeTableList as Array<any>).find(
+          (x) => x.uid === field.mapping_content,
+        );
+        const content = Array.isArray(encode?.content) ? encode.content : [];
+        return content.map((x: any) => ({
+          value: String(x.code ?? ''),
+          label: `${String(x.code ?? '')} ${String(x.desc ?? '')}`.trim(),
+        }));
+      }
       return [];
-    }
-    return schema.map((col) => ({
-      key: col.name,
-      name: col.label || col.name,
-      data_type: col.data_type,
-      value: String(values[col.name] ?? ''),
-    }));
-  }, [currentRow, detail, values]);
+    },
+    [encodeTableList],
+  );
+
+  const isEmptyValue = useCallback((value: any): boolean => {
+    if (value === undefined || value === null) return true;
+    if (typeof value === 'string') return value.trim() === '';
+    if (Array.isArray(value)) return value.length === 0;
+    if (typeof value === 'object') return Object.keys(value).length === 0;
+    return false;
+  }, []);
+
+  const normalizeScalarValue = useCallback(
+    (
+      value: any,
+      valueType:
+        | Annotation.FormField['value_type']
+        | Annotation.FormChildField['value_type'],
+    ) => {
+      if (isEmptyValue(value)) return undefined;
+      if (valueType === 'date') {
+        if (dayjs.isDayjs(value)) return (value as Dayjs).format('YYYY-MM-DD');
+        return String(value);
+      }
+      if (valueType === 'number') {
+        const num = typeof value === 'number' ? value : Number(value);
+        return Number.isNaN(num) ? value : num;
+      }
+      if (valueType === 'bool') {
+        if (typeof value === 'boolean') return value;
+        if (value === 'true') return true;
+        if (value === 'false') return false;
+      }
+      return value;
+    },
+    [isEmptyValue],
+  );
+
+  const validateScalar = useCallback(
+    (
+      value: any,
+      field: Annotation.FormField | Annotation.FormChildField,
+      fieldLabel: string,
+    ): string | null => {
+      if (isEmptyValue(value)) {
+        return null;
+      }
+      if (field.mapping_type && getMappingOptions(field).length > 0) {
+        const options = new Set(
+          getMappingOptions(field).map(
+            (opt: { value: string; label: string }) => String(opt.value),
+          ),
+        );
+        if (!options.has(String(value))) {
+          return `${fieldLabel} 取值不在映射选项中`;
+        }
+      }
+      if (field.value_type === 'date' && !dayjs(String(value)).isValid()) {
+        return `${fieldLabel} 不是合法日期`;
+      }
+      if (field.value_type === 'number' && Number.isNaN(Number(value))) {
+        return `${fieldLabel} 不是合法数字`;
+      }
+      if (
+        field.value_type === 'bool' &&
+        !(
+          value === true ||
+          value === false ||
+          value === 'true' ||
+          value === 'false'
+        )
+      ) {
+        return `${fieldLabel} 不是合法布尔值`;
+      }
+      return null;
+    },
+    [getMappingOptions, isEmptyValue],
+  );
 
   const displayOriginalDetail = useMemo(() => {
     if (!originalDetail || originalDetail.length === 0) {
@@ -271,16 +361,205 @@ const AnnotationLibraryDetailPage: FC = () => {
     [renderRecord],
   );
 
+  const updateFieldValue = useCallback((columnName: string, nextValue: any) => {
+    setValues((prev) => ({
+      ...prev,
+      [columnName]: nextValue,
+    }));
+  }, []);
+
+  const updateChildValue = useCallback(
+    (columnName: string, childKey: string, nextValue: any) => {
+      setValues((prev) => {
+        const current =
+          prev[columnName] &&
+          typeof prev[columnName] === 'object' &&
+          !Array.isArray(prev[columnName])
+            ? prev[columnName]
+            : {};
+        return {
+          ...prev,
+          [columnName]: {
+            ...current,
+            [childKey]: nextValue,
+          },
+        };
+      });
+    },
+    [],
+  );
+
+  const renderScalarInput = useCallback(
+    (
+      field: Annotation.FormField | Annotation.FormChildField,
+      value: any,
+      onChange: (next: any) => void,
+    ) => {
+      const options = getMappingOptions(field);
+      if (options.length > 0) {
+        return (
+          <Select
+            allowClear
+            className="w-full"
+            value={isEmptyValue(value) ? undefined : value}
+            options={options}
+            onChange={(v) => onChange(v)}
+          />
+        );
+      }
+      if (field.value_type === 'date') {
+        const dateValue =
+          value && dayjs(String(value)).isValid() ? dayjs(String(value)) : null;
+        return (
+          <DatePicker
+            allowClear
+            className="w-full"
+            value={dateValue}
+            onChange={(v) => onChange(v ?? undefined)}
+          />
+        );
+      }
+      if (field.value_type === 'number') {
+        return (
+          <InputNumber
+            className="w-full"
+            value={isEmptyValue(value) ? undefined : Number(value)}
+            onChange={(v) => onChange(v ?? undefined)}
+          />
+        );
+      }
+      if (field.value_type === 'bool') {
+        return (
+          <Select
+            allowClear
+            className="w-full"
+            value={value === true || value === false ? value : undefined}
+            options={[
+              { label: '是', value: true },
+              { label: '否', value: false },
+            ]}
+            onChange={(v) => onChange(v)}
+          />
+        );
+      }
+      return (
+        <Input value={value ?? ''} onChange={(e) => onChange(e.target.value)} />
+      );
+    },
+    [getMappingOptions, isEmptyValue],
+  );
+
   const saveCurrentRow = useCallback(
     async (showSuccessMessage: boolean) => {
       if (!projectUid || !libraryUid || !currentRow?.visit_no) {
         return false;
       }
+      for (const field of formFields) {
+        const fieldValue = values[field.column_name];
+        if (field.children.length > 0) {
+          const obj =
+            fieldValue &&
+            typeof fieldValue === 'object' &&
+            !Array.isArray(fieldValue)
+              ? fieldValue
+              : {};
+          for (const child of field.children) {
+            const childValue = obj[child.key];
+            if (child.is_array) {
+              if (!isEmptyValue(childValue) && !Array.isArray(childValue)) {
+                message.error(`${child.label} 必须为数组`);
+                return false;
+              }
+              for (const item of childValue || []) {
+                const err = validateScalar(item, child, child.label);
+                if (err) {
+                  message.error(err);
+                  return false;
+                }
+              }
+            } else {
+              const err = validateScalar(childValue, child, child.label);
+              if (err) {
+                message.error(err);
+                return false;
+              }
+            }
+          }
+        } else if (field.is_array) {
+          if (!isEmptyValue(fieldValue) && !Array.isArray(fieldValue)) {
+            message.error(`${field.label} 必须为数组`);
+            return false;
+          }
+          for (const item of fieldValue || []) {
+            const err = validateScalar(item, field, field.label);
+            if (err) {
+              message.error(err);
+              return false;
+            }
+          }
+        } else {
+          const err = validateScalar(fieldValue, field, field.label);
+          if (err) {
+            message.error(err);
+            return false;
+          }
+        }
+      }
+
+      const payloadValues: Record<string, any> = {};
       const schema = detail?.library.table_schema ?? [];
-      const payloadValues = schema.reduce<Record<string, any>>((acc, col) => {
-        acc[col.name] = values[col.name] ?? '';
-        return acc;
-      }, {});
+      for (const col of schema) {
+        payloadValues[col.name] = values[col.name] ?? '';
+      }
+      for (const field of formFields) {
+        if (field.children.length > 0) {
+          const raw =
+            values[field.column_name] &&
+            typeof values[field.column_name] === 'object' &&
+            !Array.isArray(values[field.column_name])
+              ? values[field.column_name]
+              : {};
+          const obj: Record<string, any> = {};
+          for (const child of field.children) {
+            const childVal = raw[child.key];
+            if (child.is_array) {
+              const arr = Array.isArray(childVal)
+                ? childVal
+                    .map((x: any) => normalizeScalarValue(x, child.value_type))
+                    .filter((x: any) => !isEmptyValue(x))
+                : [];
+              if (arr.length > 0) {
+                obj[child.key] = arr;
+              }
+            } else {
+              const v = normalizeScalarValue(childVal, child.value_type);
+              if (!isEmptyValue(v)) {
+                obj[child.key] = v;
+              }
+            }
+          }
+          payloadValues[field.column_name] =
+            Object.keys(obj).length > 0 ? obj : '';
+          continue;
+        }
+        if (field.is_array) {
+          const arr = Array.isArray(values[field.column_name])
+            ? values[field.column_name]
+                .map((x: any) => normalizeScalarValue(x, field.value_type))
+                .filter((x: any) => !isEmptyValue(x))
+            : [];
+          payloadValues[field.column_name] = arr.length > 0 ? arr : '';
+          continue;
+        }
+        const normalized = normalizeScalarValue(
+          values[field.column_name],
+          field.value_type,
+        );
+        payloadValues[field.column_name] = isEmptyValue(normalized)
+          ? ''
+          : normalized;
+      }
+
       const res = await annotationApi.saveLibraryRow({
         project_uid: projectUid,
         library_uid: libraryUid,
@@ -300,9 +579,13 @@ const AnnotationLibraryDetailPage: FC = () => {
       annotationApi,
       currentRow?.visit_no,
       detail?.library.table_schema,
+      formFields,
+      isEmptyValue,
       libraryUid,
       message,
+      normalizeScalarValue,
       projectUid,
+      validateScalar,
       values,
     ],
   );
@@ -618,38 +901,185 @@ const AnnotationLibraryDetailPage: FC = () => {
                 className="sticky top-0"
                 title={`标注编辑（病案号：${String(currentRow.visit_no)}）`}
               >
-                <Table<RowItem>
-                  rowKey="key"
-                  loading={loading}
-                  dataSource={rows}
-                  pagination={false}
-                >
-                  <Table.Column<RowItem>
-                    title="名称"
-                    dataIndex="name"
-                    width={220}
-                  />
-                  <Table.Column<RowItem>
-                    title="数据类型"
-                    dataIndex="data_type"
-                    width={120}
-                  />
-                  <Table.Column<RowItem>
-                    title="值"
-                    dataIndex="value"
-                    render={(_, row) => (
-                      <Input
-                        value={String(values[row.key] ?? '')}
-                        onChange={(e) =>
-                          setValues((prev) => ({
-                            ...prev,
-                            [row.key]: e.target.value,
-                          }))
+                <div className="max-h-[56vh] overflow-y-auto pr-[8px]">
+                  {formFields.length < 1 ? (
+                    <Empty description="暂无可编辑字段" />
+                  ) : (
+                    <div className="flex flex-col gap-[10px]">
+                      {formFields.map((field) => {
+                        const fieldValue = values[field.column_name];
+                        if (field.children.length > 0) {
+                          const detailValue =
+                            fieldValue &&
+                            typeof fieldValue === 'object' &&
+                            !Array.isArray(fieldValue)
+                              ? fieldValue
+                              : {};
+                          return (
+                            <Card
+                              key={field.column_name}
+                              size="small"
+                              title={field.label}
+                            >
+                              <div className="flex flex-col gap-[10px]">
+                                {field.children.map((child) => {
+                                  const childValue = detailValue[child.key];
+                                  if (child.is_array) {
+                                    const arr = Array.isArray(childValue)
+                                      ? childValue
+                                      : [];
+                                    return (
+                                      <div key={child.key}>
+                                        <div className="text-fg-secondary mb-[6px]">
+                                          {child.label}
+                                        </div>
+                                        <div className="flex flex-col gap-[6px]">
+                                          {arr.map((item, idx) => (
+                                            <div
+                                              key={`${child.key}-${idx}`}
+                                              className="flex items-center gap-[6px]"
+                                            >
+                                              <div className="flex-1">
+                                                {renderScalarInput(
+                                                  child,
+                                                  item,
+                                                  (next) => {
+                                                    const nextArr = [...arr];
+                                                    nextArr[idx] = next;
+                                                    updateChildValue(
+                                                      field.column_name,
+                                                      child.key,
+                                                      nextArr,
+                                                    );
+                                                  },
+                                                )}
+                                              </div>
+                                              <Button
+                                                danger
+                                                onClick={() =>
+                                                  updateChildValue(
+                                                    field.column_name,
+                                                    child.key,
+                                                    arr.filter(
+                                                      (_, i) => i !== idx,
+                                                    ),
+                                                  )
+                                                }
+                                              >
+                                                删除
+                                              </Button>
+                                            </div>
+                                          ))}
+                                          <Button
+                                            onClick={() =>
+                                              updateChildValue(
+                                                field.column_name,
+                                                child.key,
+                                                [...arr, undefined],
+                                              )
+                                            }
+                                          >
+                                            添加
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+                                  return (
+                                    <div key={child.key}>
+                                      <div className="text-fg-secondary mb-[6px]">
+                                        {child.label}
+                                      </div>
+                                      {renderScalarInput(
+                                        child,
+                                        childValue,
+                                        (next) =>
+                                          updateChildValue(
+                                            field.column_name,
+                                            child.key,
+                                            next,
+                                          ),
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </Card>
+                          );
                         }
-                      />
-                    )}
-                  />
-                </Table>
+
+                        if (field.is_array) {
+                          const arr = Array.isArray(fieldValue)
+                            ? fieldValue
+                            : [];
+                          return (
+                            <Card
+                              key={field.column_name}
+                              size="small"
+                              title={field.label}
+                            >
+                              <div className="flex flex-col gap-[6px]">
+                                {arr.map((item, idx) => (
+                                  <div
+                                    key={`${field.column_name}-${idx}`}
+                                    className="flex items-center gap-[6px]"
+                                  >
+                                    <div className="flex-1">
+                                      {renderScalarInput(
+                                        field,
+                                        item,
+                                        (next) => {
+                                          const nextArr = [...arr];
+                                          nextArr[idx] = next;
+                                          updateFieldValue(
+                                            field.column_name,
+                                            nextArr,
+                                          );
+                                        },
+                                      )}
+                                    </div>
+                                    <Button
+                                      danger
+                                      onClick={() =>
+                                        updateFieldValue(
+                                          field.column_name,
+                                          arr.filter((_, i) => i !== idx),
+                                        )
+                                      }
+                                    >
+                                      删除
+                                    </Button>
+                                  </div>
+                                ))}
+                                <Button
+                                  onClick={() =>
+                                    updateFieldValue(field.column_name, [
+                                      ...arr,
+                                      undefined,
+                                    ])
+                                  }
+                                >
+                                  添加
+                                </Button>
+                              </div>
+                            </Card>
+                          );
+                        }
+
+                        return (
+                          <div key={field.column_name}>
+                            <div className="text-fg-secondary mb-[6px]">
+                              {field.label}
+                            </div>
+                            {renderScalarInput(field, fieldValue, (next) =>
+                              updateFieldValue(field.column_name, next),
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </Card>
             </div>
           </div>
