@@ -59,6 +59,7 @@ const AnnotationLibraryDetailPage: FC = () => {
   const [values, setValues] = useState<Record<string, any>>({});
   const [originalDetail, setOriginalDetail] =
     useState<Warehouse.PatientDetail | null>(null);
+  const [selectedOriginalType, setSelectedOriginalType] = useState('');
   const [originalLoading, setOriginalLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [completing, setCompleting] = useState(false);
@@ -301,6 +302,27 @@ const AnnotationLibraryDetailPage: FC = () => {
       })
       .filter(Boolean) as Warehouse.PatientDetail;
   }, [originalDetail]);
+
+  useEffect(() => {
+    if (displayOriginalDetail.length < 1) {
+      setSelectedOriginalType('');
+      return;
+    }
+    const exists = displayOriginalDetail.some(
+      (x) => x.name === selectedOriginalType,
+    );
+    if (!exists) {
+      setSelectedOriginalType(displayOriginalDetail[0]?.name || '');
+    }
+  }, [displayOriginalDetail, selectedOriginalType]);
+
+  const selectedOriginalRecord = useMemo(
+    () =>
+      displayOriginalDetail.find((x) => x.name === selectedOriginalType) ||
+      displayOriginalDetail[0] ||
+      null,
+    [displayOriginalDetail, selectedOriginalType],
+  );
 
   const renderRecord = useCallback((record: Record<string, string>) => {
     return Object.keys(record).length === 0 ? (
@@ -901,25 +923,36 @@ const AnnotationLibraryDetailPage: FC = () => {
                     <span>原始病历加载中...</span>
                   </div>
                 ) : displayOriginalDetail.length > 0 ? (
-                  <div className="max-h-[56vh] overflow-y-auto pr-[8px]">
-                    {displayOriginalDetail.map((d) => (
-                      <Descriptions
-                        className="mt-[20px] first:mt-0"
-                        key={d.name}
-                        title={d.label}
-                        items={d.columns.map((c) => ({
-                          key: c.value,
-                          label: c.label,
-                          children: renderValue(d.data[0][c.value]),
-                          span: c.data_length > 100 ? 3 : 1,
-                        }))}
-                        column={3}
-                        bordered
-                        layout="vertical"
-                        size="small"
-                      />
-                    ))}
-                  </div>
+                  <>
+                    <Select
+                      className="w-full mb-[12px]"
+                      value={selectedOriginalRecord?.name}
+                      options={displayOriginalDetail.map((d) => ({
+                        value: d.name,
+                        label: d.label,
+                      }))}
+                      onChange={(val) => setSelectedOriginalType(String(val))}
+                    />
+                    <div className="max-h-[56vh] overflow-y-auto pr-[8px]">
+                      {selectedOriginalRecord && (
+                        <Descriptions
+                          key={selectedOriginalRecord.name}
+                          items={selectedOriginalRecord.columns.map((c) => ({
+                            key: c.value,
+                            label: c.label,
+                            children: renderValue(
+                              selectedOriginalRecord.data[0][c.value],
+                            ),
+                            span: c.data_length > 100 ? 3 : 1,
+                          }))}
+                          column={3}
+                          bordered
+                          layout="vertical"
+                          size="small"
+                        />
+                      )}
+                    </div>
+                  </>
                 ) : (
                   <Empty description="暂无原始病历数据" />
                 )}
