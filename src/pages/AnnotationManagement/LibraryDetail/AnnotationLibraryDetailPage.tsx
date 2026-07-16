@@ -5,7 +5,6 @@ import {
   Descriptions,
   Empty,
   Input,
-  Pagination,
   Spin,
   Table,
   Tabs,
@@ -50,6 +49,7 @@ const AnnotationLibraryDetailPage: FC = () => {
   const [detail, setDetail] = useState<Annotation.LibraryDetail | null>(null);
   const [pageNum, setPageNum] = useState(1);
   const [total, setTotal] = useState(0);
+  const [pageInput, setPageInput] = useState('1');
   const [keyword, setKeyword] = useState('');
   const [queryKeyword, setQueryKeyword] = useState('');
   const [annotationStatus, setAnnotationStatus] = useState<
@@ -118,6 +118,28 @@ const AnnotationLibraryDetailPage: FC = () => {
   useEffect(() => {
     fetchPage(1, queryKeyword);
   }, [annotationStatus, fetchPage, queryKeyword]);
+
+  useEffect(() => {
+    setPageInput(String(pageNum));
+  }, [pageNum]);
+
+  const goToPage = useCallback(
+    (targetPage: number) => {
+      const maxPage = total > 0 ? total : 1;
+      const nextPage = Math.min(Math.max(targetPage, 1), maxPage);
+      fetchPage(nextPage, queryKeyword);
+    },
+    [fetchPage, queryKeyword, total],
+  );
+
+  const submitPageInput = useCallback(() => {
+    const parsed = Number.parseInt(pageInput, 10);
+    if (Number.isNaN(parsed)) {
+      setPageInput(String(pageNum));
+      return;
+    }
+    goToPage(parsed);
+  }, [goToPage, pageInput, pageNum]);
 
   const rows = useMemo<RowItem[]>(() => {
     const schema = detail?.library.table_schema ?? [];
@@ -329,12 +351,12 @@ const AnnotationLibraryDetailPage: FC = () => {
       title={`专病库标注 - ${detail.library.name}`}
       action={
         <div className="flex items-center gap-[8px]">
-          <Button onClick={onExport}>导出 CSV</Button>
+          <Button onClick={onExport}>导出 CSV</Button>{' '}
           {detail.library.source_dataset_type === DatasetType.Subscribe && (
             <Button loading={refreshing} onClick={onRefresh}>
               更新专病库
             </Button>
-          )}
+          )}{' '}
           <Button danger disabled={!isAdmin} onClick={onDeleteLibrary}>
             删除数据集
           </Button>
@@ -389,7 +411,7 @@ const AnnotationLibraryDetailPage: FC = () => {
         <div className="flex items-center justify-end gap-[8px] mb-[12px]">
           <Button type="primary" loading={saving} onClick={onSave}>
             保存当前记录
-          </Button>
+          </Button>{' '}
           {annotationStatus === 'pending' && (
             <Button loading={completing} onClick={onComplete}>
               完成当前记录标注
@@ -406,15 +428,33 @@ const AnnotationLibraryDetailPage: FC = () => {
               setQueryKeyword(keyword.trim());
             }}
           />
-          <Pagination
-            current={pageNum}
-            pageSize={1}
-            total={total}
-            showQuickJumper
-            showSizeChanger={false}
-            onChange={(p) => fetchPage(p, queryKeyword)}
-            showTotal={(t) => `共 ${t} 条`}
-          />
+          <div className="flex items-center gap-[8px]">
+            <Button
+              type="text"
+              size="small"
+              onClick={() => goToPage(pageNum - 1)}
+              disabled={loading || pageNum <= 1 || total < 1}
+            >
+              <i className="i-icon-park-outline:left text-[20px]" />
+            </Button>
+            <Input
+              size="small"
+              className="w-[56px] text-center"
+              value={pageInput}
+              onChange={(e) => setPageInput(e.target.value.replace(/\D/g, ''))}
+              onPressEnter={submitPageInput}
+              onBlur={submitPageInput}
+            />
+            <span>/ {total}</span>
+            <Button
+              type="text"
+              size="small"
+              onClick={() => goToPage(pageNum + 1)}
+              disabled={loading || total < 1 || pageNum >= total}
+            >
+              <i className="i-icon-park-outline:right text-[20px]" />
+            </Button>
+          </div>
         </div>
 
         {!currentRow ? (
