@@ -207,6 +207,15 @@ const AnnotationLibraryDetailPage: FC = () => {
     return false;
   }, []);
 
+  const formatFieldTitle = useCallback((cn?: string, en?: string): string => {
+    const cnName = String(cn ?? '').trim();
+    const enName = String(en ?? '').trim();
+    if (cnName && enName && cnName !== enName) {
+      return `${cnName}（${enName}）`;
+    }
+    return cnName || enName;
+  }, []);
+
   const normalizeScalarValue = useCallback(
     (
       value: any,
@@ -455,6 +464,7 @@ const AnnotationLibraryDetailPage: FC = () => {
         return false;
       }
       for (const field of formFields) {
+        const fieldTitle = formatFieldTitle(field.label, field.key);
         const fieldValue = values[field.column_name];
         if (field.children.length > 0) {
           const obj =
@@ -464,21 +474,22 @@ const AnnotationLibraryDetailPage: FC = () => {
               ? fieldValue
               : {};
           for (const child of field.children) {
+            const childTitle = formatFieldTitle(child.label, child.key);
             const childValue = obj[child.key];
             if (child.is_array) {
               if (!isEmptyValue(childValue) && !Array.isArray(childValue)) {
-                message.error(`${child.label} 必须为数组`);
+                message.error(`${childTitle} 必须为数组`);
                 return false;
               }
               for (const item of childValue || []) {
-                const err = validateScalar(item, child, child.label);
+                const err = validateScalar(item, child, childTitle);
                 if (err) {
                   message.error(err);
                   return false;
                 }
               }
             } else {
-              const err = validateScalar(childValue, child, child.label);
+              const err = validateScalar(childValue, child, childTitle);
               if (err) {
                 message.error(err);
                 return false;
@@ -487,18 +498,18 @@ const AnnotationLibraryDetailPage: FC = () => {
           }
         } else if (field.is_array) {
           if (!isEmptyValue(fieldValue) && !Array.isArray(fieldValue)) {
-            message.error(`${field.label} 必须为数组`);
+            message.error(`${fieldTitle} 必须为数组`);
             return false;
           }
           for (const item of fieldValue || []) {
-            const err = validateScalar(item, field, field.label);
+            const err = validateScalar(item, field, fieldTitle);
             if (err) {
               message.error(err);
               return false;
             }
           }
         } else {
-          const err = validateScalar(fieldValue, field, field.label);
+          const err = validateScalar(fieldValue, field, fieldTitle);
           if (err) {
             message.error(err);
             return false;
@@ -585,6 +596,7 @@ const AnnotationLibraryDetailPage: FC = () => {
       message,
       normalizeScalarValue,
       projectUid,
+      formatFieldTitle,
       validateScalar,
       values,
     ],
@@ -907,6 +919,10 @@ const AnnotationLibraryDetailPage: FC = () => {
                   ) : (
                     <div className="flex flex-col gap-[10px]">
                       {formFields.map((field) => {
+                        const fieldTitle = formatFieldTitle(
+                          field.label,
+                          field.key,
+                        );
                         const fieldValue = values[field.column_name];
                         if (field.children.length > 0) {
                           const detailValue =
@@ -919,10 +935,14 @@ const AnnotationLibraryDetailPage: FC = () => {
                             <Card
                               key={field.column_name}
                               size="small"
-                              title={field.label}
+                              title={fieldTitle}
                             >
                               <div className="flex flex-col gap-[10px]">
                                 {field.children.map((child) => {
+                                  const childTitle = formatFieldTitle(
+                                    child.label,
+                                    child.key,
+                                  );
                                   const childValue = detailValue[child.key];
                                   if (child.is_array) {
                                     const arr = Array.isArray(childValue)
@@ -931,7 +951,7 @@ const AnnotationLibraryDetailPage: FC = () => {
                                     return (
                                       <div key={child.key}>
                                         <div className="text-fg-secondary mb-[6px]">
-                                          {child.label}
+                                          {childTitle}
                                         </div>
                                         <div className="flex flex-col gap-[6px]">
                                           {arr.map((item, idx) => (
@@ -988,7 +1008,7 @@ const AnnotationLibraryDetailPage: FC = () => {
                                   return (
                                     <div key={child.key}>
                                       <div className="text-fg-secondary mb-[6px]">
-                                        {child.label}
+                                        {childTitle}
                                       </div>
                                       {renderScalarInput(
                                         child,
@@ -1016,7 +1036,7 @@ const AnnotationLibraryDetailPage: FC = () => {
                             <Card
                               key={field.column_name}
                               size="small"
-                              title={field.label}
+                              title={fieldTitle}
                             >
                               <div className="flex flex-col gap-[6px]">
                                 {arr.map((item, idx) => (
@@ -1069,7 +1089,7 @@ const AnnotationLibraryDetailPage: FC = () => {
                         return (
                           <div key={field.column_name}>
                             <div className="text-fg-secondary mb-[6px]">
-                              {field.label}
+                              {fieldTitle}
                             </div>
                             {renderScalarInput(field, fieldValue, (next) =>
                               updateFieldValue(field.column_name, next),
