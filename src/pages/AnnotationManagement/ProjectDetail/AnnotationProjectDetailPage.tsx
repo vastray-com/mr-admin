@@ -416,6 +416,18 @@ const AnnotationProjectDetailPage: FC = () => {
                     数据条数：
                     <span className="text-fg-primary">{lib.row_count}</span>
                   </p>
+                  <p className="text-fg-tertiary mt-[4px]">
+                    未标注：
+                    <span className="text-fg-primary">
+                      {lib.pending_row_count ?? 0}
+                    </span>
+                  </p>
+                  <p className="text-fg-tertiary mt-[4px]">
+                    已标注：
+                    <span className="text-fg-primary">
+                      {lib.completed_row_count ?? 0}
+                    </span>
+                  </p>
                 </Card>
               );
             })}

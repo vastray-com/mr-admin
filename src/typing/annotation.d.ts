@@ -29,6 +29,8 @@ export declare namespace Annotation {
     source_unique_key?: string;
     doris_table_name: string;
     row_count: number;
+    pending_row_count?: number;
+    completed_row_count?: number;
     table_schema: ColumnSchema[];
     created_at: string;
     updated_at: string;
