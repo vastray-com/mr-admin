@@ -17,6 +17,7 @@ import { useUserStore } from '@/store/useUserStore';
 import { ENUM_VARS, UserRole } from '@/typing/enum';
 import { DatasetType } from '@/typing/enum/dataset';
 import type { Annotation } from '@/typing/annotation';
+import type { Warehouse } from '@/typing/warehose';
 
 type RowItem = {
   key: string;
@@ -35,7 +36,7 @@ const getApiErrorMessage = (error: unknown, fallback: string): string => {
 };
 
 const AnnotationLibraryDetailPage: FC = () => {
-  const { annotationApi } = useApi();
+  const { annotationApi, warehouseApi } = useApi();
   const { message } = App.useApp();
   const nav = useNavigate();
   const user = useUserStore((s) => s.user);
@@ -59,6 +60,9 @@ const AnnotationLibraryDetailPage: FC = () => {
     null,
   );
   const [values, setValues] = useState<Record<string, any>>({});
+  const [originalDetail, setOriginalDetail] =
+    useState<Warehouse.PatientDetail | null>(null);
+  const [originalLoading, setOriginalLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -120,6 +124,32 @@ const AnnotationLibraryDetailPage: FC = () => {
   }, [annotationStatus, fetchPage, queryKeyword]);
 
   useEffect(() => {
+    const visitNo = currentRow?.visit_no ? String(currentRow.visit_no) : '';
+    if (!visitNo) {
+      setOriginalDetail(null);
+      return;
+    }
+    setOriginalLoading(true);
+    warehouseApi
+      .getPatientDetail({ visit_no: visitNo })
+      .then((res) => {
+        if (res.code === 200) {
+          setOriginalDetail(res.data);
+        } else {
+          setOriginalDetail(null);
+          message.error(res.message || '获取原始病历失败');
+        }
+      })
+      .catch((error) => {
+        setOriginalDetail(null);
+        message.error(
+          getApiErrorMessage(error, '获取原始病历失败，请稍后重试'),
+        );
+      })
+      .finally(() => setOriginalLoading(false));
+  }, [currentRow?.visit_no, message, warehouseApi]);
+
+  useEffect(() => {
     setPageInput(String(pageNum));
   }, [pageNum]);
 
@@ -153,6 +183,93 @@ const AnnotationLibraryDetailPage: FC = () => {
       value: String(values[col.name] ?? ''),
     }));
   }, [currentRow, detail, values]);
+
+  const displayOriginalDetail = useMemo(() => {
+    if (!originalDetail || originalDetail.length === 0) {
+      return [];
+    }
+    return originalDetail
+      .map((d) => {
+        const firstRow = d.data?.[0];
+        if (!firstRow) return null;
+        const cols = d.columns.filter(
+          (c) => ![undefined, null, 'NULL'].includes(firstRow[c.value]),
+        );
+        return {
+          ...d,
+          columns: cols,
+        };
+      })
+      .filter(Boolean) as Warehouse.PatientDetail;
+  }, [originalDetail]);
+
+  const renderRecord = useCallback((record: Record<string, string>) => {
+    return Object.keys(record).length === 0 ? (
+      <p>-</p>
+    ) : (
+      <div>
+        {Object.entries(record).map(([k, v]) => (
+          <p
+            className="leading-[20px] mt-[8px] first:mt-0"
+            key={k}
+          >{`${k}: ${v}`}</p>
+        ))}
+      </div>
+    );
+  }, []);
+
+  const renderValue = useCallback(
+    (
+      value:
+        | string
+        | number
+        | Record<string, string>[]
+        | string[]
+        | Record<string, string>,
+    ) => {
+      if (!value) return <p>-</p>;
+      switch (typeof value) {
+        case 'string':
+        case 'number':
+        case 'bigint':
+          return <p>{value}</p>;
+        case 'boolean':
+          return <p>{value ? '是' : '否'}</p>;
+        case 'object':
+          if (Array.isArray(value)) {
+            if (value.length === 0) {
+              return <p>-</p>;
+            } else if (typeof value[0] === 'string') {
+              return (
+                <div>
+                  {(value as string[]).map((v) => (
+                    <p key={v} className="flex mt-[8px] first:mt-0">
+                      <span className="w-[6px] h-[6px] rounded-full bg-blue mr-[8px] shrink-0 grow-0 basis-[6px] mt-[9px]" />
+                      <span className="leading-[24px]">{v}</span>
+                    </p>
+                  ))}
+                </div>
+              );
+            } else {
+              return (value as Record<string, string>[]).map((v) => (
+                <div
+                  key={JSON.stringify(v)}
+                  className="flex mt-[12px] first:mt-0"
+                >
+                  <span className="w-[6px] h-[6px] rounded-full bg-blue mr-[8px] shrink-0 grow-0 basis-[6px] mt-[7px]" />
+                  <div>{renderRecord(v)}</div>
+                </div>
+              ));
+            }
+          } else {
+            return renderRecord(value);
+          }
+        default:
+          return <p>{String(value)}</p>;
+      }
+    },
+    [renderRecord],
+  );
 
   const saveCurrentRow = useCallback(
     async (showSuccessMessage: boolean) => {
@@ -460,43 +577,82 @@ const AnnotationLibraryDetailPage: FC = () => {
         {!currentRow ? (
           <Empty description="当前条件无数据" />
         ) : (
-          <>
-            <p className="text-fg-tertiary mb-[12px]">
-              当前病案号：{String(currentRow.visit_no)}
-            </p>
-            <Table<RowItem>
-              rowKey="key"
-              loading={loading}
-              dataSource={rows}
-              pagination={false}
-            >
-              <Table.Column<RowItem>
-                title="名称"
-                dataIndex="name"
-                width={280}
-              />
-              <Table.Column<RowItem>
-                title="数据类型"
-                dataIndex="data_type"
-                width={160}
-              />
-              <Table.Column<RowItem>
-                title="值"
-                dataIndex="value"
-                render={(_, row) => (
-                  <Input
-                    value={String(values[row.key] ?? '')}
-                    onChange={(e) =>
-                      setValues((prev) => ({
-                        ...prev,
-                        [row.key]: e.target.value,
-                      }))
-                    }
-                  />
+          <div className="max-h-[64vh] overflow-y-auto pr-[4px]">
+            <div className="grid grid-cols-[minmax(0,1fr)_minmax(420px,46%)] gap-[12px] items-start">
+              <Card
+                size="small"
+                title={`原始病历（病案号：${String(currentRow.visit_no)}）`}
+              >
+                {originalLoading ? (
+                  <div className="h-[240px] flex items-center justify-center gap-[8px]">
+                    <Spin />
+                    <span>原始病历加载中...</span>
+                  </div>
+                ) : displayOriginalDetail.length > 0 ? (
+                  <div className="max-h-[56vh] overflow-y-auto pr-[8px]">
+                    {displayOriginalDetail.map((d) => (
+                      <Descriptions
+                        className="mt-[20px] first:mt-0"
+                        key={d.name}
+                        title={d.label}
+                        items={d.columns.map((c) => ({
+                          key: c.value,
+                          label: c.label,
+                          children: renderValue(d.data[0][c.value]),
+                          span: c.data_length > 100 ? 3 : 1,
+                        }))}
+                        column={3}
+                        bordered
+                        layout="vertical"
+                        size="small"
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <Empty description="暂无原始病历数据" />
                 )}
-              />
-            </Table>
-          </>
+              </Card>
+
+              <Card
+                size="small"
+                className="sticky top-0"
+                title={`标注编辑（病案号：${String(currentRow.visit_no)}）`}
+              >
+                <Table<RowItem>
+                  rowKey="key"
+                  loading={loading}
+                  dataSource={rows}
+                  pagination={false}
+                >
+                  <Table.Column<RowItem>
+                    title="名称"
+                    dataIndex="name"
+                    width={220}
+                  />
+                  <Table.Column<RowItem>
+                    title="数据类型"
+                    dataIndex="data_type"
+                    width={120}
+                  />
+                  <Table.Column<RowItem>
+                    title="值"
+                    dataIndex="value"
+                    render={(_, row) => (
+                      <Input
+                        value={String(values[row.key] ?? '')}
+                        onChange={(e) =>
+                          setValues((prev) => ({
+                            ...prev,
+                            [row.key]: e.target.value,
+                          }))
+                        }
+                      />
+                    )}
+                  />
+                </Table>
+              </Card>
+            </div>
+          </div>
         )}
       </Card>
     </ContentLayout>
