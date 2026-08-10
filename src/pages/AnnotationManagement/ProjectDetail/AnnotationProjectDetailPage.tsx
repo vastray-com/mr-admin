@@ -34,6 +34,10 @@ type EditLibraryForm = {
   description?: string;
 };
 
+type AddMembersForm = {
+  member_uids: string[];
+};
+
 const getApiErrorMessage = (error: unknown, fallback: string): string => {
   const err = error as {
     response?: { data?: { message?: string } };
@@ -165,6 +169,87 @@ const AnnotationProjectDetailPage: FC = () => {
     {},
   );
   const [editForm] = Form.useForm<EditLibraryForm>();
+  const [membersForm] = Form.useForm<AddMembersForm>();
+  const [membersOpen, setMembersOpen] = useState(false);
+  const [membersSaving, setMembersSaving] = useState(false);
+  const [memberCandidates, setMemberCandidates] = useState<
+    Annotation.ProjectMemberCandidate[]
+  >([]);
+  const [memberCandidatesLoading, setMemberCandidatesLoading] = useState(false);
+
+  const loadMemberCandidates = useCallback(
+    async (showError = true) => {
+      if (!uid) return;
+      const res = await annotationApi.getProjectMemberCandidates(uid);
+      if (res.code === 200) {
+        setMemberCandidates(res.data || []);
+        return;
+      }
+      setMemberCandidates([]);
+      if (showError) {
+        message.error(res.message || '获取成员列表失败');
+      }
+    },
+    [annotationApi, message, uid],
+  );
+
+  const canManageMembers = useMemo(() => {
+    if (!detail || !user) return false;
+    return isAdmin || detail.creator === user.uid;
+  }, [detail, isAdmin, user]);
+  const isProjectOwner = useMemo(() => {
+    if (!detail || !user) return false;
+    return detail.creator === user.uid;
+  }, [detail, user]);
+
+  const openMembersModal = useCallback(async () => {
+    if (!uid || !detail) return;
+    membersForm.resetFields();
+    setMemberCandidatesLoading(true);
+    try {
+      await loadMemberCandidates(true);
+      membersForm.setFieldsValue({
+        member_uids: (detail.member_uids || []).filter(
+          (x) => x !== detail.creator,
+        ),
+      });
+    } catch (error) {
+      setMemberCandidates([]);
+      message.error(getApiErrorMessage(error, '获取成员列表失败，请稍后重试'));
+    } finally {
+      setMemberCandidatesLoading(false);
+    }
+    setMembersOpen(true);
+  }, [detail, loadMemberCandidates, membersForm, message, uid]);
+
+  const onAddMembers = useCallback(
+    async (values: AddMembersForm) => {
+      if (!uid) return;
+      const member_uids = (values.member_uids || [])
+        .map((x) => x.trim())
+        .filter(Boolean);
+      setMembersSaving(true);
+      try {
+        const res = await annotationApi.addProjectMembers({
+          uid,
+          member_uids,
+        });
+        if (res.code === 200) {
+          message.success('成员更新成功');
+          setMembersOpen(false);
+          fetchDetail();
+        } else {
+          message.error(res.message || '成员更新失败');
+        }
+      } catch (error) {
+        message.error(getApiErrorMessage(error, '成员更新失败，请稍后重试'));
+      } finally {
+        setMembersSaving(false);
+      }
+    },
+    [annotationApi, fetchDetail, message, uid],
+  );
+
   const openEditLibrary = useCallback(
     (lib: Annotation.Library) => {
       setEditingLibrary(lib);
@@ -305,6 +390,20 @@ const AnnotationProjectDetailPage: FC = () => {
           ? dayjs(detail.updated_at).format('YYYY-MM-DD HH:mm:ss')
           : '-',
       },
+      {
+        key: 'members',
+        label: '项目成员',
+        children:
+          detail.member_labels && detail.member_labels.length > 0 ? (
+            <div className="flex flex-wrap gap-[6px]">
+              {detail.member_labels.map((memberLabel, index) => (
+                <Tag key={`${memberLabel}-${index}`}>{memberLabel}</Tag>
+              ))}
+            </div>
+          ) : (
+            '-'
+          ),
+      },
     ];
   }, [detail]);
 
@@ -326,12 +425,17 @@ const AnnotationProjectDetailPage: FC = () => {
       title="数据标注项目详情"
       action={
         <div className="flex gap-[8px]">
+          {canManageMembers && (
+            <Button onClick={openMembersModal}>成员管理</Button>
+          )}{' '}
           <Button onClick={openImport} type="primary">
             导入数据集
-          </Button>
-          <Button danger onClick={onDeleteProject}>
-            删除项目
-          </Button>
+          </Button>{' '}
+          {isProjectOwner && (
+            <Button danger onClick={onDeleteProject}>
+              删除项目
+            </Button>
+          )}
         </div>
       }
     >
@@ -376,24 +480,31 @@ const AnnotationProjectDetailPage: FC = () => {
                 >
                   导出 CSV
                 </Button>,
-                <Button
-                  key="refresh"
-                  type="link"
-                  disabled={!isSubscribe}
-                  loading={refreshingMap[lib.uid]}
-                  onClick={() => onRefreshLibrary(lib)}
-                >
-                  更新专病库
-                </Button>,
-                <Button
-                  key="delete"
-                  type="link"
-                  danger
-                  disabled={!isAdmin}
-                  onClick={() => onDeleteLibrary(lib)}
-                >
-                  删除
-                </Button>,
+                ...(isSubscribe
+                  ? [
+                      <Button
+                        key="refresh"
+                        type="link"
+                        loading={refreshingMap[lib.uid]}
+                        onClick={() => onRefreshLibrary(lib)}
+                      >
+                        更新专病库
+                      </Button>,
+                    ]
+                  : []),
+                ...(user?.uid === detail.creator || isAdmin
+                  ? [
+                      <Button
+                        key="delete"
+                        type="link"
+                        danger
+                        disabled={!isAdmin}
+                        onClick={() => onDeleteLibrary(lib)}
+                      >
+                        删除
+                      </Button>,
+                    ]
+                  : []),
               ];
               return (
                 <Card
@@ -434,6 +545,37 @@ const AnnotationProjectDetailPage: FC = () => {
           </Flex>
         )}
       </Card>
+
+      <Modal
+        centered
+        open={membersOpen}
+        title="成员管理"
+        onCancel={() => setMembersOpen(false)}
+        onOk={membersForm.submit}
+        confirmLoading={membersSaving}
+        destroyOnHidden
+      >
+        <Form<AddMembersForm>
+          form={membersForm}
+          layout="vertical"
+          requiredMark={false}
+          onFinish={onAddMembers}
+        >
+          <Form.Item<AddMembersForm> label="项目成员" name="member_uids">
+            <Select
+              mode="multiple"
+              showSearch
+              loading={memberCandidatesLoading}
+              placeholder="请选择成员（可搜索）"
+              options={memberCandidates.map((x) => ({
+                value: x.uid,
+                label: x.label,
+              }))}
+              optionFilterProp="label"
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
 
       <Modal
         centered

@@ -200,17 +200,26 @@ const AnnotationProjectListPage: FC = () => {
                 >
                   查看详情
                 </Button>,
-                <Button key="edit" type="link" onClick={() => openEdit(item)}>
-                  编辑
-                </Button>,
-                <Button
-                  key="delete"
-                  type="link"
-                  danger
-                  onClick={() => onDelete(item)}
-                >
-                  删除
-                </Button>,
+
+                ...(user?.uid === item.creator || isAdmin
+                  ? [
+                      <Button
+                        key="edit"
+                        type="link"
+                        onClick={() => openEdit(item)}
+                      >
+                        编辑
+                      </Button>,
+                      <Button
+                        key="delete"
+                        type="link"
+                        danger
+                        onClick={() => onDelete(item)}
+                      >
+                        删除
+                      </Button>,
+                    ]
+                  : []),
               ]}
             >
               <Typography.Title level={5} className="!mb-[8px]">

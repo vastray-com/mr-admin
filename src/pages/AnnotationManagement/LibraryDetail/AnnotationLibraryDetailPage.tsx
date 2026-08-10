@@ -935,9 +935,11 @@ const AnnotationLibraryDetailPage: FC = () => {
               更新专病库
             </Button>
           )}{' '}
-          <Button danger disabled={!isAdmin} onClick={onDeleteLibrary}>
-            删除数据集
-          </Button>
+          {isAdmin && (
+            <Button danger disabled={!isAdmin} onClick={onDeleteLibrary}>
+              删除数据集
+            </Button>
+          )}
         </div>
       }
     >

@@ -358,6 +358,14 @@ export const useApi = () => {
         service.post('/annotation/project/update', params) as Promise<
           APIRes<string>
         >,
+      addProjectMembers: (params: Annotation.AddProjectMembersParams) =>
+        service.post('/annotation/project/add_members', params) as Promise<
+          APIRes<string>
+        >,
+      getProjectMemberCandidates: (uid: string) =>
+        service.get('/annotation/project/member_candidates', {
+          params: { uid },
+        }) as Promise<APIRes<Annotation.ProjectMemberCandidate[]>>,
       deleteProject: (uid: string) =>
         service.post('/annotation/project/delete', { uid }) as Promise<
           APIRes<string>

@@ -7,6 +7,8 @@ export declare namespace Annotation {
     description?: string;
     creator: string;
     creator_name?: string;
+    member_uids?: string[];
+    member_labels?: string[];
     libraries: Library[];
     created_at?: string;
     updated_at?: string;
@@ -49,6 +51,16 @@ export declare namespace Annotation {
     uid: string;
     name?: string;
     description?: string;
+  };
+
+  type AddProjectMembersParams = {
+    uid: string;
+    member_uids: string[];
+  };
+
+  type ProjectMemberCandidate = {
+    uid: string;
+    label: string;
   };
 
   type ImportLibraryParams = {
