@@ -67,6 +67,42 @@ const AnnotationLibraryDetailPage: FC = () => {
   const [saving, setSaving] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [isZenMode, setIsZenMode] = useState(false);
+  const setSiderWidth = useCacheStore((s) => s.setSiderWidth);
+  const setLayoutZenMode = useCacheStore((s) => s.setLayoutZenMode);
+
+  useEffect(() => {
+    setLayoutZenMode(isZenMode);
+    setSiderWidth(isZenMode ? 0 : 200);
+    return () => {
+      setLayoutZenMode(false);
+      setSiderWidth(200);
+    };
+  }, [isZenMode, setLayoutZenMode, setSiderWidth]);
+
+  useEffect(() => {
+    if (!isZenMode) {
+      return;
+    }
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isZenMode]);
+
+  useEffect(() => {
+    if (!isZenMode) {
+      return;
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsZenMode(false);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isZenMode]);
 
   const fetchDetail = useCallback(async () => {
     if (!projectUid || !libraryUid) return;
@@ -1059,7 +1095,27 @@ const AnnotationLibraryDetailPage: FC = () => {
         />
       </Card>
 
-      <Card className="mt-[16px]" title="数据编辑（每页 1 条）">
+      <Card
+        className={
+          isZenMode
+            ? 'pos-fixed left-0 top-0 z-[5000] m-0 h-screen w-full rounded-none'
+            : 'mt-[16px]'
+        }
+        styles={
+          isZenMode
+            ? {
+                header: { background: '#EFF0FE' },
+                body: { background: '#EFF0FE' },
+              }
+            : undefined
+        }
+        title="数据编辑（每页 1 条）"
+        extra={
+          <Button size="small" onClick={() => setIsZenMode((v) => !v)}>
+            {isZenMode ? '退出 Zen Mode' : 'Zen Mode'}
+          </Button>
+        }
+      >
         <Tabs
           activeKey={annotationStatus}
           onChange={(key) =>
@@ -1125,7 +1181,13 @@ const AnnotationLibraryDetailPage: FC = () => {
         {!currentRow ? (
           <Empty description="当前条件无数据" />
         ) : (
-          <div className="max-h-[64vh] overflow-y-auto pr-[4px]">
+          <div
+            className={
+              isZenMode
+                ? 'max-h-[calc(100vh_-_250px)] overflow-y-auto pr-[4px]'
+                : 'max-h-[64vh] overflow-y-auto pr-[4px]'
+            }
+          >
             <div className="grid grid-cols-[minmax(0,1fr)_minmax(460px,56%)] gap-[12px] items-start">
               <Card
                 size="small"
@@ -1150,7 +1212,13 @@ const AnnotationLibraryDetailPage: FC = () => {
                         setSelectedOriginalDataId(String(dataId ?? ''));
                       }}
                     />
-                    <div className="max-h-[calc(64vh_-_56px_-_24px_-_62px_-_32px)] overflow-y-auto pr-[8px]">
+                    <div
+                      className={
+                        isZenMode
+                          ? 'max-h-[calc(100vh_-_360px)] overflow-y-auto pr-[8px]'
+                          : 'max-h-[calc(64vh_-_56px_-_24px_-_62px_-_32px)] overflow-y-auto pr-[8px]'
+                      }
+                    >
                       {selectedOriginalRecord && (
                         <Descriptions
                           key={selectedOriginalRecord.name}
@@ -1180,7 +1248,13 @@ const AnnotationLibraryDetailPage: FC = () => {
                 className="sticky top-0"
                 title={`标注编辑（病案号：${String(currentRow.visit_no)}）`}
               >
-                <div className="max-h-[calc(64vh_-_56px_-_24px_-_50px)] overflow-y-auto pr-[8px]">
+                <div
+                  className={
+                    isZenMode
+                      ? 'max-h-[calc(100vh_-_360px)] overflow-y-auto pr-[8px]'
+                      : 'max-h-[calc(64vh_-_56px_-_24px_-_50px)] overflow-y-auto pr-[8px]'
+                  }
+                >
                   {formFields.length < 1 ? (
                     <Empty description="暂无可编辑字段" />
                   ) : (

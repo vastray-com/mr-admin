@@ -9,6 +9,8 @@ type SelectOptions = {
 }[];
 
 type State = {
+  layoutZenMode: boolean;
+  siderWidth: number;
   presetFields: StructuredRuleset.PresetFields;
   encodeTableList: EncodeTable.List;
   encodeTableOptions: SelectOptions;
@@ -21,6 +23,8 @@ type State = {
   resourceTypeMap: Record<string, string>;
 };
 type Actions = {
+  setLayoutZenMode: (enabled: boolean) => void;
+  setSiderWidth: (width: number) => void;
   setPresetFields: (fields: StructuredRuleset.PresetFields) => void;
   setEncodeTableList: (list: EncodeTable.List) => void;
   setStructuredRulesetList: (list: StructuredRuleset.List) => void;
@@ -32,6 +36,8 @@ type Actions = {
 type Store = State & Actions;
 
 const initialState: State = {
+  layoutZenMode: false,
+  siderWidth: 200,
   encodeTableList: [],
   encodeTableOptions: [],
   structuredRulesetList: [],
@@ -46,6 +52,8 @@ const initialState: State = {
 
 export const useCacheStore = createWithEqualityFn<Store>((set) => ({
   ...initialState,
+  setLayoutZenMode: (enabled: boolean) => set({ layoutZenMode: enabled }),
+  setSiderWidth: (width: number) => set({ siderWidth: width }),
   setEncodeTableList: (list: EncodeTable.List) => {
     const encodeTableOptions = list.map((encode) => ({
       value: `${encode.uid}`,

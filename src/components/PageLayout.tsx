@@ -5,6 +5,7 @@ import { useLocation, useNavigate, useOutlet } from 'react-router';
 import { ChangePwdModal } from '@/components/Modal/ChangePwdModal';
 import { getMenuStatus, menuItems } from '@/router/privateRoutes';
 import { DEFAULT_PUBLIC_PATH } from '@/router/route';
+import { useCacheStore } from '@/store/useCacheStore';
 import { useUserStore } from '@/store/useUserStore';
 import { ls } from '@/utils/ls';
 
@@ -15,6 +16,10 @@ export const PageLayout: FC = () => {
   const menuStatus = useMemo(() => getMenuStatus(pathname), [pathname]);
 
   const [user, reset] = useUserStore((s) => [s.user, s.reset]);
+  const [siderWidth, layoutZenMode] = useCacheStore((s) => [
+    s.siderWidth,
+    s.layoutZenMode,
+  ]);
   const [openKeys, setOpenKeys] = useState<string[]>(menuStatus.openKeys);
 
   const [showChangePwdModal, setShowChangePwdModal] = useState(false);
@@ -42,60 +47,64 @@ export const PageLayout: FC = () => {
       />
 
       <Layout className="h-full w-full p-[12px] gradient-bg">
-        <Layout.Header className="z-1 glass-bg h-[64px] w-full flex items-center justify-between px-[24px]">
-          <div className="flex items-center gap-x-[36px]">
-            <div
-              className="h-[28px] flex items-center gap-x-[12px] cursor-pointer"
-              onClick={() => nav('/')}
+        {!layoutZenMode && (
+          <Layout.Header className="z-1 glass-bg h-[64px] w-full flex items-center justify-between px-[24px]">
+            <div className="flex items-center gap-x-[36px]">
+              <div
+                className="h-[28px] flex items-center gap-x-[12px] cursor-pointer"
+                onClick={() => nav('/')}
+              >
+                <img
+                  src={import.meta.env.VITE_APP_LOGO}
+                  alt=""
+                  className="h-full aspect-ratio-square"
+                />
+                <h1 className="text-title text-[20px] font-bold">
+                  {import.meta.env.VITE_APP_NAME}
+                </h1>
+              </div>
+            </div>
+
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: 'change_password',
+                    icon: <i className="i-icon-park-outline:lock" />,
+                    label: (
+                      <span onClick={() => setShowChangePwdModal(true)}>
+                        修改密码
+                      </span>
+                    ),
+                  },
+                  { type: 'divider' },
+                  {
+                    key: 'logout',
+                    icon: <i className="i-icon-park-outline:logout" />,
+                    danger: true,
+                    label: <span onClick={logout}>退出登录</span>,
+                  },
+                ],
+              }}
             >
-              <img
-                src={import.meta.env.VITE_APP_LOGO}
-                alt=""
-                className="h-full aspect-ratio-square"
-              />
-              <h1 className="text-title text-[20px] font-bold">
-                {import.meta.env.VITE_APP_NAME}
-              </h1>
-            </div>
-          </div>
+              <div className="cursor-pointer flex items-center justify-center gap-x-[8px]">
+                <Avatar
+                  className="w-[40px] h-[40px]"
+                  icon={<img src="/avatar.jpg" alt="avatar" />}
+                />
+                <span className="text-primary font-medium text-[1.1em]">
+                  {user?.nickname || user?.username || ''}
+                </span>
+                <span className="i-icon-park-outline:down text-[20px]" />
+              </div>
+            </Dropdown>
+          </Layout.Header>
+        )}
 
-          <Dropdown
-            menu={{
-              items: [
-                {
-                  key: 'change_password',
-                  icon: <i className="i-icon-park-outline:lock" />,
-                  label: (
-                    <span onClick={() => setShowChangePwdModal(true)}>
-                      修改密码
-                    </span>
-                  ),
-                },
-                { type: 'divider' },
-                {
-                  key: 'logout',
-                  icon: <i className="i-icon-park-outline:logout" />,
-                  danger: true,
-                  label: <span onClick={logout}>退出登录</span>,
-                },
-              ],
-            }}
-          >
-            <div className="cursor-pointer flex items-center justify-center gap-x-[8px]">
-              <Avatar
-                className="w-[40px] h-[40px]"
-                icon={<img src="/avatar.jpg" alt="avatar" />}
-              />
-              <span className="text-primary font-medium text-[1.1em]">
-                {user?.nickname || user?.username || ''}
-              </span>
-              <span className="i-icon-park-outline:down text-[20px]" />
-            </div>
-          </Dropdown>
-        </Layout.Header>
-
-        <Layout className="z-1 h-full w-full mt-[12px] bg-[unset]">
-          <Layout.Sider width={200} className="glass-bg h-full p-0">
+        <Layout
+          className={`z-1 h-full w-full ${layoutZenMode ? '' : 'mt-[12px]'} bg-[unset]`}
+        >
+          <Layout.Sider width={siderWidth} className="glass-bg h-full p-0">
             <Menu
               mode="inline"
               selectedKeys={menuStatus.selectedKeys}
@@ -121,7 +130,11 @@ export const PageLayout: FC = () => {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -16, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="h-full w-[calc(100%_-_200px_-_12px)] ml-[12px]"
+              className="h-full"
+              style={{
+                marginLeft: siderWidth > 0 ? 12 : 0,
+                width: `calc(100% - ${siderWidth}px - ${siderWidth > 0 ? 12 : 0}px)`,
+              }}
             >
               <Layout className="h-full w-full glass-bg p-0 overflow-hidden">
                 <Layout.Content className="h-full w-full">
