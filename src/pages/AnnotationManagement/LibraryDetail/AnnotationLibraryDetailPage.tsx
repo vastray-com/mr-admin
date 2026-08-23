@@ -5,6 +5,7 @@ import {
   Cascader,
   DatePicker,
   Descriptions,
+  Dropdown,
   Empty,
   Input,
   InputNumber,
@@ -992,31 +993,49 @@ const AnnotationLibraryDetailPage: FC = () => {
     saveCurrentRow,
   ]);
 
-  const onExport = useCallback(async () => {
-    if (!projectUid || !libraryUid || !detail) return;
-    const loadingKey = `export-${libraryUid}`;
-    message.loading({ key: loadingKey, content: '正在导出...', duration: 0 });
-    try {
-      const res = await annotationApi.exportLibrary({
-        project_uid: projectUid,
-        library_uid: libraryUid,
-      });
-      const blob = new Blob([res.data], { type: 'text/csv;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${detail.library.name}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-      a.remove();
-      message.success({ key: loadingKey, content: '导出成功' });
-    } catch (error) {
-      message.error({
-        key: loadingKey,
-        content: getApiErrorMessage(error, '导出失败'),
-      });
-    }
-  }, [annotationApi, detail, libraryUid, message, projectUid]);
+  const onExport = useCallback(
+    async (exportScope: Annotation.ExportLibraryScope) => {
+      if (!projectUid || !libraryUid || !detail) return;
+      const loadingKey = `export-${libraryUid}`;
+      const scopeTextMap: Record<Annotation.ExportLibraryScope, string> = {
+        pending: '未标注数据',
+        completed: '已标注数据',
+        all: '全部数据',
+      };
+      message.loading({ key: loadingKey, content: '正在导出...', duration: 0 });
+      try {
+        const res = await annotationApi.exportLibrary({
+          project_uid: projectUid,
+          library_uid: libraryUid,
+          export_scope: exportScope,
+        });
+        const blob = new Blob([res.data], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${detail.library.name}-${scopeTextMap[exportScope]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        a.remove();
+        message.success({ key: loadingKey, content: '导出成功' });
+      } catch (error) {
+        message.error({
+          key: loadingKey,
+          content: getApiErrorMessage(error, '导出失败'),
+        });
+      }
+    },
+    [annotationApi, detail, libraryUid, message, projectUid],
+  );
+
+  const exportMenuItems = useMemo(
+    () => [
+      { key: 'completed', label: '导出已标注数据' },
+      { key: 'pending', label: '导出未标注数据' },
+      { key: 'all', label: '导出全部数据' },
+    ],
+    [],
+  );
 
   const onDeleteLibrary = useCallback(async () => {
     if (!projectUid || !libraryUid) return;
@@ -1101,7 +1120,16 @@ const AnnotationLibraryDetailPage: FC = () => {
       ]}
       action={
         <div className="flex items-center gap-[8px]">
-          <Button onClick={onExport}>导出 CSV</Button>{' '}
+          <Dropdown
+            trigger={['click']}
+            menu={{
+              items: exportMenuItems,
+              onClick: ({ key }) =>
+                onExport(key as Annotation.ExportLibraryScope),
+            }}
+          >
+            <Button>导出 CSV</Button>
+          </Dropdown>
           {detail.library.source_dataset_type === DatasetType.Subscribe && (
             <Button loading={refreshing} onClick={onRefresh}>
               更新专病库

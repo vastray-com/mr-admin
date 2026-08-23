@@ -3,6 +3,7 @@ import {
   Button,
   Card,
   Descriptions,
+  Dropdown,
   Empty,
   Flex,
   Form,
@@ -321,20 +322,29 @@ const AnnotationProjectDetailPage: FC = () => {
   );
 
   const onExportLibrary = useCallback(
-    async (lib: Annotation.Library) => {
+    async (
+      lib: Annotation.Library,
+      exportScope: Annotation.ExportLibraryScope,
+    ) => {
       if (!uid) return;
       const loadingKey = `exp-${lib.uid}`;
+      const scopeTextMap: Record<Annotation.ExportLibraryScope, string> = {
+        pending: '未标注数据',
+        completed: '已标注数据',
+        all: '全部数据',
+      };
       message.loading({ key: loadingKey, content: '正在导出...', duration: 0 });
       try {
         const res = await annotationApi.exportLibrary({
           project_uid: uid,
           library_uid: lib.uid,
+          export_scope: exportScope,
         });
         const blob = new Blob([res.data], { type: 'text/csv;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${lib.name}.csv`;
+        a.download = `${lib.name}-${scopeTextMap[exportScope]}.csv`;
         a.click();
         URL.revokeObjectURL(url);
         a.remove();
@@ -347,6 +357,15 @@ const AnnotationProjectDetailPage: FC = () => {
       }
     },
     [annotationApi, message, uid],
+  );
+
+  const exportMenuItems = useMemo(
+    () => [
+      { key: 'completed', label: '导出已标注数据' },
+      { key: 'pending', label: '导出未标注数据' },
+      { key: 'all', label: '导出全部数据' },
+    ],
+    [],
   );
 
   const onRefreshLibrary = useCallback(
@@ -473,13 +492,20 @@ const AnnotationProjectDetailPage: FC = () => {
                 >
                   编辑
                 </Button>,
-                <Button
+                <Dropdown
                   key="export"
-                  type="link"
-                  onClick={() => onExportLibrary(lib)}
+                  trigger={['click']}
+                  menu={{
+                    items: exportMenuItems,
+                    onClick: ({ key }) =>
+                      onExportLibrary(
+                        lib,
+                        key as Annotation.ExportLibraryScope,
+                      ),
+                  }}
                 >
-                  导出 CSV
-                </Button>,
+                  <Button type="link">导出 CSV</Button>
+                </Dropdown>,
                 ...(isSubscribe
                   ? [
                       <Button

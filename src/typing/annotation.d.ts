@@ -154,4 +154,12 @@ export declare namespace Annotation {
     library_uid: string;
     row_id: string;
   };
+
+  type ExportLibraryScope = 'pending' | 'completed' | 'all';
+
+  type ExportLibraryParams = {
+    project_uid: string;
+    library_uid: string;
+    export_scope?: ExportLibraryScope;
+  };
 }

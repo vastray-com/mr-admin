@@ -409,7 +409,7 @@ export const useApi = () => {
         service.post('/annotation/library/complete_row', params) as Promise<
           APIRes<string>
         >,
-      exportLibrary: (params: { project_uid: string; library_uid: string }) =>
+      exportLibrary: (params: Annotation.ExportLibraryParams) =>
         noInterceptorsService.get('/annotation/library/export', {
           params,
           responseType: 'blob',
