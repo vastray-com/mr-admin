@@ -2,6 +2,7 @@ import {
   App,
   Button,
   Card,
+  Cascader,
   DatePicker,
   Descriptions,
   Empty,
@@ -61,6 +62,7 @@ const AnnotationLibraryDetailPage: FC = () => {
   const [originalDetail, setOriginalDetail] =
     useState<Warehouse.PatientDetail | null>(null);
   const [selectedOriginalType, setSelectedOriginalType] = useState('');
+  const [selectedOriginalDataId, setSelectedOriginalDataId] = useState('');
   const [originalLoading, setOriginalLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [completing, setCompleting] = useState(false);
@@ -435,6 +437,81 @@ const AnnotationLibraryDetailPage: FC = () => {
       null,
     [displayOriginalDetail, selectedOriginalType],
   );
+
+  const selectedOriginalData = useMemo(() => {
+    if (!selectedOriginalRecord) {
+      return null;
+    }
+    const list = Array.isArray(selectedOriginalRecord.data)
+      ? selectedOriginalRecord.data
+      : [];
+    if (list.length < 1) {
+      return null;
+    }
+    if (!selectedOriginalDataId) {
+      return list[0];
+    }
+    return (
+      list.find(
+        (item, idx) => String(item?.id ?? idx) === selectedOriginalDataId,
+      ) || list[0]
+    );
+  }, [selectedOriginalDataId, selectedOriginalRecord]);
+
+  const originalDetailOptions = useMemo(
+    () =>
+      displayOriginalDetail.map((item) => {
+        const list = Array.isArray(item.data) ? item.data : [];
+        if (list.length <= 1) {
+          return {
+            value: item.name,
+            label: item.label,
+          };
+        }
+        return {
+          value: item.name,
+          label: item.label,
+          children: list.map((row, idx) => ({
+            value: String(row?.id ?? idx),
+            label: `ID: ${String(row?.id ?? idx)}`,
+          })),
+        };
+      }),
+    [displayOriginalDetail],
+  );
+
+  const selectedOriginalPath = useMemo(() => {
+    if (!selectedOriginalRecord) {
+      return undefined;
+    }
+    const list = Array.isArray(selectedOriginalRecord.data)
+      ? selectedOriginalRecord.data
+      : [];
+    if (list.length <= 1) {
+      return [selectedOriginalRecord.name];
+    }
+    return [selectedOriginalRecord.name, selectedOriginalDataId];
+  }, [selectedOriginalDataId, selectedOriginalRecord]);
+
+  useEffect(() => {
+    if (!selectedOriginalRecord) {
+      setSelectedOriginalDataId('');
+      return;
+    }
+    const list = Array.isArray(selectedOriginalRecord.data)
+      ? selectedOriginalRecord.data
+      : [];
+    if (list.length < 1) {
+      setSelectedOriginalDataId('');
+      return;
+    }
+    const exists = list.some(
+      (item, idx) => String(item?.id ?? idx) === selectedOriginalDataId,
+    );
+    if (!exists) {
+      setSelectedOriginalDataId(String(list[0]?.id ?? 0));
+    }
+  }, [selectedOriginalDataId, selectedOriginalRecord]);
 
   const renderRecord = useCallback((record: Record<string, string>) => {
     return Object.keys(record).length === 0 ? (
@@ -1061,14 +1138,17 @@ const AnnotationLibraryDetailPage: FC = () => {
                   </div>
                 ) : displayOriginalDetail.length > 0 ? (
                   <>
-                    <Select
+                    <Cascader
                       className="w-full mb-[12px]"
-                      value={selectedOriginalRecord?.name}
-                      options={displayOriginalDetail.map((d) => ({
-                        value: d.name,
-                        label: d.label,
-                      }))}
-                      onChange={(val) => setSelectedOriginalType(String(val))}
+                      popupMatchSelectWidth
+                      value={selectedOriginalPath}
+                      options={originalDetailOptions}
+                      placeholder="请选择原始病历类型"
+                      onChange={(path) => {
+                        const [type, dataId] = path;
+                        setSelectedOriginalType(String(type ?? ''));
+                        setSelectedOriginalDataId(String(dataId ?? ''));
+                      }}
                     />
                     <div className="max-h-[calc(64vh_-_56px_-_24px_-_62px_-_32px)] overflow-y-auto pr-[8px]">
                       {selectedOriginalRecord && (
@@ -1078,7 +1158,7 @@ const AnnotationLibraryDetailPage: FC = () => {
                             key: c.value,
                             label: c.label,
                             children: renderValue(
-                              selectedOriginalRecord.data[0][c.value],
+                              selectedOriginalData?.[c.value],
                             ),
                             span: c.data_length > 100 ? 3 : 1,
                           }))}
