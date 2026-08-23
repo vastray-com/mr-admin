@@ -564,14 +564,15 @@ const AnnotationProjectDetailPage: FC = () => {
           <Form.Item<AddMembersForm> label="项目成员" name="member_uids">
             <Select
               mode="multiple"
-              showSearch
+              showSearch={{
+                optionFilterProp: 'label',
+              }}
               loading={memberCandidatesLoading}
               placeholder="请选择成员（可搜索）"
               options={memberCandidates.map((x) => ({
                 value: x.uid,
                 label: x.label,
               }))}
-              optionFilterProp="label"
             />
           </Form.Item>
         </Form>

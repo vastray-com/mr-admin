@@ -189,24 +189,6 @@ const AnnotationLibraryDetailPage: FC = () => {
     setPageInput(String(pageNum));
   }, [pageNum]);
 
-  const goToPage = useCallback(
-    (targetPage: number) => {
-      const maxPage = total > 0 ? total : 1;
-      const nextPage = Math.min(Math.max(targetPage, 1), maxPage);
-      fetchPage(nextPage, queryKeyword);
-    },
-    [fetchPage, queryKeyword, total],
-  );
-
-  const submitPageInput = useCallback(() => {
-    const parsed = Number.parseInt(pageInput, 10);
-    if (Number.isNaN(parsed)) {
-      setPageInput(String(pageNum));
-      return;
-    }
-    goToPage(parsed);
-  }, [goToPage, pageInput, pageNum]);
-
   const encodeTableList = useCacheStore((s) => s.encodeTableList);
   const formFields = useMemo(() => {
     const source = detail?.form_fields ?? [];
@@ -481,6 +463,7 @@ const AnnotationLibraryDetailPage: FC = () => {
       if (!value) return <p>-</p>;
       switch (typeof value) {
         case 'string':
+          return value.split('\n').map((line) => <p key={line}>{line}</p>);
         case 'number':
         case 'bigint':
           return <p>{value}</p>;
@@ -754,31 +737,54 @@ const AnnotationLibraryDetailPage: FC = () => {
     ],
   );
 
-  const onSave = useCallback(async () => {
-    if (!projectUid || !libraryUid || !currentRow?.visit_no) {
+  const onSave = useCallback(
+    async (disableAutoRefresh = false) => {
+      if (!projectUid || !libraryUid || !currentRow?.visit_no) {
+        return;
+      }
+      setSaving(true);
+      try {
+        const ok = await saveCurrentRow(true);
+        if (ok && !disableAutoRefresh) {
+          fetchPage(pageNum, queryKeyword);
+        }
+      } catch (error) {
+        message.error(getApiErrorMessage(error, '保存失败，请稍后重试'));
+      } finally {
+        setSaving(false);
+      }
+    },
+    [
+      currentRow,
+      fetchPage,
+      libraryUid,
+      message,
+      pageNum,
+      projectUid,
+      queryKeyword,
+      saveCurrentRow,
+    ],
+  );
+
+  const goToPage = useCallback(
+    async (targetPage: number) => {
+      // 切换页码时先自动保存当前页数据
+      await onSave(true);
+      const maxPage = total > 0 ? total : 1;
+      const nextPage = Math.min(Math.max(targetPage, 1), maxPage);
+      fetchPage(nextPage, queryKeyword);
+    },
+    [fetchPage, onSave, queryKeyword, total],
+  );
+
+  const submitPageInput = useCallback(() => {
+    const parsed = Number.parseInt(pageInput, 10);
+    if (Number.isNaN(parsed)) {
+      setPageInput(String(pageNum));
       return;
     }
-    setSaving(true);
-    try {
-      const ok = await saveCurrentRow(true);
-      if (ok) {
-        fetchPage(pageNum, queryKeyword);
-      }
-    } catch (error) {
-      message.error(getApiErrorMessage(error, '保存失败，请稍后重试'));
-    } finally {
-      setSaving(false);
-    }
-  }, [
-    currentRow,
-    fetchPage,
-    libraryUid,
-    message,
-    pageNum,
-    projectUid,
-    queryKeyword,
-    saveCurrentRow,
-  ]);
+    goToPage(parsed);
+  }, [goToPage, pageInput, pageNum]);
 
   const onComplete = useCallback(async () => {
     if (!projectUid || !libraryUid || !currentRow?.visit_no) {
@@ -1029,7 +1035,7 @@ const AnnotationLibraryDetailPage: FC = () => {
               setQueryKeyword(keyword.trim());
             }}
           />
-          <Button type="primary" loading={saving} onClick={onSave}>
+          <Button type="primary" loading={saving} onClick={() => onSave(false)}>
             保存当前记录
           </Button>{' '}
           {annotationStatus === 'pending' && (
