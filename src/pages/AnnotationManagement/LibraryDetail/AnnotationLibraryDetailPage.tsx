@@ -21,6 +21,11 @@ import { useCacheStore } from '@/store/useCacheStore';
 import { useUserStore } from '@/store/useUserStore';
 import { ENUM_VARS, UserRole } from '@/typing/enum';
 import { DatasetType } from '@/typing/enum/dataset';
+import {
+  extractBm25Keywords,
+  highlightTextByKeywords,
+  matchesAnyKeyword,
+} from '@/utils/textHighlighter';
 import type { Annotation } from '@/typing/annotation';
 import type { Warehouse } from '@/typing/warehose';
 
@@ -434,24 +439,60 @@ const AnnotationLibraryDetailPage: FC = () => {
     [getMappingOptions, isEmptyValue],
   );
 
+  const searchKeywords = useMemo(
+    () => extractBm25Keywords(queryKeyword),
+    [queryKeyword],
+  );
+
+  const stringifyOriginalDetailValue = useCallback((value: unknown): string => {
+    if (value === undefined || value === null) {
+      return '';
+    }
+    if (typeof value === 'string' || typeof value === 'number') {
+      return String(value);
+    }
+    if (typeof value === 'boolean') {
+      return value ? 'true' : 'false';
+    }
+    if (Array.isArray(value)) {
+      return value.map((item) => stringifyOriginalDetailValue(item)).join(' ');
+    }
+    if (typeof value === 'object') {
+      return Object.values(value as Record<string, unknown>)
+        .map((item) => stringifyOriginalDetailValue(item))
+        .join(' ');
+    }
+    return '';
+  }, []);
+
   const displayOriginalDetail = useMemo(() => {
     if (!originalDetail || originalDetail.length === 0) {
       return [];
     }
+    const hasSearch = searchKeywords.length > 0;
     return originalDetail
       .map((d) => {
-        const firstRow = d.data?.[0];
+        const allRows = Array.isArray(d.data) ? d.data : [];
+        const filteredRows = hasSearch
+          ? allRows.filter((row) => {
+              const title = `${d.label} ${d.name} ${String(row?.title ?? '')}`;
+              const content = stringifyOriginalDetailValue(row);
+              return matchesAnyKeyword(`${title} ${content}`, searchKeywords);
+            })
+          : allRows;
+        const firstRow = filteredRows[0];
         if (!firstRow) return null;
         const cols = d.columns.filter(
           (c) => ![undefined, null, 'NULL'].includes(firstRow[c.value]),
         );
         return {
           ...d,
+          data: filteredRows,
           columns: cols,
         };
       })
       .filter(Boolean) as Warehouse.PatientDetail;
-  }, [originalDetail]);
+  }, [originalDetail, searchKeywords, stringifyOriginalDetailValue]);
 
   useEffect(() => {
     if (displayOriginalDetail.length < 1) {
@@ -549,20 +590,22 @@ const AnnotationLibraryDetailPage: FC = () => {
     }
   }, [selectedOriginalDataId, selectedOriginalRecord]);
 
-  const renderRecord = useCallback((record: Record<string, string>) => {
-    return Object.keys(record).length === 0 ? (
-      <p>-</p>
-    ) : (
-      <div>
-        {Object.entries(record).map(([k, v]) => (
-          <p
-            className="leading-[20px] mt-[8px] first:mt-0"
-            key={k}
-          >{`${k}: ${v}`}</p>
-        ))}
-      </div>
-    );
-  }, []);
+  const renderRecord = useCallback(
+    (record: Record<string, string>) => {
+      return Object.keys(record).length === 0 ? (
+        <p>-</p>
+      ) : (
+        <div>
+          {Object.entries(record).map(([k, v]) => (
+            <p className="leading-[20px] mt-[8px] first:mt-0" key={k}>
+              {k}: {highlightTextByKeywords(String(v ?? ''), searchKeywords)}
+            </p>
+          ))}
+        </div>
+      );
+    },
+    [searchKeywords],
+  );
 
   const renderValue = useCallback(
     (
@@ -576,7 +619,13 @@ const AnnotationLibraryDetailPage: FC = () => {
       if (!value) return <p>-</p>;
       switch (typeof value) {
         case 'string':
-          return value.split('\n').map((line) => <p key={line}>{line}</p>);
+          return value
+            .split('\n')
+            .map((line, idx) => (
+              <p key={`${line}-${idx}`}>
+                {highlightTextByKeywords(line, searchKeywords)}
+              </p>
+            ));
         case 'number':
         case 'bigint':
           return <p>{value}</p>;
@@ -589,10 +638,12 @@ const AnnotationLibraryDetailPage: FC = () => {
             } else if (typeof value[0] === 'string') {
               return (
                 <div>
-                  {(value as string[]).map((v) => (
-                    <p key={v} className="flex mt-[8px] first:mt-0">
+                  {(value as string[]).map((v, idx) => (
+                    <p key={`${v}-${idx}`} className="flex mt-[8px] first:mt-0">
                       <span className="w-[6px] h-[6px] rounded-full bg-blue mr-[8px] shrink-0 grow-0 basis-[6px] mt-[9px]" />
-                      <span className="leading-[24px]">{v}</span>
+                      <span className="leading-[24px]">
+                        {highlightTextByKeywords(v, searchKeywords)}
+                      </span>
                     </p>
                   ))}
                 </div>
@@ -612,10 +663,12 @@ const AnnotationLibraryDetailPage: FC = () => {
             return renderRecord(value);
           }
         default:
-          return <p>{String(value)}</p>;
+          return (
+            <p>{highlightTextByKeywords(String(value), searchKeywords)}</p>
+          );
       }
     },
-    [renderRecord],
+    [renderRecord, searchKeywords],
   );
 
   const updateFieldValue = useCallback((columnName: string, nextValue: any) => {
