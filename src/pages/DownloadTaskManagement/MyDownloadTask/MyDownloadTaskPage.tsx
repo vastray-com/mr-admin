@@ -76,7 +76,11 @@ const MyDownloadTaskPage = () => {
               <Button
                 type="link"
                 target="_blank"
-                href={`/data/dataset/detail/${record.dataset_uid}`}
+                href={
+                  record.annotation_library_uid && record.annotation_project_uid
+                    ? `/annotation/library/detail/${record.annotation_project_uid}/${record.annotation_library_uid}`
+                    : `/data/dataset/detail/${record.dataset_uid}`
+                }
                 className="p-0 m-0"
               >
                 {name}
@@ -87,6 +91,15 @@ const MyDownloadTaskPage = () => {
             title="数据范围/质控模版"
             dataIndex="r"
             render={(_, record: DownloadTask.Item) => {
+              if (record.annotation_library_uid) {
+                const scope = record.annotation_export_scope || 'all';
+                const scopeMap: Record<string, string> = {
+                  all: '全部数据',
+                  pending: '未标注数据',
+                  completed: '已标注数据',
+                };
+                return `标注: ${scopeMap[scope] || scope}`;
+              }
               const t = record.template_name;
               const rl = record.resource_list as string[] | undefined;
               if (t) {

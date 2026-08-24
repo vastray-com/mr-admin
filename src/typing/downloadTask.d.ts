@@ -10,6 +10,10 @@ export declare namespace DownloadTask {
     examiner_uid: string | null;
     examiner_name: string | null;
     failed_reason: string | null;
+    annotation_project_uid?: string | null;
+    annotation_library_uid?: string | null;
+    annotation_library_name?: string | null;
+    annotation_export_scope?: 'all' | 'pending' | 'completed' | null;
     deleted_at: string | null;
     created_at: string;
     updated_at: string;

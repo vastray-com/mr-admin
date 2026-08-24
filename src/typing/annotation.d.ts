@@ -162,4 +162,10 @@ export declare namespace Annotation {
     library_uid: string;
     export_scope?: ExportLibraryScope;
   };
+
+  type CreateExportTaskParams = {
+    project_uid: string;
+    library_uid: string;
+    export_scope?: ExportLibraryScope;
+  };
 }

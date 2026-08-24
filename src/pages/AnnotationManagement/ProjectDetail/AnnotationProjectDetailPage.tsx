@@ -328,31 +328,32 @@ const AnnotationProjectDetailPage: FC = () => {
     ) => {
       if (!uid) return;
       const loadingKey = `exp-${lib.uid}`;
-      const scopeTextMap: Record<Annotation.ExportLibraryScope, string> = {
-        pending: '未标注数据',
-        completed: '已标注数据',
-        all: '全部数据',
-      };
-      message.loading({ key: loadingKey, content: '正在导出...', duration: 0 });
+      message.loading({
+        key: loadingKey,
+        content: '正在提交审批...',
+        duration: 0,
+      });
       try {
-        const res = await annotationApi.exportLibrary({
+        const res = await annotationApi.createExportTask({
           project_uid: uid,
           library_uid: lib.uid,
           export_scope: exportScope,
         });
-        const blob = new Blob([res.data], { type: 'text/csv;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${lib.name}-${scopeTextMap[exportScope]}.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
-        a.remove();
-        message.success({ key: loadingKey, content: '导出成功' });
+        if (res.code === 200) {
+          message.success({
+            key: loadingKey,
+            content: '已提交审批，请到“我的下载”查看',
+          });
+        } else {
+          message.error({
+            key: loadingKey,
+            content: res.message || '提交审批失败',
+          });
+        }
       } catch (error) {
         message.error({
           key: loadingKey,
-          content: getApiErrorMessage(error, '导出失败'),
+          content: getApiErrorMessage(error, '提交审批失败'),
         });
       }
     },
