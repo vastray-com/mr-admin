@@ -42,6 +42,7 @@ const DatasetListPage = () => {
   const { refresh } = usePaginationData({
     fetchData: datasetApi.getDatasetList,
     setData: setData,
+    initialPageSize: 50,
   });
 
   const user = useUserStore((s) => s.user);

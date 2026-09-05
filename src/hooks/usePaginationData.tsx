@@ -10,6 +10,7 @@ import {
 type Options<T> = {
   fetchData: (params: PaginationParams) => Promise<APIRes<PaginationData<T>>>;
   setData: (data: T[]) => void;
+  initialPageSize?: number;
 };
 
 type Hook = <T>(opt: Options<T>) => {
@@ -22,7 +23,7 @@ export const usePaginationData: Hook = (opt) => {
   const [total, setTotal] = useState(0);
   const [pagination, setPagination] = useState<PaginationParams>({
     page_num: 1,
-    page_size: 10,
+    page_size: opt.initialPageSize ?? 10,
   });
 
   const onPaginationChange = useCallback(
