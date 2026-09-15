@@ -22,6 +22,7 @@ import { useLocation } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { DocxPreview } from '@/components/DocxPreview';
 import { Markdown } from '@/components/Markdown';
+import { PdfPreview } from '@/components/PdfPreview';
 import { useApi } from '@/hooks/useApi';
 import { downloadFile } from '@/utils/helper';
 import type { TableProps } from 'antd';
@@ -90,7 +91,6 @@ const WorkspacePage: FC = () => {
   const [previewKind, setPreviewKind] = useState<PreviewKind>('text');
   const [previewName, setPreviewName] = useState('');
   const [documentBlob, setDocumentBlob] = useState<Blob>();
-  const [pdfUrl, setPdfUrl] = useState<string>();
 
   /** 拉取指定目录（缺省为根目录）的文件列表 */
   const fetchList = useCallback(
@@ -116,7 +116,7 @@ const WorkspacePage: FC = () => {
   const location = useLocation();
   const locatedKeyRef = useRef<string | null>(null);
 
-  /** 打开文件预览弹窗：文本 / Markdown 走 `/preview`，PDF / Word 拉取原始字节后分别内嵌渲染 */
+  /** 打开文件预览弹窗：文本 / Markdown 走 `/preview`，PDF / Word 拉取原始字节后交给对应渲染组件 */
   const openPreview = useCallback(
     async (path: string) => {
       const name = path.split('/').pop() ?? path;
@@ -150,17 +150,6 @@ const WorkspacePage: FC = () => {
     },
     [workspaceApi, message],
   );
-
-  // PDF 交由浏览器内置阅读器渲染：把文件字节转换为 blob URL，更换文件或关闭弹窗时释放
-  useEffect(() => {
-    if (previewKind !== 'pdf' || !documentBlob) {
-      setPdfUrl(undefined);
-      return;
-    }
-    const url = URL.createObjectURL(documentBlob);
-    setPdfUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [previewKind, documentBlob]);
 
   // 每次导航进入本页时按 URL 参数定位：列出目标目录，若指定了文件则直接打开预览
   useEffect(() => {
@@ -423,12 +412,8 @@ const WorkspacePage: FC = () => {
             <Spin />
           </div>
         ) : previewKind === 'pdf' ? (
-          pdfUrl ? (
-            <iframe
-              title={previewName}
-              src={pdfUrl}
-              className="h-[70vh] w-full rounded-[6px] border-0"
-            />
+          documentBlob ? (
+            <PdfPreview blob={documentBlob} />
           ) : null
         ) : previewKind === 'word' ? (
           documentBlob ? (
