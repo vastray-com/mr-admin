@@ -25,7 +25,8 @@
 - 状态管理：Zustand
 - HTTP：Axios
 - 样式：UnoCSS + 全局 CSS
-- 图表：AntV G2
+- 图表：AntV G2（ECharts 用于智能体对话内嵌图表，按需加载）
+- 文档预览：docx-preview（Word `.docx` 预览，按需加载）
 - 代码高亮：Shiki
 
 ## 2.2 关键配置文件
@@ -267,7 +268,9 @@
 | `usePaginationData()` | `src/hooks/usePaginationData.tsx` | 通用分页数据拉取与刷新 |
 | `datasetFilterFE2DB()` | `src/pages/DatasetManagement/helper.ts` | 将前端过滤器结构转后端结构 |
 | `datasetFilterDB2FE()` | `src/pages/DatasetManagement/helper.ts` | 将后端过滤器结构转前端结构 |
-| `downloadFile()` | `src/utils/helper.tsx` | 处理 blob 响应并触发下载 |
+| `downloadFile()` | `src/utils/helper.tsx` | 处理 blob 响应并触发下载（文件名优先取 `Content-Disposition` 的 `filename*`，支持中文名） |
+| `parseContentDispositionFileName()` | `src/utils/helper.tsx` | 从 `Content-Disposition` 解析文件名（`filename*` 百分号解码，回退 `filename`） |
+| `DocxPreview` | `src/components/DocxPreview.tsx` | Word（`.docx`）预览（按需加载 docx-preview，渲染为类 Word 版式） |
 | `generateCurlExample()` | `src/utils/helper.tsx` | 生成规则测试 API 的 curl 样例 |
 | `service.interceptors.*` | `src/utils/service.ts` | 统一 token 注入、鉴权失败跳转、错误处理 |
 | `useCacheStore.set*` | `src/store/useCacheStore.tsx` | 全局缓存写入与下拉选项预计算 |

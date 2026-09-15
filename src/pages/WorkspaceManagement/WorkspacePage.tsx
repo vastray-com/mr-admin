@@ -20,6 +20,7 @@ import {
 } from 'react';
 import { useLocation } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
+import { DocxPreview } from '@/components/DocxPreview';
 import { Markdown } from '@/components/Markdown';
 import { useApi } from '@/hooks/useApi';
 import { downloadFile } from '@/utils/helper';
@@ -29,13 +30,23 @@ import type { Workspace as WorkspaceType } from '@/typing/workspace';
 /** 预览弹窗的展示模式：渲染 Markdown 或查看原始文本 */
 type PreviewMode = 'render' | 'source';
 
+/** 文件预览方式：Markdown 渲染 / PDF 内嵌 / Word 解析 / 纯文本 */
+type PreviewKind = 'markdown' | 'pdf' | 'word' | 'text';
+
 /** 按扩展名识别的 Markdown 文件后缀 */
 const MARKDOWN_EXTENSIONS = ['md', 'markdown', 'mdown', 'mkd', 'mkdn'];
 
-/** 根据文件名判断是否为 Markdown 文件 */
-const isMarkdownFile = (name: string): boolean => {
-  const ext = name.split('.').pop()?.toLowerCase() ?? '';
-  return MARKDOWN_EXTENSIONS.includes(ext);
+/** 取文件名扩展名（小写；无扩展名时为空串） */
+const fileExtension = (name: string): string =>
+  name.split('.').pop()?.toLowerCase() ?? '';
+
+/** 根据文件名决定预览方式（PDF / Word 需先拉取原始字节，再交由专用组件渲染） */
+const getPreviewKind = (name: string): PreviewKind => {
+  const ext = fileExtension(name);
+  if (MARKDOWN_EXTENSIONS.includes(ext)) return 'markdown';
+  if (ext === 'pdf') return 'pdf';
+  if (ext === 'docx') return 'word';
+  return 'text';
 };
 
 /** 从接口异常中提取可读错误信息 */
@@ -67,7 +78,7 @@ const formatSize = (size: number): string => {
  */
 const WorkspacePage: FC = () => {
   const { workspaceApi } = useApi();
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
 
   const [listing, setListing] = useState<WorkspaceType.Listing>();
   const [loading, setLoading] = useState(false);
@@ -76,6 +87,10 @@ const WorkspacePage: FC = () => {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewData, setPreviewData] = useState<WorkspaceType.FilePreview>();
   const [previewMode, setPreviewMode] = useState<PreviewMode>('render');
+  const [previewKind, setPreviewKind] = useState<PreviewKind>('text');
+  const [previewName, setPreviewName] = useState('');
+  const [documentBlob, setDocumentBlob] = useState<Blob>();
+  const [pdfUrl, setPdfUrl] = useState<string>();
 
   /** 拉取指定目录（缺省为根目录）的文件列表 */
   const fetchList = useCallback(
@@ -101,20 +116,30 @@ const WorkspacePage: FC = () => {
   const location = useLocation();
   const locatedKeyRef = useRef<string | null>(null);
 
-  /** 打开文件预览弹窗 */
+  /** 打开文件预览弹窗：文本 / Markdown 走 `/preview`，PDF / Word 拉取原始字节后分别内嵌渲染 */
   const openPreview = useCallback(
     async (path: string) => {
+      const name = path.split('/').pop() ?? path;
+      const kind = getPreviewKind(name);
       setPreviewData(undefined);
+      setDocumentBlob(undefined);
+      setPreviewName(name);
+      setPreviewKind(kind);
       setPreviewOpen(true);
       setPreviewLoading(true);
       setPreviewMode('render');
       try {
-        const res = await workspaceApi.preview(path);
-        if (res.code === 200 && res.data) {
-          setPreviewData(res.data);
+        if (kind === 'pdf' || kind === 'word') {
+          const res = await workspaceApi.raw(path);
+          setDocumentBlob(res.data);
         } else {
-          message.error(res.message || '预览失败');
-          setPreviewOpen(false);
+          const res = await workspaceApi.preview(path);
+          if (res.code === 200 && res.data) {
+            setPreviewData(res.data);
+          } else {
+            message.error(res.message || '预览失败');
+            setPreviewOpen(false);
+          }
         }
       } catch (error) {
         message.error(getApiErrorMessage(error, '预览失败'));
@@ -125,6 +150,17 @@ const WorkspacePage: FC = () => {
     },
     [workspaceApi, message],
   );
+
+  // PDF 交由浏览器内置阅读器渲染：把文件字节转换为 blob URL，更换文件或关闭弹窗时释放
+  useEffect(() => {
+    if (previewKind !== 'pdf' || !documentBlob) {
+      setPdfUrl(undefined);
+      return;
+    }
+    const url = URL.createObjectURL(documentBlob);
+    setPdfUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [previewKind, documentBlob]);
 
   // 每次导航进入本页时按 URL 参数定位：列出目标目录，若指定了文件则直接打开预览
   useEffect(() => {
@@ -157,6 +193,44 @@ const WorkspacePage: FC = () => {
   const openDir = useCallback(
     (entry: WorkspaceType.Entry) => void fetchList(entry.path),
     [fetchList],
+  );
+
+  /** 删除文件或目录（目录递归删除），成功后刷新当前目录并关闭已删除文件的预览 */
+  const onDelete = useCallback(
+    async (entry: WorkspaceType.Entry) => {
+      try {
+        const res = await workspaceApi.delete(entry.path);
+        if (res.code === 200) {
+          message.success(res.message || '删除成功');
+          if (previewData?.path === entry.path) {
+            setPreviewOpen(false);
+          }
+          await fetchList(listing?.path ?? '');
+        } else {
+          message.error(res.message || '删除失败');
+        }
+      } catch (error) {
+        message.error(getApiErrorMessage(error, '删除失败'));
+      }
+    },
+    [workspaceApi, message, fetchList, listing?.path, previewData?.path],
+  );
+
+  /** 弹出删除确认框，用户手工确认后再执行删除 */
+  const confirmDelete = useCallback(
+    (entry: WorkspaceType.Entry) => {
+      modal.confirm({
+        title: entry.is_dir ? '删除文件夹' : '删除文件',
+        content: entry.is_dir
+          ? `确认删除文件夹「${entry.name}」及其下全部内容吗？该操作不可恢复。`
+          : `确认删除文件「${entry.name}」吗？该操作不可恢复。`,
+        okText: '删除',
+        okButtonProps: { danger: true },
+        cancelText: '取消',
+        onOk: () => onDelete(entry),
+      });
+    },
+    [modal, onDelete],
   );
 
   // 面包屑：工作区 / 一级目录 / 二级目录 …
@@ -242,27 +316,33 @@ const WorkspacePage: FC = () => {
     {
       title: '操作',
       key: 'action',
-      width: 140,
-      render: (_, record) =>
-        record.is_dir ? (
-          <Button type="link" onClick={() => openDir(record)}>
-            打开
+      width: 200,
+      render: (_, record) => (
+        <>
+          {record.is_dir ? (
+            <Button type="link" onClick={() => openDir(record)}>
+              打开
+            </Button>
+          ) : (
+            <>
+              <Button type="link" onClick={() => void openPreview(record.path)}>
+                预览
+              </Button>
+              <Button type="link" onClick={() => void onDownload(record)}>
+                下载
+              </Button>
+            </>
+          )}
+          <Button type="link" danger onClick={() => confirmDelete(record)}>
+            删除
           </Button>
-        ) : (
-          <>
-            <Button type="link" onClick={() => void openPreview(record.path)}>
-              预览
-            </Button>
-            <Button type="link" onClick={() => void onDownload(record)}>
-              下载
-            </Button>
-          </>
-        ),
+        </>
+      ),
     },
   ];
 
   // 当前预览文件是否为 Markdown（决定是否提供渲染/源码切换）
-  const isMarkdownPreview = !!previewData && isMarkdownFile(previewData.name);
+  const isMarkdownPreview = previewKind === 'markdown' && !!previewData;
 
   return (
     <ContentLayout
@@ -278,7 +358,7 @@ const WorkspacePage: FC = () => {
           className="mb-[16px]"
           type="info"
           showIcon
-          message="该目录为智能体文件沙箱，智能体的所有文件读写都限制在此目录内；浏览与下载均不会越出该目录。"
+          message="该目录为智能体文件沙箱，智能体的所有文件读写都限制在此目录内；浏览、下载与删除均不会越出该目录。"
         />
 
         <div className="mb-[12px] flex items-center justify-between">
@@ -312,7 +392,7 @@ const WorkspacePage: FC = () => {
         open={previewOpen}
         title={
           <div className="flex items-center justify-between gap-[16px] pr-[24px]">
-            <span className="truncate">{previewData?.name ?? '文件预览'}</span>
+            <span className="truncate">{previewName || '文件预览'}</span>
             {isMarkdownPreview && !previewLoading && (
               <Segmented<PreviewMode>
                 size="small"
@@ -327,7 +407,7 @@ const WorkspacePage: FC = () => {
           </div>
         }
         footer={null}
-        width={860}
+        width={previewKind === 'pdf' || previewKind === 'word' ? 1000 : 860}
         onCancel={() => setPreviewOpen(false)}
       >
         {previewData?.truncated && (
@@ -342,6 +422,18 @@ const WorkspacePage: FC = () => {
           <div className="flex justify-center py-[40px]">
             <Spin />
           </div>
+        ) : previewKind === 'pdf' ? (
+          pdfUrl ? (
+            <iframe
+              title={previewName}
+              src={pdfUrl}
+              className="h-[70vh] w-full rounded-[6px] border-0"
+            />
+          ) : null
+        ) : previewKind === 'word' ? (
+          documentBlob ? (
+            <DocxPreview blob={documentBlob} />
+          ) : null
         ) : isMarkdownPreview && previewMode === 'render' ? (
           <div className="max-h-[60vh] overflow-auto rounded-[6px] bg-black/5 p-[12px]">
             <Markdown content={previewData?.content ?? ''} />

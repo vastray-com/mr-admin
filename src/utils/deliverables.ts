@@ -59,7 +59,7 @@ export const deliverablePath = (item: Agent.Deliverable): string | null => {
         params.set('path', dir);
       }
       params.set('file', name);
-      return `/workspace?${params.toString()}`;
+      return `/data_project/workspace?${params.toString()}`;
     }
     default:
       return null;

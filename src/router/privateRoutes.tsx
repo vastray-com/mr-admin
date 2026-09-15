@@ -78,17 +78,22 @@ const privateBaseRoutes: BaseRoute = [
   {
     key: '/data_project',
     element: <Outlet />,
-    label: '数据项目',
+    label: '工作空间',
     addToMenu: true,
-    roles: [UserRole.Admin],
+    roles: [UserRole.Admin, UserRole.User],
     loader: ({ request }) => {
       const url = new URL(request.url);
       if (url.pathname === '/data_project') {
-        return redirect('/data_project/list');
+        const role = useUserStore.getState().user?.role;
+        return redirect(
+          role === UserRole.Admin
+            ? '/data_project/list'
+            : '/data_project/workspace',
+        );
       }
       return null;
     },
-    icon: <i className="i-icon-park-outline:database-network" />,
+    icon: <i className="i-icon-park-outline:workbench" />,
     children: [
       {
         key: '/data_project/list',
@@ -112,6 +117,13 @@ const privateBaseRoutes: BaseRoute = [
         label: '视图详情',
         addToMenu: false,
         roles: [UserRole.Admin],
+      },
+      {
+        key: '/data_project/workspace',
+        element: <LazyComponents.Workspace />,
+        label: '文件',
+        addToMenu: true,
+        roles: [UserRole.Admin, UserRole.User],
       },
     ],
   },
@@ -327,12 +339,16 @@ const privateBaseRoutes: BaseRoute = [
     ],
   },
   {
+    // 旧路径重定向：文件菜单已并入「工作空间 > 文件」
     key: '/workspace',
-    element: <LazyComponents.Workspace />,
+    element: <Outlet />,
     label: '文件',
-    addToMenu: true,
+    addToMenu: false,
     roles: [UserRole.Admin, UserRole.User],
-    icon: <i className="i-icon-park-outline:folder-open" />,
+    loader: ({ request }) => {
+      const url = new URL(request.url);
+      return redirect(`/data_project/workspace${url.search}`);
+    },
   },
   {
     key: '/user_management',

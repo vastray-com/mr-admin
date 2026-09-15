@@ -568,6 +568,15 @@ export const useApi = () => {
           params: { path },
           responseType: 'blob',
         }) as Promise<AxiosResponse<Blob>>,
+      raw: (path: string) =>
+        noInterceptorsService.get('/workspace/raw', {
+          params: { path },
+          responseType: 'blob',
+        }) as Promise<AxiosResponse<Blob>>,
+      delete: (path: string) =>
+        service.delete('/workspace/delete', { params: { path } }) as Promise<
+          APIRes<string>
+        >,
     }),
     [],
   );
