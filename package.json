@@ -8,6 +8,7 @@
     "build:test": "tsc -b && vite build --mode test",
     "build:changyi": "tsc -b && vite build --mode changyi",
     "build:suzhoushili": "tsc -b && vite build --mode suzhoushili",
+    "build:changzhouertong": "tsc -b && vite build --mode changzhouertong",
     "lint": "biome check .",
     "preview": "vite preview"
   },
