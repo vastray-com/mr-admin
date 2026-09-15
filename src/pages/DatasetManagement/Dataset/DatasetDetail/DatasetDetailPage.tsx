@@ -13,7 +13,7 @@ import {
   Spin,
 } from 'antd';
 import { useCallback, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 import { ContentLayout } from '@/components/ContentLayout';
 import { useApi } from '@/hooks/useApi';
 import { useDownloadDataset } from '@/hooks/useDownloadDataset';
@@ -276,13 +276,19 @@ const DatasetDetailPage = () => {
                                 l.resource_type}
                             </span>
                             <i className="i-icon-park-outline:arrow-right text-[16px] text-fg-tertiary" />
-                            <span>
-                              {
-                                rulesetOptions.find(
-                                  (r) => r.value === l.structured_ruleset_uid,
-                                )?.label
-                              }
-                            </span>
+                            <Link
+                              to={`/rule_management/ruleset/${encodeURIComponent(
+                                l.structured_ruleset_uid,
+                              )}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              title="在新页面查看规则详情"
+                              className="text-[#3875F6] hover:underline"
+                            >
+                              {rulesetOptions.find(
+                                (r) => r.value === l.structured_ruleset_uid,
+                              )?.label ?? l.structured_ruleset_uid}
+                            </Link>
                           </div>
                         ))}
                   </div>

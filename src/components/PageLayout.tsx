@@ -3,8 +3,15 @@ import { AnimatePresence, motion } from 'motion/react';
 import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useOutlet } from 'react-router';
 import { ChangePwdModal } from '@/components/Modal/ChangePwdModal';
+import { AgentChatDock } from '@/pages/AgentManagement/Chat/AgentChatDock';
+import { AgentDockButton } from '@/pages/AgentManagement/Chat/AgentDockButton';
+import {
+  loadAgentDockPrefs,
+  saveAgentDockPrefs,
+} from '@/pages/AgentManagement/dockPrefs';
 import { getMenuStatus, menuItems } from '@/router/privateRoutes';
 import { DEFAULT_PUBLIC_PATH } from '@/router/route';
+import { useAgentStore } from '@/store/useAgentStore';
 import { useCacheStore } from '@/store/useCacheStore';
 import { useUserStore } from '@/store/useUserStore';
 import { ls } from '@/utils/ls';
@@ -20,9 +27,46 @@ export const PageLayout: FC = () => {
     s.siderWidth,
     s.layoutZenMode,
   ]);
+  const agentRunning = useAgentStore((s) => s.running);
   const [openKeys, setOpenKeys] = useState<string[]>(menuStatus.openKeys);
 
   const [showChangePwdModal, setShowChangePwdModal] = useState(false);
+
+  // 智能体对话右侧侧栏（开合/全屏/宽度偏好持久化到 localStorage）
+  const [initialDockPrefs] = useState(loadAgentDockPrefs);
+  const [agentDockOpen, setAgentDockOpen] = useState(initialDockPrefs.open);
+  const [agentDockFullscreen, setAgentDockFullscreen] = useState(
+    initialDockPrefs.fullscreen,
+  );
+  const [agentDockWidth, setAgentDockWidth] = useState(initialDockPrefs.width);
+  // 首次打开才挂载，避免应用启动时多余的会话请求
+  const [agentDockMounted, setAgentDockMounted] = useState(
+    initialDockPrefs.open,
+  );
+
+  const openAgentDock = useCallback(() => {
+    setAgentDockMounted(true);
+    setAgentDockOpen(true);
+  }, []);
+
+  const closeAgentDock = useCallback(() => setAgentDockOpen(false), []);
+
+  const toggleAgentDockFullscreen = useCallback(
+    () => setAgentDockFullscreen((prev) => !prev),
+    [],
+  );
+
+  // 持久化侧栏偏好（拖拽调宽时借助定时器做防抖）
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      saveAgentDockPrefs({
+        open: agentDockOpen,
+        fullscreen: agentDockFullscreen,
+        width: agentDockWidth,
+      });
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [agentDockOpen, agentDockFullscreen, agentDockWidth]);
 
   const logout = useCallback(() => {
     reset();
@@ -37,6 +81,12 @@ export const PageLayout: FC = () => {
       Array.from(new Set([...prev, ...menuStatus.openKeys])),
     );
   }, [menuStatus.openKeys]);
+
+  // 侧栏占位宽度：全屏时脱离文档流，不占位；收起时收敛为 0
+  const siderMargin = siderWidth > 0 ? 12 : 0;
+  const dockFullscreen = agentDockOpen && agentDockFullscreen;
+  const dockReserved =
+    agentDockOpen && !dockFullscreen ? agentDockWidth + 12 : 0;
 
   return (
     <>
@@ -65,46 +115,57 @@ export const PageLayout: FC = () => {
               </div>
             </div>
 
-            <Dropdown
-              menu={{
-                items: [
-                  {
-                    key: 'change_password',
-                    icon: <i className="i-icon-park-outline:lock" />,
-                    label: (
-                      <span onClick={() => setShowChangePwdModal(true)}>
-                        修改密码
-                      </span>
-                    ),
-                  },
-                  { type: 'divider' },
-                  {
-                    key: 'logout',
-                    icon: <i className="i-icon-park-outline:logout" />,
-                    danger: true,
-                    label: <span onClick={logout}>退出登录</span>,
-                  },
-                ],
-              }}
-            >
-              <div className="cursor-pointer flex items-center justify-center gap-x-[8px]">
-                <Avatar
-                  className="w-[40px] h-[40px]"
-                  icon={<img src="/avatar.jpg" alt="avatar" />}
-                />
-                <span className="text-primary font-medium text-[1.1em]">
-                  {user?.nickname || user?.username || ''}
-                </span>
-                <span className="i-icon-park-outline:down text-[20px]" />
-              </div>
-            </Dropdown>
+            <div className="flex items-center gap-x-[12px]">
+              <AgentDockButton
+                open={agentDockOpen}
+                running={agentRunning}
+                onToggle={agentDockOpen ? closeAgentDock : openAgentDock}
+              />
+
+              <Dropdown
+                menu={{
+                  items: [
+                    {
+                      key: 'change_password',
+                      icon: <i className="i-icon-park-outline:lock" />,
+                      label: (
+                        <span onClick={() => setShowChangePwdModal(true)}>
+                          修改密码
+                        </span>
+                      ),
+                    },
+                    { type: 'divider' },
+                    {
+                      key: 'logout',
+                      icon: <i className="i-icon-park-outline:logout" />,
+                      danger: true,
+                      label: <span onClick={logout}>退出登录</span>,
+                    },
+                  ],
+                }}
+              >
+                <div className="cursor-pointer flex items-center justify-center gap-x-[8px]">
+                  <Avatar
+                    className="w-[40px] h-[40px]"
+                    icon={<img src="/avatar.jpg" alt="avatar" />}
+                  />
+                  <span className="text-primary font-medium text-[1.1em]">
+                    {user?.nickname || user?.username || ''}
+                  </span>
+                  <span className="i-icon-park-outline:down text-[20px]" />
+                </div>
+              </Dropdown>
+            </div>
           </Layout.Header>
         )}
 
         <Layout
           className={`z-1 h-full w-full ${layoutZenMode ? '' : 'mt-[12px]'} bg-[unset]`}
         >
-          <Layout.Sider width={siderWidth} className="glass-bg h-full p-0">
+          <Layout.Sider
+            width={siderWidth}
+            className="glass-bg h-full p-0 overflow-x-hidden overflow-y-auto"
+          >
             <Menu
               mode="inline"
               selectedKeys={menuStatus.selectedKeys}
@@ -132,8 +193,10 @@ export const PageLayout: FC = () => {
               transition={{ duration: 0.2 }}
               className="h-full"
               style={{
-                marginLeft: siderWidth > 0 ? 12 : 0,
-                width: `calc(100% - ${siderWidth}px - ${siderWidth > 0 ? 12 : 0}px)`,
+                marginLeft: siderMargin,
+                width: `calc(100% - ${siderWidth}px - ${siderMargin}px - ${dockReserved}px)`,
+                // 与侧栏宽度动画保持同步
+                transition: 'width 0.2s ease, margin-left 0.2s ease',
               }}
             >
               <Layout className="h-full w-full glass-bg p-0 overflow-hidden">
@@ -143,6 +206,17 @@ export const PageLayout: FC = () => {
               </Layout>
             </motion.div>
           </AnimatePresence>
+
+          {agentDockMounted && (
+            <AgentChatDock
+              open={agentDockOpen}
+              fullscreen={agentDockFullscreen}
+              width={agentDockWidth}
+              onResize={setAgentDockWidth}
+              onClose={closeAgentDock}
+              onToggleFullscreen={toggleAgentDockFullscreen}
+            />
+          )}
         </Layout>
 
         {/*<div className="pos-absolute w-full h-full top-0 left-0 bg-[url('/page_bg.webp')] bg-cover bg-no-repeat opacity-32"></div>*/}

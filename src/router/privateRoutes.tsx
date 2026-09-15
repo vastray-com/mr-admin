@@ -76,6 +76,46 @@ const privateBaseRoutes: BaseRoute = [
     ],
   },
   {
+    key: '/data_project',
+    element: <Outlet />,
+    label: '数据项目',
+    addToMenu: true,
+    roles: [UserRole.Admin],
+    loader: ({ request }) => {
+      const url = new URL(request.url);
+      if (url.pathname === '/data_project') {
+        return redirect('/data_project/list');
+      }
+      return null;
+    },
+    icon: <i className="i-icon-park-outline:database-network" />,
+    children: [
+      {
+        key: '/data_project/list',
+        element: <LazyComponents.DataProjectList />,
+        label: '数据项目',
+        addToMenu: true,
+        roles: [UserRole.Admin],
+      },
+      {
+        key: '/data_project/detail/:uid',
+        selectedKeys: ['/data_project/list'],
+        element: <LazyComponents.DataProjectDetail />,
+        label: '项目详情',
+        addToMenu: false,
+        roles: [UserRole.Admin],
+      },
+      {
+        key: '/data_project/view/:uid',
+        selectedKeys: ['/data_project/list'],
+        element: <LazyComponents.DataViewDetail />,
+        label: '视图详情',
+        addToMenu: false,
+        roles: [UserRole.Admin],
+      },
+    ],
+  },
+  {
     key: '/annotation',
     element: <Outlet />,
     label: '数据标注',
@@ -254,6 +294,45 @@ const privateBaseRoutes: BaseRoute = [
         roles: [UserRole.Admin, UserRole.User],
       },
     ],
+  },
+  {
+    key: '/agent',
+    element: <Outlet />,
+    label: '智能体',
+    addToMenu: true,
+    roles: [UserRole.Admin, UserRole.User],
+    loader: ({ request }) => {
+      const url = new URL(request.url);
+      if (url.pathname === '/agent') {
+        return redirect('/agent/skills');
+      }
+      return null;
+    },
+    icon: <i className="i-icon-park-outline:robot-one" />,
+    children: [
+      {
+        key: '/agent/skills',
+        element: <LazyComponents.AgentSkillList />,
+        label: '技能管理',
+        addToMenu: true,
+        roles: [UserRole.Admin, UserRole.User],
+      },
+      {
+        key: '/agent/tasks',
+        element: <LazyComponents.AgentTaskList />,
+        label: '定时任务',
+        addToMenu: true,
+        roles: [UserRole.Admin, UserRole.User],
+      },
+    ],
+  },
+  {
+    key: '/workspace',
+    element: <LazyComponents.Workspace />,
+    label: '文件',
+    addToMenu: true,
+    roles: [UserRole.Admin, UserRole.User],
+    icon: <i className="i-icon-park-outline:folder-open" />,
   },
   {
     key: '/user_management',

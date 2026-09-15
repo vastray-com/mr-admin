@@ -1,7 +1,9 @@
 import { useMemo } from 'react';
 import { noInterceptorsService, service } from '@/utils/service';
 import type { AxiosResponse } from 'axios';
+import type { Agent } from '@/typing/agent';
 import type { Annotation } from '@/typing/annotation';
+import type { DataProject } from '@/typing/dataProject';
 import type { Dataset } from '@/typing/dataset';
 import type { DownloadTask } from '@/typing/downloadTask';
 import type { DownloadTemplate } from '@/typing/downloadTemplate';
@@ -10,6 +12,7 @@ import type { StructuredRuleset } from '@/typing/structuredRuleset';
 import type { Task } from '@/typing/task';
 import type { User } from '@/typing/user';
 import type { Warehouse } from '@/typing/warehose';
+import type { Workspace } from '@/typing/workspace';
 
 export const useApi = () => {
   const task = useMemo(
@@ -86,6 +89,60 @@ export const useApi = () => {
       genAIFilter: (params: Dataset.GenAIFilterParams) =>
         service.post('/dataset/gen_ai_filter', params) as Promise<
           APIRes<string>
+        >,
+    }),
+    [],
+  );
+
+  const dataProject = useMemo(
+    () => ({
+      getList: (params: DataProject.ListParams) =>
+        service.get('/admin/data_project/list', { params }) as Promise<
+          APIRes<PaginationData<DataProject.Item>>
+        >,
+      getDetail: (uid: string) =>
+        service.get('/admin/data_project/detail', {
+          params: { uid },
+        }) as Promise<APIRes<DataProject.Item>>,
+      create: (params: DataProject.CreateParams) =>
+        service.post('/admin/data_project/create', params) as Promise<
+          APIRes<string>
+        >,
+      update: (params: DataProject.UpdateParams) =>
+        service.post('/admin/data_project/update', params) as Promise<
+          APIRes<string>
+        >,
+      delete: (uid: string) =>
+        service.post('/admin/data_project/delete', { uid }) as Promise<
+          APIRes<string>
+        >,
+      getViewList: (params: DataProject.ViewListParams) =>
+        service.get('/admin/data_project/view/list', { params }) as Promise<
+          APIRes<DataProject.ViewList>
+        >,
+      getViewDetail: (uid: string) =>
+        service.get('/admin/data_project/view/detail', {
+          params: { uid },
+        }) as Promise<APIRes<DataProject.View>>,
+      createView: (params: DataProject.CreateViewParams) =>
+        service.post('/admin/data_project/view/create', params) as Promise<
+          APIRes<string>
+        >,
+      updateView: (params: DataProject.UpdateViewParams) =>
+        service.post('/admin/data_project/view/update', params) as Promise<
+          APIRes<string>
+        >,
+      deleteView: (params: DataProject.DeleteViewParams) =>
+        service.post('/admin/data_project/view/delete', params) as Promise<
+          APIRes<string>
+        >,
+      getViewData: (params: DataProject.ViewDataParams) =>
+        service.get('/admin/data_project/view/data', { params }) as Promise<
+          APIRes<DataProject.ViewData>
+        >,
+      executeViewSql: (params: DataProject.ViewQueryParams) =>
+        service.post('/admin/data_project/view/execute', params) as Promise<
+          APIRes<DataProject.ViewQueryResult>
         >,
     }),
     [],
@@ -423,9 +480,102 @@ export const useApi = () => {
     [],
   );
 
+  const agent = useMemo(
+    () => ({
+      // 会话
+      listSessions: () =>
+        service.get('/agent/sessions') as Promise<APIRes<Agent.Session[]>>,
+      createSession: (title?: string) =>
+        service.post('/agent/sessions', { title }) as Promise<
+          APIRes<Agent.Session>
+        >,
+      deleteSession: (uid: string) =>
+        service.delete(`/agent/sessions/${uid}`) as Promise<APIRes<boolean>>,
+      listMessages: (uid: string) =>
+        service.get(`/agent/sessions/${uid}/messages`) as Promise<
+          APIRes<Agent.Message[]>
+        >,
+      stopSession: (uid: string) =>
+        service.post(`/agent/sessions/${uid}/stop`) as Promise<
+          APIRes<Agent.Message>
+        >,
+      retrySession: (uid: string) =>
+        service.post(`/agent/sessions/${uid}/retry`) as Promise<
+          APIRes<Agent.Message>
+        >,
+      compactSession: (uid: string) =>
+        service.post(`/agent/sessions/${uid}/compact-session`) as Promise<
+          APIRes<Agent.Session>
+        >,
+      // 技能
+      listSkills: () =>
+        service.get('/agent/skills') as Promise<APIRes<Agent.Skill[]>>,
+      createSkill: (payload: Agent.SkillPayload) =>
+        service.post('/agent/skills', payload) as Promise<APIRes<Agent.Skill>>,
+      updateSkill: (uid: string, payload: Agent.SkillPayload) =>
+        service.put(`/agent/skills/${uid}`, payload) as Promise<
+          APIRes<Agent.Skill>
+        >,
+      deleteSkill: (uid: string) =>
+        service.delete(`/agent/skills/${uid}`) as Promise<APIRes<boolean>>,
+      setSkillEnabled: (uid: string, enabled: boolean) =>
+        service.put(`/agent/skills/${uid}/enabled`, { enabled }) as Promise<
+          APIRes<Agent.Skill>
+        >,
+      // 定时任务
+      listTasks: () =>
+        service.get('/agent/tasks') as Promise<APIRes<Agent.Task[]>>,
+      createTask: (payload: Agent.TaskPayload) =>
+        service.post('/agent/tasks', payload) as Promise<APIRes<Agent.Task>>,
+      updateTask: (uid: string, payload: Agent.TaskPayload) =>
+        service.put(`/agent/tasks/${uid}`, payload) as Promise<
+          APIRes<Agent.Task>
+        >,
+      deleteTask: (uid: string) =>
+        service.delete(`/agent/tasks/${uid}`) as Promise<APIRes<boolean>>,
+      setTaskEnabled: (uid: string, enabled: boolean) =>
+        service.put(`/agent/tasks/${uid}/enabled`, { enabled }) as Promise<
+          APIRes<Agent.Task>
+        >,
+      runTaskNow: (uid: string) =>
+        service.post(`/agent/tasks/${uid}/run`) as Promise<
+          APIRes<Agent.TaskRun>
+        >,
+      listTaskRuns: (uid: string) =>
+        service.get(`/agent/tasks/${uid}/runs`) as Promise<
+          APIRes<Agent.TaskRun[]>
+        >,
+      getTaskRun: (uid: string) =>
+        service.get(`/agent/task-runs/${uid}`) as Promise<
+          APIRes<Agent.TaskRun>
+        >,
+    }),
+    [],
+  );
+
+  const workspace = useMemo(
+    () => ({
+      list: (path?: string) =>
+        service.get('/workspace/list', { params: { path } }) as Promise<
+          APIRes<Workspace.Listing>
+        >,
+      preview: (path: string) =>
+        service.get('/workspace/preview', { params: { path } }) as Promise<
+          APIRes<Workspace.FilePreview>
+        >,
+      download: (path: string) =>
+        noInterceptorsService.get('/workspace/download', {
+          params: { path },
+          responseType: 'blob',
+        }) as Promise<AxiosResponse<Blob>>,
+    }),
+    [],
+  );
+
   return {
     taskApi: task,
     datasetApi: dataset,
+    dataProjectApi: dataProject,
     downloadTaskApi: download_task,
     downloadTemplateApi: download_template,
     encodeApi: encode,
@@ -435,5 +585,7 @@ export const useApi = () => {
     sysApi: sys,
     warehouseApi: warehouse,
     annotationApi: annotation,
+    agentApi: agent,
+    workspaceApi: workspace,
   };
 };

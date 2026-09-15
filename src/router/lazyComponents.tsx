@@ -58,6 +58,18 @@ const WarehouseDataPreview = lazy(
   () => import('@/pages/DatasetManagement/Warehouse/WarehouseDataPreview'),
 );
 
+// 数据项目
+const DataProjectList = lazy(
+  () => import('@/pages/DataProjectManagement/ProjectList/DataProjectListPage'),
+);
+const DataProjectDetail = lazy(
+  () =>
+    import('@/pages/DataProjectManagement/ProjectDetail/DataProjectDetailPage'),
+);
+const DataViewDetail = lazy(
+  () => import('@/pages/DataProjectManagement/ViewDetail/DataViewDetailPage'),
+);
+
 // 数据标注
 const AnnotationProjectList = lazy(
   () =>
@@ -109,6 +121,19 @@ const AuditLogList = lazy(
   () => import('@/pages/SysManagement/AuditLog/AuditLogPage'),
 );
 
+// 智能体
+const AgentSkillList = lazy(
+  () => import('@/pages/AgentManagement/Skills/AgentSkillPage'),
+);
+const AgentTaskList = lazy(
+  () => import('@/pages/AgentManagement/Tasks/AgentTaskPage'),
+);
+
+// 文件工作区
+const Workspace = lazy(
+  () => import('@/pages/WorkspaceManagement/WorkspacePage'),
+);
+
 export default {
   StructuredRulesetList,
   StructuredRulesetDetail,
@@ -126,10 +151,16 @@ export default {
   AnnotationProjectList,
   AnnotationProjectDetail,
   AnnotationLibraryDetail,
+  DataProjectList,
+  DataProjectDetail,
+  DataViewDetail,
   MyDownloadTask,
   DownloadTaskList,
   DownloadTemplateList,
   UserList,
   TokenList,
   AuditLogList,
+  AgentSkillList,
+  AgentTaskList,
+  Workspace,
 };
