@@ -56,7 +56,7 @@ const ExternalDataSourcePage: FC = () => {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<ExternalDataSource.Item | null>(null);
   const [saving, setSaving] = useState(false);
-  const [testingUid, setTestingUid] = useState<string>('');
+  const [testingUid, setTestingUid] = useState<string | null>(null);
 
   const [form] = Form.useForm<ExternalSourceFormValues>();
 
@@ -208,6 +208,10 @@ const ExternalDataSourcePage: FC = () => {
 
   const onTestConnection = useCallback(
     async (item: ExternalDataSource.Item) => {
+      if (!item.uid) {
+        message.error('数据源 uid 缺失，无法执行连通性测试');
+        return;
+      }
       setTestingUid(item.uid);
       try {
         const res = await externalDataSourceApi.testConnection(item.uid);
@@ -217,12 +221,14 @@ const ExternalDataSourcePage: FC = () => {
           } else {
             message.warning(res.data.message || '连接失败');
           }
-          await refresh();
         } else {
           message.error(res.message || '测试失败');
         }
+      } catch (error: any) {
+        message.error(error?.response?.data?.message || '连通性测试失败');
       } finally {
-        setTestingUid('');
+        setTestingUid(null);
+        void refresh();
       }
     },
     [externalDataSourceApi, message, refresh],
@@ -320,7 +326,7 @@ const ExternalDataSourcePage: FC = () => {
                 <Button
                   type="link"
                   size="small"
-                  loading={testingUid === row.uid}
+                  loading={testingUid !== null && testingUid === row.uid}
                   onClick={() => void onTestConnection(row)}
                 >
                   连通性测试

@@ -173,9 +173,15 @@ export const useApi = () => {
           enabled,
         }) as Promise<APIRes<ExternalDataSource.Item>>,
       testConnection: (uid: string) =>
-        service.post('/admin/external_data_source/test_connection', {
-          uid,
-        }) as Promise<
+        service.post(
+          '/admin/external_data_source/test_connection',
+          {
+            uid,
+          },
+          {
+            timeout: 15000,
+          },
+        ) as Promise<
           APIRes<{
             uid: string;
             success: boolean;
