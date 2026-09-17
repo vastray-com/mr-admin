@@ -59,13 +59,6 @@ const privateBaseRoutes: BaseRoute = [
         roles: [UserRole.Admin, UserRole.User],
       },
       {
-        key: '/data/external_source/list',
-        element: <LazyComponents.ExternalDataSourcePage />,
-        label: '外部数据源',
-        addToMenu: true,
-        roles: [UserRole.Admin],
-      },
-      {
         key: '/data/dataset/list',
         element: <LazyComponents.DatasetList />,
         label: '数据集列表',
@@ -342,6 +335,30 @@ const privateBaseRoutes: BaseRoute = [
         label: '定时任务',
         addToMenu: true,
         roles: [UserRole.Admin, UserRole.User],
+      },
+    ],
+  },
+  {
+    key: '/integration',
+    element: <Outlet />,
+    label: '数据开发',
+    addToMenu: true,
+    roles: [UserRole.Admin],
+    loader: ({ request }) => {
+      const url = new URL(request.url);
+      if (url.pathname === '/integration') {
+        return redirect('/integration/external_source/list');
+      }
+      return null;
+    },
+    icon: <i className="i-icon-park-outline:connection-point" />,
+    children: [
+      {
+        key: '/integration/external_source/list',
+        element: <LazyComponents.ExternalDataSourcePage />,
+        label: '外部数据源',
+        addToMenu: true,
+        roles: [UserRole.Admin],
       },
     ],
   },
