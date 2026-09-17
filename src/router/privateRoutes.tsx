@@ -59,6 +59,13 @@ const privateBaseRoutes: BaseRoute = [
         roles: [UserRole.Admin, UserRole.User],
       },
       {
+        key: '/data/external_source/list',
+        element: <LazyComponents.ExternalDataSourcePage />,
+        label: '外部数据源',
+        addToMenu: true,
+        roles: [UserRole.Admin],
+      },
+      {
         key: '/data/dataset/list',
         element: <LazyComponents.DatasetList />,
         label: '数据集列表',

@@ -7,6 +7,7 @@ import type { DataProject } from '@/typing/dataProject';
 import type { Dataset } from '@/typing/dataset';
 import type { DownloadTask } from '@/typing/downloadTask';
 import type { DownloadTemplate } from '@/typing/downloadTemplate';
+import type { ExternalDataSource } from '@/typing/externalDataSource';
 import type { PushRule } from '@/typing/pushRule';
 import type { StructuredRuleset } from '@/typing/structuredRuleset';
 import type { Task } from '@/typing/task';
@@ -143,6 +144,48 @@ export const useApi = () => {
       executeViewSql: (params: DataProject.ViewQueryParams) =>
         service.post('/admin/data_project/view/execute', params) as Promise<
           APIRes<DataProject.ViewQueryResult>
+        >,
+    }),
+    [],
+  );
+
+  const externalDataSource = useMemo(
+    () => ({
+      getList: (params: ExternalDataSource.ListParams) =>
+        service.get('/admin/external_data_source/list', { params }) as Promise<
+          APIRes<ExternalDataSource.Item[]>
+        >,
+      getDetail: (uid: string) =>
+        service.get('/admin/external_data_source/detail', {
+          params: { uid },
+        }) as Promise<APIRes<ExternalDataSource.Item>>,
+      create: (params: ExternalDataSource.CreateParams) =>
+        service.post('/admin/external_data_source/create', params) as Promise<
+          APIRes<ExternalDataSource.Item>
+        >,
+      update: (params: ExternalDataSource.UpdateParams) =>
+        service.post('/admin/external_data_source/update', params) as Promise<
+          APIRes<ExternalDataSource.Item>
+        >,
+      setEnabled: (uid: string, enabled: boolean) =>
+        service.post('/admin/external_data_source/set_enabled', {
+          uid,
+          enabled,
+        }) as Promise<APIRes<ExternalDataSource.Item>>,
+      testConnection: (uid: string) =>
+        service.post('/admin/external_data_source/test_connection', {
+          uid,
+        }) as Promise<
+          APIRes<{
+            uid: string;
+            success: boolean;
+            status: string;
+            message: string;
+          }>
+        >,
+      delete: (uid: string) =>
+        service.post('/admin/external_data_source/delete', { uid }) as Promise<
+          APIRes<boolean>
         >,
     }),
     [],
@@ -585,6 +628,7 @@ export const useApi = () => {
     taskApi: task,
     datasetApi: dataset,
     dataProjectApi: dataProject,
+    externalDataSourceApi: externalDataSource,
     downloadTaskApi: download_task,
     downloadTemplateApi: download_template,
     encodeApi: encode,

@@ -57,6 +57,10 @@ const DatasetDetail = lazy(
 const WarehouseDataPreview = lazy(
   () => import('@/pages/DatasetManagement/Warehouse/WarehouseDataPreview'),
 );
+const ExternalDataSourcePage = lazy(
+  () =>
+    import('@/pages/DatasetManagement/ExternalSource/ExternalDataSourcePage'),
+);
 
 // 数据项目
 const DataProjectList = lazy(
@@ -148,6 +152,7 @@ export default {
   DatasetList,
   DatasetDetail,
   WarehouseDataPreview,
+  ExternalDataSourcePage,
   AnnotationProjectList,
   AnnotationProjectDetail,
   AnnotationLibraryDetail,
