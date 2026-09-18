@@ -307,25 +307,38 @@ const WorkspacePage: FC = () => {
       key: 'action',
       width: 200,
       render: (_, record) => (
-        <>
+        <div className="flex whitespace-nowrap">
           {record.is_dir ? (
-            <Button type="link" onClick={() => openDir(record)}>
+            <Button type="link" size="small" onClick={() => openDir(record)}>
               打开
             </Button>
           ) : (
             <>
-              <Button type="link" onClick={() => void openPreview(record.path)}>
+              <Button
+                type="link"
+                size="small"
+                onClick={() => void openPreview(record.path)}
+              >
                 预览
               </Button>
-              <Button type="link" onClick={() => void onDownload(record)}>
+              <Button
+                type="link"
+                size="small"
+                onClick={() => void onDownload(record)}
+              >
                 下载
               </Button>
             </>
           )}
-          <Button type="link" danger onClick={() => confirmDelete(record)}>
+          <Button
+            type="link"
+            size="small"
+            danger
+            onClick={() => confirmDelete(record)}
+          >
             删除
           </Button>
-        </>
+        </div>
       ),
     },
   ];
